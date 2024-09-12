@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}
+    Error 401
+{% endblock %}
+{% block content %}
+<div class="flex items-center flex-col">
+    <div class="flex items-center justify-between w-full px-8">
+        <div class="flex items-center justify-center w-[50%]">
+            <div>
+                <img src="{{url_for('static', filename='img/bienvenido_qhawariy.svg')}}" alt="" srcset="">
+            </div>
+        </div>
+        <div class="flex items-center flex-col w-[50%]">
+            <p class="text-center text-h2">Acceso Denegado <span class="text-blue-100 uppercase">error 401</span></p>
+            <p class="text-stretch-300 font-light pt-2 text-h5">No tengo permitido mostrar esta pagina</p>
+            <p class="text-stretch-300 font-bold text-h4">Por favor comuniquese con el administrador</p>
+            <div class="flex items-center pt-10">
+                <a class="btn btn--base btn-blue-100" href="{{ url_for('home.index')}}">Volver a inicio</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,164 @@
+<!-- Formulario que permite registrar a usuarios -->
+{% extends "base.html" %}
+
+{% block title %}
+    Registro de usuarios
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+                <img src="{{ url_for('static', filename='img/users_blue.svg') }}" height="24px" width="24px" alt="panel usuarios" class="block q-icon-active">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" height="24px" width="24px" alt="panel vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" height="24px" width="24px" alt="panel propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px" alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('admin.listar_usuarios') }}" class="btn--base">
+    <p class="text-h7">Lista de usuarios</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Agregar nuevo usuario</p>
+</a>
+{% endblock %}
+{% block content %}
+    <div class="register-page height-full-page bg-green-600 overflow-x-hidden lg:bg-white">
+        <div class="register-inner px-4 lg:px-0 pb-4 lg:pb-0 z-20 relative">
+            <div class="register-slider pt-6 pb-4 lg:pt-0 lg:pb-0 pl-0">
+                <div class="w-[220px] h-[320px] bg-green-600"></div>
+            </div>
+            <div class="register-form link2 lg:pb-0 lg:pt-0 bg-white shadow-custom border-cream-100 rounded-[20px] relative">
+                <div class="content-form bg-white box-register mt-0 shadow-none md:pt-3 lg:py-2">
+                    <p class="text-xl font-semibold text-center mb-4">
+                        <span class="text-blue-600">
+                            Ingresa los datos del nuevo usuario
+                        </span>
+                    </p>
+                    <form action="" method="post" class="w-full relative" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="lg:grid grid-cols-2 gap-4">
+                            <div class="mt-3 lg:col-span-2">
+                                <div class="flex rounded-xxs border border-gray-400">
+                                    <div class="dropdown-documento text-sm relative w-3/12 border-r border-gray-400">
+                                        <div class="px-4 py-3 flex items-center cursor-pointer relative">
+                                            {{ form.dni.label(class="") }}
+                                        </div>
+                                    </div>
+                                    <div class="w-9/12">
+                                        {{ form.dni(class="only-number w-full border-0 text-sm px-4 py-3 text-black-100", type="number", placeholder="Número de documento", autocomplete="off", maxlength="8") }}<br>
+                                    </div>
+                                </div>
+                                {% for error in form.dni.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <div class="relative">
+                                    <div class="w-full block">
+                                        {{ form.nombres(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Nombres", autocomplete="off") }}<br>
+                                    </div>
+                                </div>
+                                {% for error in form.nombres.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <div class="relative">
+                                    <div class="w-full block">
+                                        {{ form.apellidos(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Apellidos", autocomplete="off") }}<br>
+                                    </div>
+                                </div>
+                                {% for error in form.apellidos.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3 ">
+                                <div class="relative">
+                                    <div class="w-full block">
+                                        {{ form.email(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", type="email", placeholder="Correo electrónico", autocomplete="off") }}<br>
+                                    </div>
+                                </div>
+                                {% for error in form.email.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <div class="relative">
+                                    <div class="w-full block">
+                                        {{ form.telefono(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Número de celular", autocomplete="off") }}<br>
+                                    </div>
+                                </div>
+                                {% for error in form.telefono.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3">
+                                <div class="relative">
+                                    <div class="w-full block">
+                                        {{ form.clave(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", type="password", inputmode="verbatim", placeholder="Contraseña", autocomplete="off") }}
+                                    </div>
+                                </div>
+                                {% for error in form.clave.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-span-2 mt-3">
+                            <div class="mt-4 mb-5">
+                                {{ form.submit(class="btn btn--base bg-green-100 text-white w-full md:w-auto block text-center") }}
+                            </div>
+                        </div>
+                        <!-- <div class="text-xs font-semibold mt-4 lg:mt-0 lg:ml-2 text-gris-90">
+                            ¿Ya tienes una cuenta?
+                            <a href="{{ url_for('auth.login')}}" class="text-blue-100 underline">Ingresa aquí</a>
+                        </div> -->
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

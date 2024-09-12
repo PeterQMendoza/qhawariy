@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}
+    Usuarios
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/users_blue.svg') }}" height="24px" width="24px" alt="panel usuarios" class="block q-icon-active">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" height="24px" width="24px" alt="inicio vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" height="24px" width="24px" alt="panel propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px" alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Lista de usuarios</p>
+</a>
+{% endblock %}
+{% block content %}
+    <!-- Contenido -->
+    <div class="flex items-center justify-between py-2">
+        <div class="">
+            <p class="text-h5 text-black-100 md:mt-12 text-center"> Usuarios</p>
+        </div>
+    </div>
+    <div class="flex items-center justify-between py-2">
+        <a href="{{ url_for('auth.register') }}" class="btn btn--base btn-gray-111">
+            <div class="flex justify-center items-center">
+                <img src="{{url_for('static', filename='img/icon-user-plus.svg')}}" height="24px" width="24px" alt="agregar usuario" class="">
+                <p class="ml-2 text-xs">Agrear nuevo usuario</p>
+            </div>
+        </a>
+        <a href="{{ url_for('admin.descargar_xls') }}" class="btn btn--base btn-blue-100 text-white p-1">
+            <div class="flex justify-center items-center">
+                <img src="{{url_for('static', filename='img/download.svg')}}" height="24px" width="24px" alt="descargar usuarios" class="">
+                <p class="ml-2 text-xs sm:hidden">Descargar</p>
+            </div>
+        </a>
+    </div>
+    <div class="list-users pb-6 block w-full">
+        <div class="list-users-wrapper grid gap-2 grid-cols-1">
+            {% for user in users %}
+            <div class="user-card p-5 rounded-[10px] hover:shadow-md bg-white border border-black-10 rounded-[10px]">
+                <div class="flex items-start justify-between">
+                    <div class="flex">
+                        <div class="block mr-2">
+                            <img src="{{ url_for('static', filename='img/icon-user.svg') }}" height="24px" width="24px" alt="" class="w-9 h-9 block w-full m-auto">
+                        </div>
+                        <div>
+                            <p class="text-blue-100 text-body-2 lg:text-body-2 font-semibold">{{ user.nombres }} {{user.apellidos}}</p>
+                            <p class="text-black-60 mb-6 text-body-3 font-medium"> {{user.correo_electronico}}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-center w-30 border border-black-10 rounded p-1 sm:w-9">
+                        {% if user.rol == "Administrador" %}
+                        <div class="flex items-center">
+                            <p class="text-xs font-medium text-green-100 sm:hidden">
+                                {{user.rol}}
+                            </p>
+                            <div>
+                                <img src="{{ url_for('static', filename='img/icon-admin-user.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if user.rol == "Controlador" %}
+                        <div class="flex items-center">
+                            <p class="text-xs font-medium text-blue-100 sm:hidden">
+                                {{user.rol}}
+                            </p>
+                            <div>
+                                <img src="{{ url_for('static', filename='img/icon-expert-user.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if user.rol == "Operacion" %}
+                        <div class="flex items-center">
+                            <p class="text-xs sm:hidden font-medium">
+                                {{user.rol}}
+                            </p>
+                            <div>
+                                <img src="{{ url_for('static', filename='img/icon-no-expert.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if user.rol == "Trabajador" %}
+                        <div class="flex items-center">
+                            <p class="text-xs sm:hidden font-medium">
+                                {{user.rol}}
+                            </p>
+                            <div>
+                                <img src="{{ url_for('static', filename='img/icon-no-expert.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.editar_usuario', user_id=user.id_usuario) }}" class="btn btn--base btn-gray-111">
+                    <div class="flex justify-center items-center">
+                        <img src="{{url_for('static', filename='img/edit.svg')}}" height="24px" width="24px" alt="editar usuario" class="">
+                        <p class="ml-2 text-xs sm:hidden">Editar</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

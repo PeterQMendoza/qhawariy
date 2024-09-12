@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}
+    Ruta | Lista rutas
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+                <img src="{{ url_for('static', filename='img/users.svg') }}" alt="usuarios" class="block q-icon-normal">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" alt="Vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" alt="Propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Lista de rutas</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between py-2">
+    <p class="text-h5 text-black-100">Lista rutas</p>
+</div>
+<div class="flex items-center justify-between py-2">
+    <a href="{{ url_for('ruta.agregar_ruta')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/plus.svg')}}" alt="agregar" class="">
+            <p class="ml-2 text-xs sm:hidden">Agregar ruta</p>
+        </div>
+    </a>
+</div>
+<div class="block w-full border border-cream-100">
+    <div class="text-body-3 grid gap-2 grid-cols-5 sm:gap-x-0 py-2 border-b border-cream-100">
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Codigo</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Año de inicio</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Año de fin</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Documento</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold"></p>
+        </div>
+    </div>
+    <div class="bg-gray-250 py-2">
+        <div class="text-body-3 grid gap-2 grid-cols-5 sm:gap-x-0 ">
+            {% for ruta in rutas %}
+            <div class="flex items-center justify-center">
+                <p>{{ruta.codigo|safe}}</p>
+            </div>
+            <div class="flex items-center justify-center">
+                <p>{{ruta.inicio_vigencia|date_time('year')|safe}}</p>
+            </div>
+            <div class="flex items-center justify-center">
+                <p>{{ruta.fin_vigencia|date_time('year')|safe}}</p>
+            </div>
+            <div class="flex items-center justify-center">
+                <a href="{{ruta.documento|safe}}" class="">Ver aqui</a>
+            </div>
+            <div class="flex items-center justify-center">
+                <a href="{{ url_for('ruta.actualizar_ruta', ruta_id=ruta.id_ruta) }}" class="btn btn--base btn-gray-111">
+                    <div class="flex justify-center items-center">
+                        <img src="{{url_for('static', filename='img/edit.svg')}}" alt="Descargar" class="">
+                        <p class="ml-2 text-xs sm:hidden">Editar</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Reportar viaje
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='dist/js/time_qhawariy.min.js') }}"></script>
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('viaje.listar_calendario')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/strip_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal hidden"> -->
+            </div>
+            Viajes
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Fechas</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="py-2">
+    <div class="flex items-center justify-between py-2">
+        <p class="text-h5 text-black-100">Calendario de programaciones realizadas</p>
+    </div>
+    <div class="border border-cream-100 p-4 rounded-sm bg-gray-250">
+        <div class="flex items-center justify-center py-2">
+            <p class="text-h3 text-blue-100">{{data|date_time('month_year')}}</p>
+        </div>
+        <div class="grid grid-cols-7 gap-2 sm:gap-2 calendar">
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Lun</p>
+            </div>
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Mar</p>
+            </div>
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Mié</p>
+            </div>
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Jue</p>
+            </div>
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Vie</p>
+            </div>
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Sáb</p>
+            </div>
+            <div class="flex items-center justify-center bg-blue-100 p-4">
+                <p class="font-light text-white pointer">Dom</p>
+            </div>
+            {% for d in date %}
+            {% if d is not string %}
+            <a href="{{url_for('viaje.agregar_viaje', fecha_id=d.id_fecha)}}" class="btn btn--base btn-white-border">
+                <div class="flex items-start justify-start">
+                    <span class="h-2 w-2 bg-green-600 rounded-full"></span>
+                </div>
+                <div class="flex flex-col items-end justify-end">
+                    <p class="">{{d.fecha|date_time('day')}}</p>
+                </div>
+            </a>
+            {% else %}
+            <a href="" class="btn btn--base btn-white-border">
+                <div class="flex items-center justify-start">
+                    <span class="h-2 w-2 rounded-full"></span>
+                </div>
+                <div class="flex flex-col items-end justify-end">
+                    <p class="">{{d|safe}}</p>
+                </div>
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <div class="flex items-center justify-start py-4">
+            <span class="h-2 w-2 bg-green-600 rounded-full"></span>
+            <p class="text-body-4 font-semibold ml-2">
+                Dia que cuenta con programacion y puede reportarse viajes
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

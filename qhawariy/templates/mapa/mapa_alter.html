@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}
+    Mapa
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/leaflet/leaflet.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/leaflet/leaflet.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/map.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="bg-white rounded p-8">
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('estadistica.mostrar_estadisticas') }}" class="btn p-1">
+            <div class="flex justify-center items-center">
+                <img src="{{url_for('static', filename='img/back.svg')}}" alt="Volver" class="">
+                <p class="ml-2 text-xs sm:hidden">Volver estadisticas</p>
+            </div>
+        </a>
+        <h5 class="text-h5 text-black-100 md:mt-12 mb-6">Visualizacion de mapa de recorrido</h5>
+    </div>
+    <div class="border border-cream-100 rounded grid grid-cols-12 sm:grid-cols-1">
+        <div class="bg-white rounded-bl rounded-tl col-span-3">
+            <div class="bg-white w-full flex items-center justify-around p-2">
+                <span class="rounded border">TC-34</span>
+                <p class="text-center">ETMS</p>
+            </div>
+            <div class="bg-blue-100 justify-center p-2">
+                <div class="flex justify-center items-center">
+                    <p class="text-white mr-2">Cambiar sentido</p>
+                    <img src="{{url_for('static', filename='img/angle-bottom.svg')}}" alt="Abajo" class="">
+                </div>
+            </div>
+            <div class="flex items-center justify-around p-2 border-b border-cream-100">
+                <p class="mr-2">Hoy</p>
+                <a href="#" class="text-blue-100 border rounded border-blue-100 p-1">Cambiar dia</a>
+            </div>
+            <div class="p-2 overflow-x-auto">
+                <div class="flex justify-center bg-blue-10 rounded p-2">
+                    <img src="{{url_for('static', filename='img/icon-question.svg')}}" alt="Abajo" class="mr-2">
+                    <p class="">Seleccione una parada para ver sus horarios</p>
+                </div>
+                <div class="block py-4 h-[188px]">
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 1</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 2</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 3</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 4</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 5</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 6</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 7</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative mb-2 last:mb-0" style="z-index:2;">
+                        <div class="bg absolute w-1 h-full left-[10px] top-6 mt-0.5 bg-black-60" style="height: calc(100% + 10px)">
+                        </div>
+                        <div class="flex w-full relative flex-row justify-between items-start">
+                            <div class="w-6 h-6 block">
+                                <div class="bg rounded-full text-body-4 font-semibold text-white w-6 h-6 items-center justify-center flex mt-0.5 bg-black-60"></div>
+                            </div>
+                            <a href="#" class="route-link w-full relative mb-5 last:mb-0 link-active">
+                                <div class="flex w-full relative flex-row justify-between items-start mb-2">
+                                    <div class="inline-flex w-full flex-1 pl-2 text-body-2 text-left">
+                                        <p>Paradero 8</p>
+                                    </div>
+                                </div>
+                                <div class="text-body-4 font-semibold flex w-full items-center pl-2 text-black-60">
+                                    Proxima llegada 17:45
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center col-span-9">
+            <div id="map" class="w-full"></div>
+        </div>
+    </div>
+</div>
+<!-- <style>
+    .icon-map{
+        position: absolute;
+        background: url("{#{ url_for('static', filename='img/market-icon.svg') }#}");
+        width: 25px;
+        height: 34px;
+    }
+</style> -->
+{% endblock %}

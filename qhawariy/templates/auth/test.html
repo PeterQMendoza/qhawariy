@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}
+    test
+{% endblock %}
+{% block content %}
+    <div class="bg-white">
+        {#{users}#}
+        {% for user in users %}
+            Users =>{{ user.nombres}}
+        {% endfor %}
+    </div>
+{% endblock %}

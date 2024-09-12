@@ -1,0 +1,142 @@
+<!-- Formulario que permite cambiar y asignar el rol a los usuario -->
+{% extends "base.html" %}
+
+{% block title %}
+    {{ user.nombres }} {{user.apellidos}}
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='source/js/user.js') }}"></script>
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/users_blue.svg') }}" height="24px" width="24px" alt="panel usuarios" class="block q-icon-active">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" height="24px" width="24px" alt="panel vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" height="24px" width="24px" alt="panel propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px" alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('admin.listar_usuarios') }}" class="btn--base">
+    <p class="text-h7">Lista de usuarios</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Administrar usuario</p>
+</a>
+{% endblock %}
+{% block content %}
+    <div class="">
+        <p class="text-h5 py-2 text-black-100 md:mt-12"> Detalles de usuario</p>
+        <div class="grid grid-cols-2-1-3 gap-2 sm:grid-cols-1">
+            <div class="rounded border-cream-100 border">
+                <p class="text-black-100 text-h6 text-center py-2">Datos del usuario</p>
+                <div class="flex justify-around items-center">
+                    <div class="block left-0">
+                        <img src="{{ url_for('static', filename='img/icon-user-lg.svg') }}" height="128px" width="128px" alt="" class="">
+                    </div>
+                    <div class="">
+                        <span class="pb-2">
+                            <p class="text-body-3 font-semibold text-blue-100">Nombres:</p>
+                            <p class="font-normal">{{ user.nombres }}</p>
+                        </span>
+                        <span class="pb-2">
+                            <p class="text-body-3 font-semibold text-blue-100">Apellidos:</p>
+                            <p class="font-normal">{{ user.apellidos }}</p>
+                        </span>
+                        <span class="pb-2">
+                            <p class="text-body-3 font-semibold text-blue-100">DNI:</p>
+                            <p class="font-normal">{{ user.dni }}</p>
+                        </span>
+                        <span class="pb-2">
+                            <p class="text-body-3 font-semibold text-blue-100">Telefono:</p>
+                            <p class="font-normal">{{ user.telefono }}</p>
+                        </span>
+                        <span class="pb-2">
+                            <p class="text-body-3 font-semibold text-blue-100">Email:</p>
+                            <p class="font-normal">{{ user.correo_electronico }}</p>
+                        </span>
+                    </div>
+                </div>
+                <div class="justify-center flex py-2">
+                    <form action="{{ url_for('admin.eliminar_usuario', user_id=user.id_usuario) }}" method="post" novalidate>
+                        {{ form.csrf_token(id='3c48e74c66e66c57c5ad5b1ac5da49cbb079e8adba0f51fc') }}
+                        <input type="submit" value="Eliminar" class="btn btn--base bg-red-600 text-white"/>
+                    </form>
+                </div>
+            </div>
+            <div class="p-4 rounded border border-cream-100 shadow-custom flex-col items-center self-center">
+                <p class="text-center text-h6 pt-2">Cambiar rol</p>
+                <div class="">
+                    <form method="post" novalidate>
+                        <div class="grid grid-cols-1 gap-2">
+                            {{ form.hidden_tag() }}
+                            <div class="mt-3">
+                                <div class="relative">
+                                    <div class="w-full block">
+                                        {{ form.rol.label }}
+                                        <p class="text-body-4 font-semibold">
+                                            (*) Actualmente este usuario tiene rol de:
+                                            <span class="text-blue-100">{{rol}}</span>
+                                        </p>
+                                        {{ form.rol(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Numero de asientos", autocomplete="off") }}<br>
+                                    </div>
+                                </div>
+                                {% for error in form.rol.errors %}
+                                <span class="text-red-600 text-xs">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-5">
+                                {{ form.submit(class="btn btn--base btn-green-600 w-full text-center") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}
+    Admin | Editar Vehiculo
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+                <img src="{{ url_for('static', filename='img/users.svg') }}" height="24px" width="24px" alt="panel usuarios" class="block q-icon-normal ">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet_blue.svg')}}" height="24px" width="24px" alt="panel vehiculos" class="block q-icon-active">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" height="24px" width="24px" alt="panel propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px" alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('vehiculo.listar_vehiculos') }}" class="btn--base">
+    <p class="text-h7">Lista de vehiculos</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Editar datos de vehiculo</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between py-2">
+    <p class="text-h5 text-black-100">Ingrese los datos a modificar del vehiculo:
+        <span class="text-blue-100">{{vehiculo.placa}}</span>
+    </p>
+</div>
+<div class="">
+    <form action="" method="post" novalidate>
+        {{form.hidden_tag()}}
+        <div class="grid grid-cols-2 gap-x-4 sm:grid-cols-1 sm:gap-x-2">
+            <div class="mt-3">
+                <div class="flex rounded-xxs border border-gray-400">
+                    <div class="dropdown-documento text-sm w-3/12 border-r border-gray-400">
+                        <div class="px-4 py-3 justify-center cursor-pointer">
+                            Nº Flota
+                        </div>
+                    </div>
+                    <div class="w-9/12">
+                        {{ form.flota.label(class="hidden") }}
+                        {{ form.flota(class="only-number w-full border-0 text-sm px-4 py-3 text-black-100", placeholder="Número de flota", autocomplete="off", maxlength="8") }}<br>
+                    </div>
+                </div>
+                {% for error in form.flota.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <div class="flex rounded-xxs border border-gray-400">
+                    <div class="dropdown-documento text-sm w-3/12 border-r border-gray-400">
+                        <div class="px-4 py-3 justify-center cursor-pointer">
+                            Placa
+                        </div>
+                    </div>
+                    <div class="w-9/12">
+                        {{ form.placa.label(class="hidden") }}
+                        {{ form.placa(class="only-number w-full border-0 text-sm px-4 py-3 text-black-100", placeholder="Número de placa", autocomplete="off", maxlength="8") }}<br>
+                    </div>
+                </div>
+                {% for error in form.placa.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <div class="relative">
+                    <div class="w-full block">
+                        {{ form.marca.label }}
+                        {{ form.marca(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Marca", autocomplete="off") }}<br>
+                    </div>
+                </div>
+                {% for error in form.marca.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <div class="relative">
+                    <div class="w-full block">
+                        {{ form.modelo.label }}
+                        {{ form.modelo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Modelo", autocomplete="off") }}<br>
+                    </div>
+                </div>
+                {% for error in form.modelo.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mt-3 ">
+                <div class="relative">
+                    <div class="w-full block">
+                        {{ form.fecha_fabricacion.label }}
+                        {{ form.fecha_fabricacion(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", type="date", placeholder="Fecha de Fabricacion", autocomplete="off") }}<br>
+                    </div>
+                </div>
+                {% for error in form.fecha_fabricacion.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <div class="relative">
+                    <div class="w-full block">
+                        {{ form.numero_asientos.label }}
+                        {{ form.numero_asientos(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Numero de asientos", autocomplete="off") }}<br>
+                    </div>
+                </div>
+                {% for error in form.numero_asientos.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <div class="relative">
+                    <div class="w-full block">
+                        {{ form.activo.label(class="checkbox-label items-center pr-3")}}
+                        {{ form.activo(class="bg-green-600") }}
+                        <p class="text-body-4 font-semibold">
+                            (*) Si esta marcado esta en estado 
+                            <span class="text-blue-100">ACTIVO</span>
+                        </p>
+                    </div>
+                </div>
+                {% for error in form.activo.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="col-span-2 mt-3 sm:col-span-1">
+                <div class="mt-4 mb-5">
+                    {{ form.submit(class="btn btn--base bg-green-600 text-white w-full md:w-auto block text-center") }}
+                </div>
+            </div>
+        </div>
+    </form>
+    <form action="{{ url_for('vehiculo.eliminar_vehiculo', id_vehiculo=vehiculo.id_vehiculo) }}" method="post" novalidate>
+        {{form.csrf_token}}
+        <div class="mt-4 mb-5">
+            <input type="submit" value="Eliminar" class="btn btn--base bg-red-600 block text-center text-white w-full md:w-auto"/>
+        </div>
+    </form>
+</div>
+{% endblock %}

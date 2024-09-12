@@ -1,0 +1,673 @@
+{% extends 'base.html' %}
+{% block title %}
+    Estadisticas
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='dist/js/estadistica_qhawariy.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='dist/js/chart.min.js') }}"></script>
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        {% if rol.rol == "Administrador" %}
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+                <img src="{{ url_for('static', filename='img/users.svg') }}" alt="usuarios" class="block q-icon-normal">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" alt="Vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" alt="Propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        {% endif %}
+        {% if rol.rol=="Controlador"%}
+        <a href="{{url_for('viaje.listar_calendario')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/strip.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal hidden"> -->
+            </div>
+            Viajes
+        </a>
+        {% endif %}
+        {% if rol.rol == "Operacion"%}
+        <a href="{{url_for('programacion.agregar_programacion')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/schedule.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Programaciones
+        </a>
+        {% endif %}
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Visualizar estadisticas</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between py-2">
+    <p class="text-h5 text-black-100">Estadisticas</p>
+    <a href="{{ url_for('estadistica.mostrar_mapa') }}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/planet.svg')}}" alt="Mapa" class="">
+            <p class="ml-2 text-xs sm:hidden">Ver mapa</p>
+        </div>
+    </a>
+</div>
+<div class="block w-full">
+    <div class="sm:grid-cols-1 grid gap-6 sm:gap-2 grid-cols-3 sm:gap-x-0">
+        <div class="col-span-2 sm:col-span-1 flex items-center justify-center">
+            <div class="grid gap-2 grid-cols-2-1-4 text-body-4 p-2">
+                <p class="col-span-2 text-center font-bold text-black-100 py-2 border-b border-black-10">Resumen</p>
+                <p class="text-right">Cantidad de vehículos activos:</p>
+                <p><span class="cva text-blue-100 font-bold"></span></p>
+                <p class="text-right">Cantidad de vehículos inactivo:</p>
+                <p><span class="cvi text-gray-100 font-bold"></span></p>
+                <p class="text-right">Cantidad total de propietarios:</p>
+                <p><span class="cp text-green-100 font-bold"></span></p>
+                <p class="text-right">Cantidad de programaciones hasta ahora:</p>
+                <p><span class="cpha text-red-600 font-bold"></span></p>
+                <p class="text-right">Cantidad de viajes reportados hasta ahora:</p>
+                <p><span class="cvrha text-red-600 font-bold"></span></p>
+            </div>
+        </div>
+        <div class="relative flex items-center justify-center">
+            <!-- pie chart -->
+            <canvas id="chart3"></canvas>
+        </div>
+        <div class="relative h-[320px] flex items-center justify-center col-span-3 mt-3 sm:col-span-1">
+            <!-- linear chart -->
+            <canvas id="chart1"></canvas>
+        </div>
+        <div class="relative h-[320px] flex flex-col items-center justify-center col-span-3 mt-3 sm:col-span-1">
+            <!-- bar chart -->
+            <canvas id="chart2"></canvas>
+        </div>
+        <div class="relative h-[320px] flex items-center justify-center col-span-3 sm:col-span-1">
+            <canvas id="chart5"></canvas>
+        </div>
+        <div class="relative h-[960px] flex flex-col items-center justify-center col-span-3 sm:col-span-1">
+            <!-- point chart -->
+            <canvas id="chart4"></canvas>
+        </div>
+        <div class="relative h-[320px] flex flex-col items-center justify-center col-span-3 mt-3 sm:col-span-1">
+            <!-- Grafico de viajes por fecha y rutas -->
+            <canvas id="chart6"></canvas>
+        </div>
+        <div class="relative h-[320px] flex flex-col items-center justify-center col-span-3 mt-3 sm:col-span-1">
+            <!-- Grafico de viajes por vehiculo -->
+            <canvas id="chart7"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded",()=>{
+        // Funciones de ayuda
+        function agregar_formato_dataset(da,label,color,order) {
+            estructura={
+                "backgroundColor":color,
+                "borderColor":color,
+                "label":label,
+                "data":da,
+                "order":order
+            };
+            return estructura;
+        }
+
+        // Lista de colores
+        colores=[
+        "#eb0046","#0039a6","#05be50","#6F7578",
+        "#b56a65","#13444d","#f5634a","#7f6000",
+        "#004443","#6a0e47","#0e0b29","#5c4152",
+        "#09738a","#005A31","#265B52","#361542",
+        "#1F3890","#005bc5","#7d677e","#e32d40",
+        "#6C194F","#3F2463","#431031","#162053",
+        "#d1024e","#5d2d4e","#c02948","#408156",
+        "#909320","#4c5e91","#f7345b","#b50d57",
+        ]
+
+        // Para el grafico de la dona chart3
+        data_4=JSON.parse('{{data4|tojson|safe}}');
+        var values=[]
+        var salidas_ruta=[];
+        for(var key in data_4){
+            values.push(data_4[key]);
+            salidas_ruta.push(key);
+        }
+        const cpha=document.querySelector('.cpha')
+        let tcpha=0;
+        values.forEach(function(a) {tcpha+=a});
+        cpha.innerHTML=tcpha
+
+        // Grafico de lineas
+        var options={
+                responsive: true,
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                aspectRatio:2,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de programaciones de vehiculos por día',
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: false,
+                        grid: {
+                            display: true,
+                            color: "rgba(255,99,132,0.2)"
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        var can1=document.getElementById('chart1');
+        data_r=JSON.parse('{{data1|tojson|safe}}');
+        n=JSON.parse('{{lista_ruta_conteo|tojson|safe}}');
+        dataset_char1=[]
+        // Agregamos todas los datos a la dataset
+        dataset_char1.push(agregar_formato_dataset(data_r,'Total',colores[0],0))
+        
+        for(let i=0;i<n.length;i++){
+            aux=agregar_formato_dataset(n[i],salidas_ruta[i],colores[i+1],i+1)
+            dataset_char1.push(aux)
+        }
+
+        const config1={
+            type: 'line',
+            data: {
+                datasets:dataset_char1,
+            },
+            options:{
+                responsive: true,
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                aspectRatio:2,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de programaciones de vehiculos por día'
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: false,
+                        grid: {
+                            display: true,
+                            color: "rgba(255,99,132,0.2)"
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        }
+        var chart1=new Chart(can1,config1);
+        window.addEventListener('beforeprint', () => {
+            chart1.resize(800, 800);
+        });
+        window.addEventListener('afterprint', () => {
+            chart1.resize();
+        });
+
+        // Grafico de BARRAS
+        var can2=document.getElementById('chart2');
+        var btn_order=document.querySelector('.order');
+        var data2=JSON.parse('{{data2|tojson|safe}}');        
+        const config2={
+            type: 'bar',
+            data: {
+                datasets: [
+                    {
+                        data: data2,
+                        borderColor: 'rgba(235, 0, 70, 1)',
+                        backgroundColor:'#eb0046',
+                        label:'Cantidad',
+                    },
+                ]
+            },
+            options:{
+                scaleShowValues: true,
+                indexAxis: 'x',
+                responsive: true,
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de programaciones por vehículo'
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: true,
+                        grid: {
+                            display: true,
+                            color: "rgba(255,99,132,0.2)",
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                        },
+                    },
+                    x: {
+                        grid: {
+                            display: true
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 50,
+                            minRotation: 30,
+                            padding: 10,
+                            fontSize: 10
+                        },
+                    },
+                }
+            }
+        };
+
+        var r2=new Chart(can2,config2);
+        window.addEventListener('beforeprint', () => {
+            r2.resize(800, 1200);
+        });
+        window.addEventListener('afterprint', () => {
+            r2.resize();
+        });
+
+        // Grafico de la DONA 
+        // La data es inicializada al inicio del codigo
+        colores_seleccionados=[]
+        //Selecciona los colores para establecer de acuerdo a la ruta
+        // por ejemplo la primera ruta es verde
+        for(let i=1;i<salidas_ruta.length+1;i++){
+            colores_seleccionados.push(colores[i])
+        }
+        for(let i=1;i<salidas_ruta.length-values.length+1;i++){
+            values.push(0);
+        }
+        console.log(values);
+
+        var can3=document.getElementById('chart3');
+        const config3={
+            type: 'doughnut',
+            data: {
+                labels:salidas_ruta,
+                datasets: [{
+                    label:'Cantidad',
+                    data: values,
+                    backgroundColor:colores_seleccionados,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                plugins:{
+                    legend:{
+                        position:'bottom',
+                    },
+                    title:{
+                        display:true,
+                        text:'Cantidad de programaciones de vehiculos por ruta'
+                    },
+                }
+            },
+    
+        }
+        var r3=new Chart(can3,config3);
+
+        // Grafico de barras propietarios
+        var can4=document.getElementById('chart4');
+        var dat5=JSON.parse('{{data5|tojson|safe}}');//activo
+        var dat6=JSON.parse('{{data6|tojson|safe}}');//inactivo
+        var lbl5=JSON.parse("{{propietarios|safe}}".replace(/'/g, '"'));//Corrige(reemplaza ' por ") los cadena enviada para ser convertidos en lista
+
+        let ctv=0;
+        let ctvi=0;
+        let cpc=0;
+        dat5.forEach(function(a){ctv+=a})
+        dat6.forEach(function(a){ctvi+=a})
+        lbl5.forEach(function(a){cpc+=1})
+        const cva=document.querySelector('.cva');
+        cva.innerHTML=ctv;
+        const cvi=document.querySelector('.cvi');
+        cvi.innerHTML=ctvi;
+        const cp=document.querySelector('.cp');
+        cp.innerHTML=cpc;
+        const config4={
+            type: 'bar',
+            data: {
+                labels:lbl5,
+                datasets: [{
+                    backgroundColor:colores[2],
+                    label:'Vehículos activos',
+                    data: dat5
+                },
+                {
+                    backgroundColor:colores[3],
+                    label:'Vehículos inactivos',
+                    data: dat6
+                }]
+            },
+            options:{
+                indexAxis: 'y',
+                responsive: true,
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        min: 0,
+                        max: Math.max(...dat5)+Math.max(...dat6),
+                        ticks: {
+                            // forces step size to be 50 units
+                            stepSize: 1
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de vehículo por propietario'
+                    }
+                }
+    
+            }
+        }
+
+        var r4=new Chart(can4,config4);
+
+        // Grafico de puntos
+        var can5=document.getElementById('chart5');
+        var temp=JSON.parse('{{tiempos|tojson|safe}}');//activo
+        const config5={
+            type: 'line',
+            data: {
+                // labels:lbl5,
+                datasets: [{
+                //     
+                    fill:true,
+                    backgroundColor:colores[3],
+                    label:'Conteo de tiempo',
+                    cubicInterpolationMode: 'monotone',
+                    tension: 0.8,
+                    data: temp
+                }]
+            },
+            options:{
+                indexAxis: 'x',
+                responsive: true,
+                interaction: {
+                    intersect: false,
+                },
+                parsing: {
+                    xAxisKey: 'tiempo',
+                    yAxisKey: 'cantidad'
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            // forces step size to be 50 units
+                            stepSize: 1
+                        },
+                    },
+                    y: {
+                        stacked: true,
+                    },
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Analisis de tiempos programados'
+                    }
+                }
+    
+            }
+        }
+
+        var r5=new Chart(can5,config5);
+
+        //GRAFICO DE VIAJES POR VEHICULO
+        var can7=document.getElementById("chart7");
+        var vpvs=JSON.parse('{{data7|tojson|safe}}');
+        const config7={
+            type: 'bar',
+            data: {
+                datasets: [
+                    {
+                        data: vpvs,
+                        borderColor: colores[4],
+                        backgroundColor:colores[4],
+                        label:'Cantidad',
+                    },
+                ]
+            },
+            options:{
+                scaleShowValues: true,
+                indexAxis: 'x',
+                responsive: true,
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de viajes por vehículo'
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: true,
+                        grid: {
+                            display: true,
+                            color: "rgba(255,99,132,0.2)",
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                        },
+                    },
+                    x: {
+                        grid: {
+                            display: true
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 50,
+                            minRotation: 30,
+                            padding: 10,
+                            fontSize: 10
+                        },
+                    },
+                }
+            }
+        };
+
+        var r7=new Chart(can7,config7);
+
+        // Grafico de lineas viajes por fecha y rutas
+        var options6={
+                responsive: true,
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                aspectRatio:2,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de viajes de vehiculos por día y ruta',
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: false,
+                        grid: {
+                            display: true,
+                            color: "rgba(255,99,132,0.2)"
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        var can6=document.getElementById('chart6');
+        vfr=JSON.parse('{{data8|tojson|safe}}');
+        lvfr=JSON.parse('{{lista_viajes_por_ruta_fecha|tojson|safe}}');
+        dataset_chart6=[]
+        // Agregamos todas los datos a la dataset
+        dataset_chart6.push(agregar_formato_dataset(vfr,'Total',colores[0],0))
+        
+        for(let i=0;i<lvfr.length;i++){
+            aux=agregar_formato_dataset(lvfr[i],salidas_ruta[i],colores[i+1],i+1)
+            dataset_chart6.push(aux)
+        }
+
+        const config6={
+            type: 'line',
+            data: {
+                datasets:dataset_chart6,
+            },
+            options:{
+                responsive: true,
+                parsing: {
+                    xAxisKey: 'x',
+                    yAxisKey: 'y'
+                },
+                maintainAspectRatio: false,
+                aspectRatio:2,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de viajes de vehiculos realizados por día'
+                    }
+                },
+                scales: {
+                    y: {
+                        stacked: false,
+                        grid: {
+                            display: true,
+                            color: "rgba(255,99,132,0.2)"
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: true
+                        }
+                    }
+                }
+            }
+        }
+        var chart6=new Chart(can6,config6);
+        window.addEventListener('beforeprint', () => {
+            chart6.resize(800, 800);
+        });
+        window.addEventListener('afterprint', () => {
+            chart6.resize();
+        });
+        // Mostrar la cantidad de visjaes realizados en el resumen
+        var tag_cvrha=document.querySelector(".cvrha");
+        let cvrha=0;
+        lvfr.forEach(function(){cvrha+=1});
+        tag_cvrha.innerHTML=cvrha;
+    });
+</script>
+{% endblock %}

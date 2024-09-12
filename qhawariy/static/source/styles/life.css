@@ -1,0 +1,57 @@
+@font-face{
+    font-family: Consolas;
+    src: url('/static/fonts/Consolas/consolai.ttf');
+}
+
+/* In life.js width*size=370 with width=37 and size=10 */
+.grid{
+    width: 370px;
+    height: 370px;
+    top: -10%;
+    left: calc(50% - 185px);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.dead-cell{
+    box-sizing: border-box;
+    content-visibility: hidden;
+    width: 10px;/* in life.js width=size+'px' with size=10*/
+    height: 10px;/* in life.js height=size+'px' with size=10*/
+}
+
+.live-cell{
+    width: 10px;/* in life.js width=size+'px' with size=10*/
+    height: 10px;/* in life.js height=size+'px' with size=10*/
+    background-color: #F4F4F4;
+    border: 1px solid #E9E9E9;
+    /* color: aliceblue; */
+    border-radius: 0.25rem;
+    --tw-shadow: 0px 4px 15px rgba(255, 255, 255, 0.14);
+    --tw-shadow-colored: 0px 4px 15px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #ffffff), var(--tw-ring-shadow, 0 0 #ffffff), var(--tw-shadow);
+}
+
+.consola{
+    font-family:Consolas;
+}
+
+/* .icon-media{
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+} */
+
+.play{
+    background-image:url('/static/img/icon-play.svg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.pause{
+    background-image:url('/static/img/icon-pause.svg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}

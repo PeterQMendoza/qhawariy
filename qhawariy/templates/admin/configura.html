@@ -1,0 +1,82 @@
+<!-- Formulario que permite cambiar y asignar el rol a los usuario -->
+{% extends "base.html" %}
+
+{% block title %}
+    Configuración
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='source/js/user.js') }}"></script>
+{% endblock %}
+{% block navigation %}
+{% if current_user.is_authenticated %}
+    <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+        </div>
+        Inicio
+    </a>
+    <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+            <img src="{{ url_for('static', filename='img/users.svg') }}" height="24px" width="24px" alt="panel usuarios" class="block q-icon-normal">
+        </div>
+        Usuarios
+    </a>
+    <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{url_for('static', filename='img/fleet.svg')}}" height="24px" width="24px" alt="panel vehiculos" class="block q-icon-normal">
+        </div>
+        Vehiculos
+    </a>
+    <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{url_for('static', filename='img/owners.svg')}}" height="24px" width="24px" alt="panel propietarios" class="block q-icon-normal">
+        </div>
+        Propietarios
+    </a>
+    <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px" alt="panel rutas" srcset="" class="block q-icon-normal">
+        </div>
+        Rutas
+    </a>
+    <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+        </div>
+        Controles
+    </a>
+    <a href="{{url_for('admin.configurar')}}" class="q-link-active q-link-exact-active">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{ url_for('static', filename='img/icon-config-blue.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-active">
+        </div>
+        Configuración
+    </a>
+    <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+        <div class="mr-4 w-6 h-6">
+            <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+        </div>
+        Estadisticas
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Configuración</p>
+</a>
+{% endblock %}
+{% block content %}
+    
+{% endblock %}

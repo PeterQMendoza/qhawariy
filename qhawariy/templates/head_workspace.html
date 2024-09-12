@@ -1,0 +1,26 @@
+{% macro header_workspace(url_return,title_url_return,title,title_description,url_action,url_action_img,url_action_name) -%}
+<div class="flex flex-col items-center grid grid-cols-6">
+    <div class="flex items-center justify-center w-full">
+        <a href="{{url_return}}" class="btn btn--base">
+            <div class="flex justify-center items-center">
+                <img src="{{url_for('static', filename='img/back.svg')}}" alt="Descargar" class="">
+                <p class="ml-2 text-xs text-center sm:hidden">{{title_url_return}}</p>
+            </div>
+        </a>
+    </div>
+    <div class="flex flex-col items-center justify-between col-span-4">
+        <h5 class="text-h5 text-center text-black-100 md:mt-12 mb-2">
+            {{title}}
+        </h5>
+        <span class="text-blue-100 font-semibold">{{title_description}}</span>
+    </div>
+    <div class="flex items-center justify-center">
+        <a href="{{url_action}}" class="btn btn--base btn-blue-100 rounded text-white p-1">
+            <div class="flex justify-center items-center">
+                <img src="{{url_action_img}}" alt="h" class="">
+                <p class="ml-2 text-xs sm:hidden">{{url_action_name}}</p>
+            </div>
+        </a>
+    </div>
+</div>
+{%- endmacro %}

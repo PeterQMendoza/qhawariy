@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Login{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="bg-login rounded items-center content-start justify-center block w-full height-full-page md:flex md:content-center bg-gris-100">
+    <div class="block w-full md:hidden"></div>
+    <div class="w-full">
+      <div class="container py-10 md:py-10">
+        <div class="relative w-full ml-auto mt-32 sm:mt-4 lg:w-2/5 md:mt-0">
+          <div class="px-8 py-10 rounded-tl-sm rounded-br-sm bg-white border-cream-100 border box-login md:px-10 md:py-12">
+            <h3 class="mb-8 text-xl font-semibold text-center">
+              <span class="text-green-600 text-3xl">¡Bienvenido!</span>
+              <span class="text-black-10">Apoyamos tu crecimiento</span>
+            </h3>
+            <div class="w-full mx-auto md:w-2/3">
+              {% if error %}
+              <div class="mb-4 text-xs text-red-600">
+                <p><strong>Error:</strong>{{error}}</p>
+              </div>
+              {% endif %}
+              <form action="" method="post" novalidate>
+                {{ form.hidden_tag()}}
+                <div class="relative mt-4 mb-3">
+                  {{ form.email(class="w-full px-4 py-3 text-sm border rounded-xxs border-gray-400 text-black-100",type="email", placeholder="name@dom.com",autocomplete="email" ) }}
+                  {% for error in form.email.errors %}
+                    <span class="text-red-600">{{ error }}</span>
+                  {% endfor %}
+                </div>
+                <div class="relative mt-4 mb-3">
+                  <div class="rounded-xxs border border-gray-400 relative">
+                    <div class="text-sm">
+                      <div class="flex items-center cursor-pointer">
+                        {{ form.password(class="w-full px-4 py-3 text-sm text-black-100", placeholder="Contraseña", type="password") }}<br>
+                      </div>
+                    </div>
+                    <div class="toggle-button cursor-pointer inline-flex translateY-[-50%] left-unset right-3 absolute top-[50%]">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]">
+                        <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+                        <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                  {% for error in form.password.errors %}
+                    <span class="text-red-600">{{ error }}</span>
+                  {% endfor %}
+                </div>
+                <div class="relative mt-4 mb-3">
+                  <span class="flex items-center">
+                    {{ form.remember_me(class="form-check-input",form="LoginForm")}}
+                    {{ form.remember_me.label(class="ml-2 text-xs text-black-100") }}
+                  </span>
+                  {% for error in form.remember_me.errors %}
+                  <span class="text-red-600">{{ error }}</span>
+                  {% endfor %}
+                </div>
+                <div class="my-6 text-center">
+                  {{ form.submit(class="text-sm py-2 px-2 btn btn--base btn-green-600")}}
+                </div>
+                <div class="text-xs font-semibold text-center text-blue-100">
+                  <!-- <a href="/registrate" class="">Regístrate</a>
+                  <span class="px-4">|</span> -->
+                  <a href="{{url_for('auth.restablecer_password')}}" class="">Olvidé mi contraseña</a></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded",()=>{
+    const eyeIcon={
+      open:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd"/></svg>',
+      closed:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]"><path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" /><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0115.75 12zM12.53 15.713l-4.243-4.244a3.75 3.75 0 004.243 4.243z" /><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 00-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 016.75 12z" /></svg>'
+    }
+
+    function addListeners() {
+      const toggleButton=document.querySelector(".toggle-button");
+      if(!toggleButton){
+        return;
+      }
+
+      toggleButton.addEventListener("click",togglePassword);
+    }
+
+    function togglePassword() {
+      var passwordField=document.querySelector("#password");
+      var toggleButton=document.querySelector(".toggle-button");
+      if(!passwordField||!toggleButton){
+        return;
+      }
+
+      toggleButton.classList.toggle("open");
+
+      var isEyeOpen=toggleButton.classList.contains("open");
+
+      if(isEyeOpen){
+        toggleButton.innerHTML=eyeIcon.closed;
+      }else{
+        toggleButton.innerHTML=eyeIcon.open;
+      }
+
+      if(isEyeOpen){
+        passwordField.type="text";
+      }else{
+        passwordField.type="password";
+      }
+    }
+    addListeners();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}
+    Propietarios
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/users.svg') }}" height="24px" width="24px" alt="panel usuarios" class="block q-icon-normal">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" height="24px" width="24px" alt="panel vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners_blue.svg')}}" height="24px" width="24px" alt="panel propietarios" class="block q-icon-active">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px" alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Lista de propietarios</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between pt-2">
+    <div class="">
+        <p class="text-h5 text-black-100">{{title}}</p>
+    </div>
+    <div class="right-0">
+        <form action="" method="post" class="flex flex-col items-center justify-center" novalidate>
+            {{form.hidden_tag()}}
+            <div class="">
+                <div class="flex justify-center items-center relative">
+                    <div class=" inline-flex translateY-[-50%] right-unset left-3 absolute top-[50%]">
+                        <img src="{{ url_for('static', filename='img/icon-len.svg') }}" height="24px" width="24px" alt>
+                    </div>
+                    {{ form.dni(class="h-[42px] w-full border border-gray-112 rounded-full px-12", placeholder="Buscar por DNI", autocomplete="on") }}<br>
+                    <div class="ml-2">
+                        {{ form.submit(class="btn btn--base btn-blue-600 w-full md:w-auto block text-center") }}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                {% for error in form.dni.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+</div>
+<div class="flex items-center justify-between pt-2">
+    <a href="{{ url_for('propietario.agregar_propietario')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/plus.svg')}}" height="24px" width="24px"  alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Nuevo propietario</p>
+        </div>
+    </a>
+    <a href="{{ url_for('propietario.cargar_archivo_propietarios')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/upload.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Agregar masivo</p>
+        </div>
+    </a>
+    <a href="{{ url_for('propietario.relacionar_propietario_vehiculo')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/relation.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Relacion propietario vehiculo</p>
+        </div>
+    </a>
+    <a href="{{ url_for('propietario.descargar_archivo',name=filename) }}" class="btn btn--base btn-blue-100">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/download.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Descargar</p>
+        </div>
+    </a>
+</div>
+<div class="text-body-3 block w-full my-2 border-cream-100 border">
+    <div class="list-users-wrapper grid gap-2 grid-cols-5 sm:gap-x-0 py-2 pr-4 border-b border-cream-100">
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Documento identificacion</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Nombres</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Apellidos</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="60 text-center font-semibold">Telefono</p>
+        </div>
+        <div>
+        </div>
+    </div>
+    <div class="h-[380px] overflow-x-hidden bg-gray-250 py-2">
+        <div class="list-users-wrapper grid gap-2 grid-cols-5 sm:gap-x-0">
+            {% if propietarios == None or propietarios == [] %}
+            <div class="col-span-8 flex items-center justify-around py-4">
+                <p class="text-black-60 text-center font-semibold">No se encontraron resultados para la busqueda</p>
+                <a href="{{ url_for('propietario.listar_propietarios') }}" class="btn btn--base btn-blue-600">Mostrar todos</a>
+            </div>
+            {% else %}
+            {% for propietario in propietarios %}
+            <div class="flex items-center justify-center">
+                <p class="text-center">
+                    {{propietario.documento_identificacion}}
+                </p>
+            </div>
+            <div class="flex items-center justify-center">
+                <p class="text-center">
+                    {{propietario.nombres}}
+                </p>
+            </div>
+            <div class="flex items-center justify-center">
+                {{propietario.apellidos}}
+            </div>
+            <div class="flex items-center justify-center">
+                {{propietario.telefono}}
+            </div>
+            <div class="flex items-center justify-center">
+                <a href="{{ url_for('propietario.actualizar_propietario', propietario_id=propietario.id_propietario) }}" class="btn btn--base btn-gray-111">
+                    <div class="flex justify-center items-center">
+                        <img src="{{url_for('static', filename='img/edit.svg')}}" height="24px" width="24px" alt="" class="">
+                        <p class="ml-2 text-xs sm:hidden">Editar</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

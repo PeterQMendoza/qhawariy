@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Configuracion de perfil
+{% endblock %}
+
+{% block content %}
+  <div class="bg-white rounded p-8 grid grid-cols-6 gap-y-2 gap-x-10">
+    <div class="col-span-6 lg:col-span-6 col-start-1 lg:col-start-2 mb-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center">
+          <img src="{{ url_for('static', filename='img/icon-avatar.svg') }}" height="24px" width="24px" alt="">
+          <div class="ml-3">
+            {{current_user.nombres}}
+            <br>
+            <span class="text-xs text-blue-100">DNI {{current_user.dni}}</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-center">
+          <a href="{{ url_for('home.index') }}" class="flex items-center justify-center">
+            <div class="mr-2">
+              <img src="{{ url_for('static', filename='img/back.svg') }}" height="24px" width="24px" alt="">
+            </div>
+            <p class="text-body-2 text-green-600">Volver a inicio</p>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-6 md:col-span-3 lg:col-span-2 col-start-1 lg:col-start-2">
+      <div class="border-b border-cream-100 pb-4">
+        <div class="flex text-xs">
+          <div class="uppercase flex-1 text-black-60 font-semibold">Etapa de mi vida</div>
+          <div class="btn-toggle4 text-green-100 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+            viewBox="0 0 5.562 3.029"
+            xmlns:xlink="http://www.w3.org/1999/xlink">
+              <path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="flex py-5 text-xs">
+        <div class="uppercase flex-1 text-black-60 font-semibold">Temas que me interesan</div>
+        <div class="btn-toggle5 text-green-100 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+          viewBox="0 0 5.562 3.029"
+          xmlns:xlink="http://www.w3.org/1999/xlink">
+            <path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="mb-4 pb-4 border-b md:border-b-0 border-cream-100">
+        <div class="tags">
+          <ul class="list-tag">
+            <li class="item-tags">
+              <div class="btn btn--base">
+                <img src="{{ url_for('static', filename='img/icon-plus.svg') }}" height="24px" width="24px"  alt="">
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-span-6 md:col-span-3 lg:col-span-2">
+      <div class="block w-full border-b  border-cream-100">
+        <div class="flex text-xs">
+          <div class="uppercase flex-1 text-black-60 font-semibold">Cambiar mis Datos Personales</div>
+          <div class="btn-toggle1 text-green-100 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+            viewBox="0 0 5.562 3.029"
+            xmlns:xlink="http://www.w3.org/1999/xlink">
+              <path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="field-form1 hidden">
+          <div class="text-xs text-black-100">{{current_user.email}}</div>
+          <div class="py-4">
+            <div class="w-full relative">
+              <form action="" method="post" novalidate>
+                {{ form_datos.hidden_tag() }}
+                <div class="md:grid grid-cols-2 gap-4">
+                  <div>
+                      <div class="flex rounded-xxs border border-gray-112">
+                          <div class="dropdown-documento text-sm relative w-3/12 border-r border-gray-112 flex items-center justify-center cursor-pointer">
+                              <p class="">
+                                  DNI
+                              </p>
+                          </div>
+                          <div class="w-9/12">
+                              {{ form_datos.dni.label(class="hidden") }}
+                              {{ form_datos.dni(class="only-number w-full border-0 text-sm px-4 py-3 text-black-100", type="number", placeholder="Número de DNI", autocomplete="off", maxlength="8", value=user.dni) }}<br>
+                          </div>
+                      </div>
+                      {% for error in form_datos.dni.errors %}
+                      <span class="text-red-600 text-xs">{{ error }}</span>
+                      {% endfor %}
+                  </div>
+                  <div class="mt-3">
+                      <div class="relative">
+                          <div class="w-full block">
+                              {{ form_datos.nombres.label }}
+                              {{ form_datos.nombres(class="rounded-xxs border text-sm w-full px-4 py-3 border-gray-112", placeholder="Nombres", autocomplete="off",value=user.nombres) }}<br>
+                          </div>
+                      </div>
+                      {% for error in form_datos.nombres.errors %}
+                      <span class="text-red-600 text-xs">{{ error }}</span>
+                      {% endfor %}
+                  </div>
+                  <div class="mt-3">
+                      <div class="relative">
+                          <div class="w-full block">
+                              {{ form_datos.apellidos.label }}
+                              {{ form_datos.apellidos(class="rounded-xxs border text-sm w-full px-4 py-3 border-gray-112", placeholder="Apellidos", autocomplete="off",value=user.apellidos) }}<br>
+                          </div>
+                      </div>
+                      {% for error in form_datos.apellidos.errors %}
+                      <span class="text-red-600 text-xs">{{ error }}</span>
+                      {% endfor %}
+                  </div>
+                  <div class="mt-3">
+                    <div class="relative">
+                      <div class="w-full block">
+                        {{ form_datos.telefono.label }}
+                        {{ form_datos.telefono(class="rounded-xxs border border-gray-112 text-sm w-full px-4 py-3", placeholder="telefono", autocomplete="off", value=user.telefono) }}<br>
+                      </div>
+                    </div>
+                    {% for error in form_datos.telefono.errors %}
+                    <span class="text-red-600 text-xs">{{ error }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  {{form_datos.submit_datos(class="btn btn--base btn-green-600")}}
+                  <a href="{{ url_for('home.index') }}" class="btn btn--base btn-blue-100">
+                    Cancelar
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="block w-full pt-6 border-b border-cream-100">
+        <div class="flex text-xs">
+          <div class="uppercase flex-1 text-black-60 font-semibold">Cambiar mi e-mail</div>
+          <div class="btn-toggle2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+            viewBox="0 0 5.562 3.029"
+            xmlns:xlink="http://www.w3.org/1999/xlink">
+              <path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="field-form2 hidden">
+          <div class="text-xs text-black-100">{{current_user.email}}</div>
+          <div class="py-4">
+            <div class="w-full relative">
+              <div class="relative">
+                <div class="w-full block">
+                  <div class="relative w-full block">
+                    <form action="" method="post" novalidate>
+                      {{ form_email.csrf_token(id='6b8d633085fc016b1b7f4dab56b33b97a36e525b666aacd3') }}
+                      <div class="md:grid grid-cols-2 gap-4">
+                        <div class="mt-3 ">
+                          <div class="relative">
+                            <div class="w-full block">
+                              {{ form_email.email.label }}
+                              {{ form_email.email(class="rounded-xxs border text-sm w-full px-4 py-3 border-gray-112", type="email", placeholder="Correo Electronico", autocomplete="off",value=user.correo_electronico) }}<br>
+                            </div>
+                          </div>
+                        {% for error in form_email.email.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                        </div>
+                      </div>
+                      <div class="mt-4 flex justify-between items-center">
+                        {{form_email.submit_email(class="btn btn--base btn-green-600")}}
+                        <a href="{{ url_for('home.index') }}" class="btn btn--base btn-red-600">
+                          <span class="w-full flex items-center justify-center">Cancelar</span>
+                        </a>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="block w-full pt-6 border-b border-cream-100">
+        <div class="flex text-xs">
+          <div class="uppercase flex-1 text-black-60 font-semibold">Cambiar mi contraseña</div>
+          <div class="btn-toggle3 flex justify-center items-center cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+            viewBox="0 0 5.562 3.029"
+            xmlns:xlink="http://www.w3.org/1999/xlink">
+              <path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="field-form3 hidden">
+          <div class="py-4">
+            <div class="w-full relative">
+              <div class="w-full block mb-3">
+                <div class="relative w-full block">
+                  <form action="" method="post" novalidate>
+                    {{ form_clave.csrf_token(id='767633c3142dfc2f153c3a6d1b75e2a78b382d09968dc5b8')}}
+                    <div class="md:grid grid-cols-2 gap-4">
+                      <div class="mt-3 relative">
+                        <div class="">
+                            <div class="w-full block">
+                                {{ form_clave.password(class="rounded-xxs border text-sm w-full px-4 py-3 border-gray-112", type="password", inputmode="verbatim", placeholder="Contraseña", autocomplete="off") }}
+                            </div>
+                        </div>
+                        <div class="btn-toggle-p-1 cursor-pointer inline-flex translateY-[-50%] left-unset right-3 absolute top-[50%]">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]">
+                            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+                            <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd"/>
+                          </svg>
+                        </div>
+                      </div>
+                      {% for error in form_clave.password.errors %}
+                      <span class="text-red-600 text-xs">{{ error }}</span>
+                      {% endfor %}
+                      <div class="mt-3 relative">
+                        <div class="">
+                            <div class="w-full block">
+                                {{ form_clave.password_confirmado(class="rounded-xxs border text-sm w-full px-4 py-3 border-gray-112", type="password", inputmode="verbatim", placeholder="Confirmar contraseña", autocomplete="off") }}
+                            </div>
+                        </div>
+                        <div class="btn-toggle-p-2 cursor-pointer inline-flex translateY-[-50%] left-unset right-3 absolute top-[50%]">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]">
+                            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+                            <path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd"/>
+                          </svg>
+                        </div>
+                      </div>
+                      {% for error in form_clave.password_confirmado.errors %}
+                      <span class="text-red-600 text-xs">{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                    <div class="mt-4 flex justify-between items-center">
+                      {{form_clave.submit_clave(class="btn btn--base btn-green-600")}}
+                      <a href="{{ url_for('home.index') }}" class="btn btn--base btn-red-600">
+                        <span class="w-full flex items-center justify-center">Cancelar</span>
+                      </a>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded",()=>{
+    let arr=[]
+    class ButtonToggle
+    {
+      constructor(btn,div,type_toggle="elementToggle")
+      {
+        this.btn=btn;
+        this.div=div;
+        this.type_toggle=type_toggle
+        this.icon={
+          open:'<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 5.562 3.029" xmlns:xlink="http://www.w3.org/1999/xlink"><path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/></svg>',
+          closed:'<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 5.562 3.029" xmlns:xlink="http://www.w3.org/1999/xlink"> <path fill="#707070" fill-rule="nonzero" d="M0.529 2.94c-0.124,0.12 -0.321,0.118 -0.441,-0.006 -0.12,-0.123 -0.117,-0.32 0.006,-0.44l2.48 -2.405 0.218 0.223 -0.218 -0.224c0.124,-0.12 0.322,-0.116 0.442,0.007 0.003,0.004 0.006,0.007 0.01,0.011l2.442 2.388c0.123,0.12 0.126,0.317 0.006,0.44 -0.12,0.124 -0.317,0.127 -0.44,0.007l-2.243 -2.194 -2.262 2.193 0 0z"/></svg>'
+        };
+        this.eyeIcon={
+          open:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd"/></svg>',
+          closed:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[20px] w-[20px]"><path d="M3.53 2.47a.75.75 0 00-1.06 1.06l18 18a.75.75 0 101.06-1.06l-18-18zM22.676 12.553a11.249 11.249 0 01-2.631 4.31l-3.099-3.099a5.25 5.25 0 00-6.71-6.71L7.759 4.577a11.217 11.217 0 014.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113z" /><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0115.75 12zM12.53 15.713l-4.243-4.244a3.75 3.75 0 004.243 4.243z" /><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 00-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 016.75 12z" /></svg>'
+        }
+      }
+
+      active()
+      {
+        if(this.type_toggle==='elementToggle'){
+          this.btn.addEventListener('click',(e)=>{
+            if(this.div.classList.contains('hidden'))
+            {
+              this.btn.innerHTML=this.icon.closed;
+            }
+            else
+            {
+              this.btn.innerHTML=this.icon.open;
+            }
+            this.div.classList.toggle("hidden");
+          });
+        }
+        if(this.type_toggle==='passwordToggle'){
+          this.btn.addEventListener('click',(e)=>{
+            this.btn.classList.toggle("open");
+            var isEyeOpen=this.btn.classList.contains("open");
+
+            if(isEyeOpen){
+              this.btn.innerHTML=this.eyeIcon.closed;
+            }else{
+              this.btn.innerHTML=this.eyeIcon.open;
+            }
+
+            if(isEyeOpen){
+              this.div.type="text";
+            }else{
+              this.div.type="password";
+            }
+          });
+        }
+      }
+    }
+
+    const btn1=document.querySelector(".btn-toggle1");
+    const btn2=document.querySelector(".btn-toggle2");
+    const btn3=document.querySelector(".btn-toggle3");
+    
+    const field1=document.querySelector(".field-form1");
+    const field2=document.querySelector(".field-form2");
+    const field3=document.querySelector(".field-form3");
+    
+    // Para cambio de contrase;a
+    const btn4=document.querySelector(".btn-toggle-p-1");
+    const btn5=document.querySelector(".btn-toggle-p-2");
+    const pswField=document.querySelector("#password");
+    const pswConfirmField=document.querySelector("#password_confirmado");
+
+    arr=[
+      new ButtonToggle(btn1,field1),
+      new ButtonToggle(btn2,field2),
+      new ButtonToggle(btn3,field3),
+      new ButtonToggle(btn4,pswField,"passwordToggle"),
+      new ButtonToggle(btn5,pswConfirmField,"passwordToggle"),
+    ]
+    console.log(arr[4])
+
+    arr.forEach(ele=>{
+      ele.active();
+    })
+
+  });
+</script>
+{% endblock %}

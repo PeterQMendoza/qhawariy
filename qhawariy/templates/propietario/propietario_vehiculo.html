@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Nuevo Propietario
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='dist/js/chart.min.js') }}"></script>
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+                <img src="{{ url_for('static', filename='img/users.svg') }}" alt="panel usuarios" class="block q-icon-normal">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet.svg')}}" alt="panel vehiculos" class="block q-icon-normal">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners_blue.svg')}}" alt="panel propietarios" class="block q-icon-active">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
+</div>
+<a href="{{ url_for('propietario.listar_propietarios') }}" class="btn--base">
+    <p class="text-h7">Lista de propietarios</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Lista de relacion propietarios/vehiculo</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between py-2">
+    <p class="text-h5 text-black-100">Lista de relacion propietario / vehiculo</p>
+</div>
+<div class="flex items-center justify-between py-2">
+    <a href="{{ url_for('propietario.agregar_propietario') }}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/plus.svg')}}" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Agregar propietario</p>
+        </div>
+    </a>
+    <a href="{{ url_for('vehiculo.agregar_vehiculo') }}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/plus.svg')}}" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Agregar vehiculo</p>
+        </div>
+    </a>
+</div>
+<div class="grid gap-y-2 gap-x-4 grid-cols-2-1-3 sm:grid-cols-1 sm:gap-x-0 py-2">
+    <div class="sm:order-2">
+        <div class="block w-full border border-cream-100">
+            <div class="grid gap-2 grid-cols-4 sm:gap-x-0 border-b border-cream-100 py-2">
+                <div class="flex items-center justify-center">
+                    <p class="text-black-60 text-center font-semibold">Propietario</p>
+                </div>
+                <div class="flex items-center justify-center">
+                    <p class="text-black-60 text-center font-semibold">Flota</p>
+                </div>
+                <div class="flex items-center justify-center">
+                    <p class="text-black-60 text-center font-semibold">Placa</p>
+                </div>
+                <div>
+                </div>
+            </div>
+            <div class="h-[380px] overflow-x-hidden bg-gray-250">
+                <div class="grid gap-2 grid-cols-4 sm:gap-x-0 text-xs font-medium py-2">
+                    {% for vp in vps %}
+                    <div class="flex items-center justify-center">
+                        <p class="text-center">
+                            {{vp.apellidos}}, {{vp.nombres}}
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        {{vp.flota}}
+                    </div>
+                    <div class="flex items-center justify-center">
+                        {{vp.placa}}
+                    </div>
+                    <div class="flex items-center justify-end">
+                        <a href="{{ url_for('propietario.eliminar_pv', pv_id=vp.id_pv) }}" class="btn btn--base bg-red-600 text-center text-white">
+                            <div class="flex justify-center items-center">
+                                <img src="{{url_for('static', filename='img/delete.svg')}}" alt="eliminar" class="">
+                                <p class="ml-2 text-xs sm:hidden">Eliminar</p>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="sm:order-1">
+        <div class="flex flex-col items-center shadow-custom border-cream-100 p-4 rounded-[20px]">
+            <p class="font-semibold text-black-100">
+                Agregar nuevo registro
+            </p>
+            <form action="" method="post" novalidate>
+                {{form.hidden_tag()}}
+                <div class="grid gap-2 grid-cols-1 sm:gap-x-0">
+                    <div class="mt-3 order-1 sm:order-no">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.propietario.label }}
+                                {{ form.propietario(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Propietario", autocomplete="off", maxlength="20") }}<br>
+                            </div>
+                        </div>
+                        {% for error in form.propietario.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 order-2 sm:order-no">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.vehiculo.label }}
+                                {{ form.vehiculo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Vehiculo", autocomplete="off", maxlength="20") }}<br>
+                            </div>
+                        </div>
+                        {% for error in form.vehiculo.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 sm:col-span-1 order-4 sm:order-no">
+                        <div class="mt-4 mb-5">
+                            {{ form.submit(class="btn btn--base bg-green-600 text-white w-full md:w-auto block text-center") }}
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-span-2 sm:col-span-1 sm:order-3 border-t border-cream-100">
+        <div class="relative h-[960px] flex flex-col items-center justify-center col-span-3 sm:col-span-1">
+            <!-- propietarios/vehiculos -->
+            <canvas id="chart4"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded',()=>{
+        // Grafico de barras propietarios
+        var can4=document.getElementById('chart4');
+        var dat5=JSON.parse('{{data5|tojson|safe}}');//activo
+        var dat6=JSON.parse('{{data6|tojson|safe}}');//inactivo
+        var lbl5=JSON.parse("{{pros|safe}}".replace(/'/g, '"'));//Corrige(reemplaza ' por ") los cadena enviada para ser convertidos en lista
+
+        const config4={
+            type: 'bar',
+            data: {
+                labels:lbl5,
+                datasets: [{
+                    backgroundColor:'#05be50',
+                    label:'Vehículos activos',
+                    data: dat5
+                },
+                {
+                    backgroundColor:"rgb(111,117,120)",
+                    label:'Vehículos inactivos',
+                    data: dat6
+                }]
+            },
+            options:{
+                indexAxis: 'y',
+                responsive: true,
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        min: 0,
+                        max: Math.max(...dat5)+Math.max(...dat6),
+                        ticks: {
+                            // forces step size to be 50 units
+                            stepSize: 1
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de vehículo por propietario'
+                    }
+                }
+    
+            }
+        }
+
+        var r4=new Chart(can4,config4);
+    });
+</script>
+{% endblock %}

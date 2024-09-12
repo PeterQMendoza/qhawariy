@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Reportar viaje
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <!-- <script type="text/javascript" src="{{ url_for('static', filename='dist/js/time_qhawariy.min.js') }}"></script> -->
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('viaje.listar_calendario')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/strip_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal hidden"> -->
+            </div>
+            Viajes
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Fechas</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="py-2">
+    {{tiempo}}
+</div>
+<div class="">
+    <button class="btn_capt btn--base btn btn-green-100" type="submit">Iniciar</button>
+    <p class="upd_val text-h2"></p>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+    document.addEventListener("DOMContentLoaded",()=>{
+        document.querySelector(".btn_capt").addEventListener("click",iniciarTemporizador);
+
+        function iniciarTemporizador() {
+            var tiempo=setInterval(temporizador,5000);
+        }
+
+        function temporizador() {
+            var req=new XMLHttpRequest();
+            req.onload=function(){
+                document.querySelector(".upd_val").innerHTML="rms="+req.responseText;
+            }
+            req.open("GET","/viaje/tiempo",true);
+            req.responseType="text";
+            req.send();
+        }
+    })
+</script>
+{% endblock %}

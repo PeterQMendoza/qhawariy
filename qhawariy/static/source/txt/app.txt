@@ -1,0 +1,84 @@
+<!-- <div class="group_container">
+    <div class="container_head">
+        <p>Ahorro</p>
+    </div>
+    <div class="container_body">
+        <form action="{{ url_for('financial.financial_form')}}" method="post" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="container_form_section">
+                {{ form.name_sav.label }}
+                {{ form.name_sav(size=128) }}<br>
+                {% for error in form.name_sav.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="container_form_section">
+                {{ form.amount_sav.label }}
+                {{ form.amount_sav }}<br>
+                {% for error in form.amount_sav.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+    </div>
+</div>
+<div class="group_container">
+    <div class="container_head">
+        <p>Ingresos</p>
+    </div>
+    <div class="container_body">
+            <div class="container_form_section">
+                {{ form.name_in.label }}
+                {{ form.name_in(size=128) }}<br>
+                {% for error in form.name_in.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="container_form_section">
+                {{ form.amount_in.label }}
+                {{ form.amount_in }}<br>
+                {% for error in form.amount_in.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="container_form_section_checkbox">
+                {{ form.is_variable_in.label }}
+                {{ form.is_variable_in }}<br>
+                {% for error in form.is_variable_in.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+    </div>
+</div>
+    {{ form.hidden_tag() }}
+<div class="group_container">
+    <div class="container_head">
+        <p>Gastos</p>
+    </div>
+    <div class="container_body">
+            <div class="container_form_section">
+                {{ form.name_sp.label }}
+                {{ form.name_sp(size=128) }}<br>
+                {% for error in form.name_sp.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="container_form_section">
+                {{ form.amount_sp.label }}
+                {{ form.amount_sp }}<br>
+                {% for error in form.amount_sp.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="container_form_section_checkbox">
+                {{ form.is_variable_sp.label }}
+                {{ form.is_variable_sp }}<br>
+                {% for error in form.is_variable_sp.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="container_form_section">
+                <input type="submit">
+            </div>
+        </form>
+    </div>
+</div> -->

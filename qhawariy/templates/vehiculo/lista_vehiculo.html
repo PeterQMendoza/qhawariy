@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% block title %}
+    Vehiculos
+{% endblock %}
+{% block head %}
+    {{ super() }}
+    <!-- <script type="text/javascript" src="{{ url_for('static', filename='source/js/buscar.js') }}"></script> -->
+{% endblock %}
+{% block navigation %}
+    {% if current_user.is_authenticated %}
+        <a href="{{url_for('home.index')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/home.svg') }}" height="24px" width="24px" alt="qhawariy inicio" srcset="" class="block q-icon-normal">
+            </div>
+            Inicio
+        </a>
+        <a href="{{url_for('admin.listar_usuarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active"> -->
+                <img src="{{ url_for('static', filename='img/users.svg') }}" height="24px" width="24px"  alt="panel usuarios" class="block q-icon-normal ">
+            </div>
+            Usuarios
+        </a>
+        <a href="{{url_for('vehiculo.listar_vehiculos')}}" class="q-link-active q-link-exact-active">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/fleet_blue.svg')}}" height="24px" width="24px"  alt="panel vehiculos" class="block q-icon-active">
+            </div>
+            Vehiculos
+        </a>
+        <a  href="{{url_for('propietario.listar_propietarios')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{url_for('static', filename='img/owners.svg')}}" height="24px" width="24px"  alt="panel propietarios" class="block q-icon-normal">
+            </div>
+            Propietarios
+        </a>
+        <a href="{{url_for('ruta.lista_ruta')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/route.svg') }}" height="24px" width="24px"  alt="panel rutas" srcset="" class="block q-icon-normal">
+            </div>
+            Rutas
+        </a>
+        <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
+            </div>
+            Estadisticas
+        </a>
+    {% endif %}
+{% endblock %}
+{% block linker %}
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="{{ url_for('home.index') }}" class="btn--base">
+    <p class="text-h7">Inicio</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
+</div>
+<a href="#" class="btn--base linker-active">
+    <p class="text-h7">Lista de vehiculos</p>
+</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between py-2 relative">
+    <div class="">
+        <p class="text-h5 text-black-100 md:mt-12">{{title|safe}}</p>
+    </div>
+    {% if current_user.is_authenticated %}
+    <div class="flex flex-col items-center justify-center right-0">
+        <form action="" method="post" class="" novalidate>
+            {{form.hidden_tag()}}
+            <div class="flex items-center relative">
+                <div class=" inline-flex translateY-[-50%] right-unset left-3 absolute top-[50%]">
+                    <img src="{{ url_for('static', filename='img/icon-len.svg') }}" height="24px" width="24px" alt>
+                </div>
+                {{ form.busca(class="h-[42px] w-full rounded-full text-gris-900 px-12 border border-gray-112", placeholder="Buscar por placa", autocomplete="on") }}<br>
+                <!-- <input type="text" autocomplete="off" placeholder="Buscar" id="buscar" class="block h-full w-full pr-12 text-gris-900 pl-12"> -->
+                <div class="btn-activate-filter cursor-pointer inline-flex translateY-[-50%] left-unset right-3 absolute top-[50%]">
+                    <img src="{{ url_for('static', filename='img/angle-bottom.svg') }}" class="btn-option-1 p-2" height="23px" width="28px" alt>
+                    <img src="{{ url_for('static', filename='img/icon-close.svg') }}" class="btn-option-2 p-2 hidden" height="32px" width="32px" alt>
+                </div>
+            </div>
+            <div class="mt-3">
+                {% for error in form.busca.errors %}
+                <span class="text-red-600 text-xs">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="filter_div absolute h-[100px] w-60 right-0 hidden">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 shadow-custom bg-white border border-blue-100 rounded p-2">
+                    <div class="mt-3">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{form.filter.label}}
+                                {{form.filter(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400",placeholder="Seleccione una opcion")}}
+                            </div>
+                        </div>
+                        {% for error in form.filter.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 relative">
+                        {{form.submit(class="btn btn--base btn-blue-600 w-full md:w-auto block text-center")}}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+<div class="flex items-center justify-between py-2">
+    <a href="{{ url_for('vehiculo.agregar_vehiculo')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/plus.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Nuevo vehiculo</p>
+        </div>
+    </a>
+    <a href="{{ url_for('vehiculo.cargar_archivo_vehiculos')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/upload.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Agregar masivo</p>
+        </div>
+    </a>
+    <a href="{{ url_for('propietario.relacionar_propietario_vehiculo')}}" class="btn btn--base btn-gray-111">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/relation.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Relacion propietario vehiculo</p>
+        </div>
+    </a>
+    <a href="{{ url_for('vehiculo.descargar_archivo', name='lista_vehiculos.xlsx') }}" class="btn btn--base btn-blue-100 text-white">
+        <div class="flex justify-center items-center">
+            <img src="{{url_for('static', filename='img/download.svg')}}" height="24px" width="24px" alt="" class="">
+            <p class="ml-2 text-xs sm:hidden">Descargar</p>
+        </div>
+    </a>
+</div>
+<div class="block w-full border-cream-100 border text-body-3">
+    <div class="grid gap-2 grid-cols-8 sm:gap-x-0 sm:text-xs py-2 pr-4 border-b border-cream-100">
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Nº Flota</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Placa</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Marca</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Modelo</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Año Fabricacion</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Nº de asientos</p>
+        </div>
+        <div class="flex items-center justify-center">
+            <p class="text-center font-semibold">Estado</p>
+        </div>
+        <div>
+        </div>
+    </div>
+    <div class="overflow-x-hidden h-[380px] bg-gray-250 py-2">
+        <div class="grid gap-2 grid-cols-8 sm:gap-x-0 sm:text-xs">
+            {% if vehiculos == None or vehiculos == [] %}
+            <div class="col-span-8 flex items-center justify-center py-4">
+                <p class="text-black-60 text-center font-semibold">No se encontrarron resultados para la busqueda</p>
+                <a href="{{ url_for('vehiculo.listar_vehiculos') }}" class="btn btn--base btn-blue-600">Mostrar todos</a>
+            </div>
+            {% else %}
+            {% for vehiculo in vehiculos %}
+            <div class="flex items-center justify-center">
+                {{vehiculo.flota}}
+            </div>
+            <div class="flex items-center justify-center uppercase">
+                {{vehiculo.placa}}
+            </div>
+            <div class="flex items-center justify-center">
+                {{vehiculo.marca}}
+            </div>
+            <div class="flex items-center justify-center">
+                {{vehiculo.modelo}}
+            </div>
+            <div class="flex items-center justify-center">
+                {{vehiculo.fecha_fabricacion|date_time('year')}}
+            </div>
+            <div class="flex items-center justify-center">
+                {{vehiculo.numero_asientos}}
+            </div>
+            <div class="flex items-center justify-center">
+                {% if vehiculo.activo %}
+                <img src="{{url_for('static', filename='img/icon-check.svg')}}" height="17px" width="24px" alt="">
+                {% else %}
+                <img src="{{url_for('static', filename='img/icon-cross.svg')}}" height="24px" width="23px" alt="">
+                {% endif %}
+            </div>
+            <div class="flex items-center justify-center">
+                <a href="{{ url_for('vehiculo.actualizar_vehiculo', vehiculo_id=vehiculo.id_vehiculo) }}" class="btn btn--base btn-gray-111">
+                    <div class="flex justify-center items-center">
+                        <img src="{{url_for('static', filename='img/edit.svg')}}" height="24px" width="24px" alt="" class="">
+                        <p class="ml-2 sm:hidden">Editar</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script  type="text/javascript">
+    document.addEventListener('DOMContentLoaded',()=>{
+        class ButtonEditar
+        {
+            constructor(btn,btn1,btn2,div)
+            {
+                this.btn=btn;
+                this.btn1=btn1;
+                this.btn2=btn2;
+                this.div=div;
+            }
+
+            active()
+            {
+                this.btn.addEventListener('click',(e)=>{
+                    if(this.div.classList.contains('hidden'))
+                    {
+                        this.div.classList.remove('hidden');
+                        this.btn1.classList.add('hidden');
+                        this.btn2.classList.remove('hidden');
+                    }
+                    else
+                    {
+                        this.div.classList.add('hidden');
+                        this.btn1.classList.remove('hidden');
+                        this.btn2.classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        const btn=document.querySelectorAll('.btn-activate-filter');
+        const btn_1=document.querySelectorAll('.btn-option-1');
+        const btn_2=document.querySelectorAll('.btn-option-2');
+        const div_visible=document.querySelectorAll('.filter_div');
+
+        arr=[
+            new ButtonEditar(btn[0],btn_1[0],btn_2[0],div_visible[0]),
+        ]
+
+        arr.forEach(ele=>{
+            ele.active();
+        })
+    });
+</script>
+{% endblock %}
