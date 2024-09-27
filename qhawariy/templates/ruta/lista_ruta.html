@@ -35,6 +35,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
@@ -48,13 +60,13 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Lista de rutas</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Lista de rutas</p>
 </a>
 {% endblock %}
 {% block content %}
@@ -69,8 +81,8 @@
         </div>
     </a>
 </div>
-<div class="block w-full border border-cream-100">
-    <div class="text-body-3 grid gap-2 grid-cols-5 sm:gap-x-0 py-2 border-b border-cream-100">
+<div class="block w-full border border-gray-209">
+    <div class="text-body-3 grid gap-2 grid-cols-5 sm:gap-x-0 py-2 border-b border-gray-209">
         <div class="flex items-center justify-center">
             <p class="text-center font-semibold">Codigo</p>
         </div>

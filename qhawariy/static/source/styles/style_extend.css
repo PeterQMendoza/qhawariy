@@ -1081,28 +1081,28 @@ img, video {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
+    /* -webkit-line-clamp: 1; */
 }
 
 .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    /* -webkit-line-clamp: 2; */
 }
 
 .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    /* -webkit-line-clamp: 3; */
 }
 
 .line-clamp-4 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
+    /* -webkit-line-clamp: 4; */
 }
 
 .\!block {
@@ -3232,28 +3232,28 @@ img, video {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
+    /* -webkit-line-clamp: 1; */
 }
 
 .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    /* -webkit-line-clamp: 2; */
 }
 
 .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    /* -webkit-line-clamp: 3; */
 }
 
 .line-clamp-4 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
+    /* -webkit-line-clamp: 4; */
 }
 
 @media (min-width: 1024px) {
@@ -4205,7 +4205,7 @@ img, video {
         overflow: hidden;
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
+        /* -webkit-line-clamp: 3; */
     }
 
     .lg\:\!block {
@@ -4683,7 +4683,7 @@ img, video {
         overflow: hidden;
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3;
+        /* -webkit-line-clamp: 3; */
     }
 }
 

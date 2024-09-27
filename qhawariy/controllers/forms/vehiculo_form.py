@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms.fields import StringField,IntegerField,SelectField, SubmitField, PasswordField, BooleanField, DateTimeField,DateField,EmailField
+from wtforms.fields import StringField,IntegerField,SelectField, SubmitField, SearchField, BooleanField, DateTimeField,DateField,EmailField
 from wtforms.widgets import DateTimeInput,DateInput
 from wtforms_html5 import AutoAttrMeta
 from wtforms.validators import DataRequired, Email, Length,AnyOf
@@ -30,6 +30,6 @@ class EditarVehiculoForm(FlaskForm):
 class BuscarVehiculoForm(FlaskForm):
     class Meta(AutoAttrMeta):
         csrf=True
-    busca=StringField("Buscar",validators=[DataRequired("No ingresaste un valor para buscar")])
+    busca=SearchField("Buscar",validators=[DataRequired("No ingresaste un valor para buscar")])
     filter=SelectField("Buscar por:", id='select_filter_1',coerce=int)
     submit=SubmitField("Buscar")

@@ -22,11 +22,12 @@ def listar_controles():
     form=ControlForm()
     if form.validate_on_submit():
         codigo=form.codigo.data
-        ubicacion=form.ubicacion.data
+        latitud=form.latitud.data
+        longitud=form.longitud.data
         consulta=Control.obtener_por_codigo(codigo=codigo)
         if consulta is None:
             try:
-                control=Control(codigo=codigo,ubicacion=ubicacion)
+                control=Control(codigo=codigo,latitud=latitud,longitud=longitud)
                 control.guardar()
                 siguiente_pagina=request.args.get("next",None)
                 if not siguiente_pagina or urlparse(siguiente_pagina).netloc!='':

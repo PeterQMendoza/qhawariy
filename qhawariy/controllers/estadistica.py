@@ -235,11 +235,13 @@ def mostrar_mapa():
     terminales=Terminal.obtener_todos_terminales()
     controles=Control.obtener_todos()
     data_terminales={'Direccion':[d.direccion for d in terminales if d!='' and d!=None]}
-    puntos_gps=[str(t.ubicacion_gps) for t in terminales if t !='' and t !=None]
-    puntos_gps_controles=[str(c.ubicacion) for c in controles if c !='' and c !=None]
+    latitud_terminales=[str(t.latitud) for t in terminales if t !='' and t !=None]
+    longitud_terminales=[str(t.longitud) for t in terminales if t !='' and t !=None]
+    latitud_controles=[str(c.latitud) for c in controles if c !='' and c !=None]
+    longitud_controles=[str(c.longitud) for c in controles if c !='' and c !=None]
     # obtener lon y lat de una cadena de texto
-    coords=obtenerLonLatDeString(puntos_gps)
-    coords_controles=obtenerLonLatDeString(puntos_gps_controles)
+    coords_terminales=[list(z) for z in zip(latitud_terminales,longitud_terminales)]
+    coords_controles=[list(z) for z in zip(latitud_controles,longitud_controles)]
     codigos=[str(c.codigo) for c in controles]
     data_controles=[list(c) for c in zip(codigos,coords_controles)]
 
@@ -327,7 +329,7 @@ def mostrar_mapa():
     ).add_to(vuelta)
     # mostrar lista de puntos gps de los terminales registrados
     fg = folium.FeatureGroup(name="Terminales").add_to(m)
-    for p in coords:
+    for p in coords_terminales:
         folium.Marker(
             p,
             popup="Terminal de la Empresa de Transporte.",
@@ -378,20 +380,20 @@ def mostrar_mapa():
         header=header,
         body_html=body_html,
         script=script,
-        coords=coords,
+        coords=coords_terminales,
         vps=tiempos_vp,
         ruta=daf.to_html()
     )
 
-def obtenerLonLatDeString(lista:list):
-    lat=[]
-    lon=[]
-    for g in lista:
-        if g!='' and g is not None:
-            try:
-                x,y=g.split(',')
-                lon.append(float(y))
-                lat.append(float(x))
-            except Exception as e:
-                flash(f"Los datos registrados en la terminal no presenta el fomato de:'Latitud,Longitud' \nDetalles de error:{e}","Error")
-    return [list(z) for z in zip(lat, lon)]
+# def obtenerLonLatDeString(lista:list):
+#     lat=[]
+#     lon=[]
+#     for g in lista:
+#         if g!='' and g is not None:
+#             try:
+#                 x,y=g.split(',')
+#                 lon.append(float(y))
+#                 lat.append(float(x))
+#             except Exception as e:
+#                 flash(f"Los datos registrados en la terminal no presenta el fomato de:'Latitud,Longitud' \nDetalles de error:{e}","Error")
+#     return [list(z) for z in zip(lat, lon)]

@@ -92,14 +92,16 @@ def agregar_terminal():
     
     if form.validate_on_submit():
         direccion=form.direccion.data
-        ubicacion_gps=form.ubicacion_gps.data
+        latitud=form.latitud.data
+        longitud=form.longitud.data
         departamento=form.departamento.data
         provincia=form.provincia.data
         distrito=form.distrito.data
 
         terminal=Terminal(
             direccion=direccion,
-            ubicacion_gps=ubicacion_gps,
+            latitud=latitud,
+            longitud=longitud,
             id_departamento=departamento,
             id_provincia=provincia,
             id_distrito=distrito

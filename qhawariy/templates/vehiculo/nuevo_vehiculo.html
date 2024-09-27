@@ -36,6 +36,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
@@ -49,23 +61,23 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('vehiculo.listar_vehiculos') }}" class="btn--base">
-    <p class="text-h7">Lista de vehiculos</p>
+    <p class="text-h3">Lista de vehiculos</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Agregar nuevo vehiculo</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Agregar nuevo vehiculo</p>
 </a>
 {% endblock %}
 {% block content %}
-    <div class="bg-white rounded p-8">
+    <div class="rounded p-8">
         <div class="flex items-center justify-between">
             <p class="text-h5 text-black-100 md:mt-12">Ingresar datos del vehiculo</p>
         </div>
@@ -73,8 +85,8 @@
             {{form.hidden_tag()}}
             <div class="grid grid-cols-2 gap-x-4 sm:grid-cols-1 sm:gap-x-2">
                 <div class="mt-3">
-                    <div class="flex rounded-xxs border border-gray-400">
-                        <div class="dropdown-documento text-sm w-3/12 border-r border-gray-400 flex items-center justify-center cursor-pointer">
+                    <div class="flex rounded-xxs border border-gray-209">
+                        <div class="dropdown-documento text-sm w-3/12 border-r bg-white border-gray-209 flex items-center justify-center cursor-pointer">
                             <p class="">
                                 Nº Flota
                             </p>
@@ -89,8 +101,8 @@
                     {% endfor %}
                 </div>
                 <div class="mt-3">
-                    <div class="flex rounded-xxs border border-gray-400">
-                        <div class="dropdown-documento text-sm w-3/12 border-r border-gray-400 flex items-center justify-center cursor-pointer">
+                    <div class="flex rounded-xxs border border-gray-209">
+                        <div class="dropdown-documento text-sm w-3/12 border-r border-gray-209 bg-white flex items-center justify-center cursor-pointer">
                             <p class="">
                                 Placa
                             </p>
@@ -108,7 +120,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.marca.label }}
-                            {{ form.marca(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Marca", autocomplete="off") }}<br>
+                            {{ form.marca(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Marca", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.marca.errors %}
@@ -119,7 +131,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.modelo.label }}
-                            {{ form.modelo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Modelo", autocomplete="off") }}<br>
+                            {{ form.modelo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Modelo", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.modelo.errors %}
@@ -130,7 +142,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.fecha_fabricacion.label }}
-                            {{ form.fecha_fabricacion(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", type="date", placeholder="Fecha de Fabricacion", autocomplete="off") }}<br>
+                            {{ form.fecha_fabricacion(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", type="date", placeholder="Fecha de Fabricacion", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.fecha_fabricacion.errors %}
@@ -141,7 +153,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.numero_asientos.label }}
-                            {{ form.numero_asientos(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Numero de asientos", autocomplete="off") }}<br>
+                            {{ form.numero_asientos(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Numero de asientos", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.numero_asientos.errors %}

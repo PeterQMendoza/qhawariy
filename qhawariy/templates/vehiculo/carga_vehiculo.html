@@ -35,6 +35,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="panel estadisticas" srcset="" class="block q-icon-normal">
@@ -48,23 +60,23 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
 <a href="{{ url_for('vehiculo.listar_vehiculos') }}" class="btn--base">
-    <p class="text-h7">Lista de vehiculos</p>
+    <p class="text-h3">Lista de vehiculos</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Agregar vehiculos de forma masiva</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Agregar vehiculos de forma masiva</p>
 </a>
 {% endblock %}
 {% block content %}
-<div class="bg-white rounded p-8">
+<div class="rounded p-8">
     <div class="flex items-center justify-between">
         <h5 class="text-h5 text-black-100"> Cargar archivo para subida masiva</h5>
     </div>
@@ -74,7 +86,7 @@
             <div class="relative">
                 <div class="w-full block">
                     {{ form.file.label }}
-                    {{ form.file(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Archivo", autocomplete="off") }}<br>
+                    {{ form.file(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Archivo", autocomplete="off") }}<br>
                 </div>
             </div>
             {% for error in form.file.errors %}
@@ -87,8 +99,8 @@
             </div>
         </div>
     </form>
-    <div class="block pt-2 text-body-3 w-full border border-cream-100">
-        <div class="grid gap-2 grid-cols-3-1-3 sm:gap-x-0 border-b border-cream-100">
+    <div class="block pt-2 text-body-3 w-full border border-gray-209">
+        <div class="grid gap-2 grid-cols-3-1-3 sm:gap-x-0 border-b border-gray-209">
             <div class="flex items-center justify-center">
                 <p class="text-black-60 text-center font-semibold">Archivo</p>
             </div>

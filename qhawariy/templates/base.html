@@ -60,12 +60,12 @@
                         {% if current_user.is_authenticated %}
                         <div class="relative pl-5 sm:pl-3">
                             <div class="menu-desktop lg:block">
-                                <div class="btn-user flex items-center cursor-pointer px-2 sm:px-1.5">
+                                <a class="btn-user rounded flex items-center cursor-pointer px-2 sm:px-1.5">
                                     <div class="">
                                         <img src="{{ url_for('static', filename='img/icon-avatar.svg') }}" height="42px" width="42px" class=" px-2" alt>
                                     </div>
                                     <p class="sm:hidden">{{ current_user.nombres }}, {{ current_user.apellidos}}</p>
-                                </div>
+                                </a>
                                 <div class="menu-user absolute bg-white right-0 z-1100 menu-dropdown shadow-custom rounded border border-gray-100 text-xs hidden">
                                     <a href="{{ url_for('auth.edit')}}" class="block px-4 py-3">Configuracion de perfil</a>
                                     <a href="{{ url_for('auth.logout')}}" class="block px-4 py-3 h-full">Cerrar Sesion</a>
@@ -153,10 +153,10 @@
                         <div class="md:pb-8 relative px-0">
                             <div class="admin-detail">
                                 <div class="w-full">
-                                    <div class="admin-module-info bg-white px-4 md:w-full md:block block w-full shadow">
+                                    <div class="admin-module-info bg-white-250 px-4 md:w-full md:block block w-full shadow">
                                         <div class="px-0 md:px-6 pb-2">
                                             {% if current_user.is_authenticated %}
-                                            <div class="flex items-center border-b border-cream-100 linker">
+                                            <div class="flex items-center border-b border-cream-100 linker py-2">
                                                 {% block linker %}
                                                 {% endblock %}
                                             </div>

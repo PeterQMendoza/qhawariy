@@ -35,6 +35,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
@@ -153,7 +165,10 @@
                 <div class="relative">
                     <div class="w-full block">
                         {{ form.activo.label(class="checkbox-label items-center pr-3")}}
-                        {{ form.activo(class="bg-green-600") }}
+                        <label class="switch">
+                            {{ form.activo(class="bg-green-600") }}
+                            <span class="slider round"></span>
+                        </label>
                         <p class="text-body-4 font-semibold">
                             (*) Si esta marcado esta en estado 
                             <span class="text-blue-100">ACTIVO</span>

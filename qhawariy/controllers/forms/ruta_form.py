@@ -15,7 +15,8 @@ class AgregarTerminalForm(FlaskForm):
     class Meta(AutoAttrMeta):
         csrf=True
     direccion= StringField("Direccion",validators=[DataRequired("Necesitamos esta informacion")])
-    ubicacion_gps = StringField("Ubicacion GPS del terminal")
+    latitud = StringField("Ubicacion GPS latitud del terminal")
+    longitud = StringField("Ubicacion GPS longitud del terminal")
     departamento = SelectField("Departamento",validators=[DataRequired("Seleccione un departamento")], id='select_departamento',coerce=int)
     provincia = SelectField("Provincia",validators=[DataRequired("Seleccione una provincia")], id='select_provincia',coerce=int)
     distrito = SelectField("Distrito",validators=[DataRequired("Seleccione un distrito")], id='select_distrito',coerce=int)
@@ -25,7 +26,8 @@ class EditarTerminalForm(FlaskForm):
     class Meta(AutoAttrMeta):
         csrf=True
     direccion= StringField("Direccion",validators=[DataRequired("Necesitamos la direccion")])
-    ubicacion_gps = StringField("Ubicacion GPS")
+    latitud= StringField("Ubicacion GPS latitud")
+    longitud = StringField("Ubicacion GPS longitud")
     departamento = SelectField("Departamento",validators=[DataRequired("Seleccione un departamento")], id='select_departamento',coerce=int)
     provincia = SelectField("Provincia",validators=[DataRequired("Seleccione una provincia")], id='select_provincia',coerce=int)
     distrito = SelectField("Distrito",validators=[DataRequired("Seleccione un distrito")], id='select_distrito',coerce=int)

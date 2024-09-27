@@ -16,5 +16,6 @@ class ControlForm(FlaskForm):
         csrf=True
 
     codigo=StringField("Codigo",validators=[DataRequired(),Length(max=8)])
-    ubicacion=StringField("Ubicacion",validators=[DataRequired("Ingrese la ubicacion del punto de control")])
+    latitud=StringField("Latitud",validators=[DataRequired("Ingrese la ubicacion del punto de control")])
+    longitud=StringField("Longitud",validators=[DataRequired("Ingrese la ubicacion del punto de control")])
     submit=SubmitField("Agregar")

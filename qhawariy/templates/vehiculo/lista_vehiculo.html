@@ -39,6 +39,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" height="24px" width="24px" alt="panel estadisticas" srcset="" class="block q-icon-normal">
@@ -52,13 +64,13 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Lista de vehiculos</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Lista de vehiculos</p>
 </a>
 {% endblock %}
 {% block content %}
@@ -74,7 +86,7 @@
                 <div class=" inline-flex translateY-[-50%] right-unset left-3 absolute top-[50%]">
                     <img src="{{ url_for('static', filename='img/icon-len.svg') }}" height="24px" width="24px" alt>
                 </div>
-                {{ form.busca(class="h-[42px] w-full rounded-full text-gris-900 px-12 border border-gray-112", placeholder="Buscar por placa", autocomplete="on") }}<br>
+                {{ form.busca(class="h-[42px] w-full rounded-full text-gris-900 px-12 border border-gray-209", placeholder="Buscar por placa", autocomplete="on") }}<br>
                 <!-- <input type="text" autocomplete="off" placeholder="Buscar" id="buscar" class="block h-full w-full pr-12 text-gris-900 pl-12"> -->
                 <div class="btn-activate-filter cursor-pointer inline-flex translateY-[-50%] left-unset right-3 absolute top-[50%]">
                     <img src="{{ url_for('static', filename='img/angle-bottom.svg') }}" class="btn-option-1 p-2" height="23px" width="28px" alt>
@@ -134,8 +146,8 @@
         </div>
     </a>
 </div>
-<div class="block w-full border-cream-100 border text-body-3">
-    <div class="grid gap-2 grid-cols-8 sm:gap-x-0 sm:text-xs py-2 pr-4 border-b border-cream-100">
+<div class="block w-full border-gray-209 border text-body-3">
+    <div class="grid gap-2 grid-cols-8 sm:gap-x-0 sm:text-xs py-2 pr-4 border-b border-gray-209">
         <div class="flex items-center justify-center">
             <p class="text-center font-semibold">Nº Flota</p>
         </div>

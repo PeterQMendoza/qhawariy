@@ -12,14 +12,14 @@ from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.programacion import Programacion
 from qhawariy.models.fecha import Fecha
+from qhawariy.utilities.builtins import LIMA_TZ
 
 class VehiculoProgramado(db.Model):
     """Modelo VehiculoProgramado
     """
     __tablename__ = "vehiculos_programados"
     id_vp = db.Column(db.Integer,primary_key=True)
-    lima_tz=pytz.timezone('America/Lima')
-    tiempo=db.Column(db.Time,default=datetime.datetime.now(tz=lima_tz).time())
+    tiempo=db.Column(db.Time,default=datetime.datetime.now(tz=LIMA_TZ).time())
     id_vehiculo = db.Column(db.Integer,db.ForeignKey("vehiculos.id_vehiculo"),nullable=False)
     id_programacion = db.Column(db.Integer,db.ForeignKey("programaciones.id_programacion"),nullable=False)
 

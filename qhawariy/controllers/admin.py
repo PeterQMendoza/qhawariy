@@ -1,16 +1,18 @@
 
 import logging
+from urllib.parse import urlparse
 import pandas as pd
 from datetime import datetime
 
 from io import BytesIO
 
-from flask import (Blueprint, render_template,redirect,url_for,abort,send_file)
+from flask import (Blueprint, render_template,redirect, request,url_for,abort,send_file)
 from flask_login import (current_user, login_required)
 from wsgiref.headers import Headers
 
-from qhawariy.controllers.forms.admin_form import UserAdminForm
+from qhawariy.controllers.forms.admin_form import ConfiguracionForm, UserAdminForm
 
+from qhawariy.models.configuracion import Configuracion
 from qhawariy.models.usuario import Usuario
 from qhawariy.models.usuario_rol import UsuarioRol
 from qhawariy.models.rol import Rol
@@ -99,9 +101,48 @@ def eliminar_usuario(user_id):
     logger.info(f"El usuario {user_id} ha sido eliminado")
     return redirect(url_for("admin.listar_usuarios"))
 
-@bp.route("/configuracion",methods=["GET","POST"])
+@bp.route("/configuracion/<int:config_id>",methods=["GET","POST"])
 @login_required
 @admin_required
-def configurar():
-    return render_template("admin/configura.html")
+def configurar(config_id):
+    configuracion=Configuracion.obtener_config(config_id)
+    if configuracion is None:
+        config=Configuracion()
+        form=ConfiguracionForm()
+        if form.validate_on_submit():
+            tiempo_espera_vehiculo=form.tiempo_espera_vehiculo.data
+            tiempo_en_recorrido=form.tiempo_en_recorrido.data
+            horario_inicio=form.horario_inicio.data
+            horario_final=form.horario_salida.data
+            cantidad_vehiculo_a_programar=form.cantidad_maxima_vehiculo_a_programar.data
+            config.tiempo_espera_vehiculo=tiempo_espera_vehiculo
+            config.tiempo_total_en_recorrido=tiempo_en_recorrido
+            config.horario_inicio=horario_inicio
+            config.horario_fin=horario_final
+            config.cantidad_vehiculos_a_programar=cantidad_vehiculo_a_programar
+            config.guardar()
+            siguiente_pagina=request.args.get("next",None)
+            if not siguiente_pagina or urlparse(siguiente_pagina).netloc!='':
+                siguiente_pagina=url_for("admin.configurar",config_id=1)
+            return redirect(siguiente_pagina)
+    else:
+        form=ConfiguracionForm(obj=configuracion)
+        if form.validate_on_submit():
+            tiempo_espera_vehiculo=form.tiempo_espera_vehiculo.data
+            tiempo_en_recorrido=form.tiempo_total_en_recorrido.data
+            horario_inicio=form.horario_inicio.data
+            horario_final=form.horario_fin.data
+            cantidad_vehiculo_a_programar=form.cantidad_vehiculos_a_programar.data
+            configuracion.tiempo_espera_vehiculo=tiempo_espera_vehiculo
+            configuracion.tiempo_total_en_recorrido=tiempo_en_recorrido
+            configuracion.horario_inicio=horario_inicio
+            configuracion.horario_fin=horario_final
+            configuracion.cantidad_vehiculos_a_programar=cantidad_vehiculo_a_programar
+            configuracion.guardar()
+            siguiente_pagina=request.args.get("next",None)
+            if not siguiente_pagina or urlparse(siguiente_pagina).netloc!='':
+                siguiente_pagina=url_for("admin.configurar",config_id=1)
+            return redirect(siguiente_pagina)
+
+    return render_template("admin/configura.html",form=form,confi=configuracion)
 

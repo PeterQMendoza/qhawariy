@@ -47,6 +47,12 @@
             </div>
             Controles
         </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         {% endif %}
         {% if rol.rol=="Controlador"%}
         <a href="{{url_for('viaje.listar_calendario')}}" class="q-icon-costumer">
@@ -78,13 +84,13 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Visualizar estadisticas</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Visualizar estadisticas</p>
 </a>
 {% endblock %}
 {% block content %}

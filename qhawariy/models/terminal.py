@@ -6,7 +6,8 @@ class Terminal(db.Model):
     __tablename__ = "terminales"
     id_terminal = db.Column(db.Integer,primary_key=True)
     direccion=db.Column(db.String(50),nullable=False)
-    ubicacion_gps=db.Column(db.String(50),nullable=False)
+    latitud=db.Column(db.String(25),nullable=False)
+    longitud=db.Column(db.String(25),nullable=False)
     id_departamento = db.Column(db.Integer,db.ForeignKey("departamentos.id_departamento"),nullable=False)
     id_provincia = db.Column(db.Integer,db.ForeignKey("provincias.id_provincia"),nullable=False)
     id_distrito = db.Column(db.Integer,db.ForeignKey("distritos.id_distrito"),nullable=False)
@@ -18,9 +19,10 @@ class Terminal(db.Model):
     # terminales = db.relationship("RutaTerminal",back_populates="terminal",cascade="all,delete-orphan")
     # terminales2 = db.relationship("RutaTerminal",back_populates="terminal2",cascade="all,delete-orphan")
 
-    def __init__(self, direccion,ubicacion_gps,id_departamento,id_provincia,id_distrito):
+    def __init__(self, direccion,latitud,longitud,id_departamento,id_provincia,id_distrito):
         self.direccion=direccion
-        self.ubicacion_gps=ubicacion_gps
+        self.latitud=latitud
+        self.longitud=longitud
         self.id_departamento=id_departamento
         self.id_provincia=id_provincia
         self.id_distrito=id_distrito

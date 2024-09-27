@@ -36,6 +36,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="panel estadisticas" srcset="" class="block q-icon-normal">
@@ -49,25 +61,25 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
 <a href="{{ url_for('ruta.lista_ruta') }}" class="btn--base">
-    <p class="text-h7">Lista de rutas</p>
+    <p class="text-h3">Lista de rutas</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
 <a href="{{ url_for('ruta.agregar_ruta') }}" class="btn--base">
-    <p class="text-h7">Agregar nueva ruta</p>
+    <p class="text-h3">Agregar nueva ruta</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Agregar nuevo terminal</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Agregar nuevo terminal</p>
 </a>
 {% endblock %}
 {% block content %}
@@ -76,8 +88,8 @@
         <div class="flex items-center justify-between py-2">
             <p class="text-h5 text-black-100">Lista de terminales registrados</p>
         </div>
-        <div class="text-body-3 border border-cream-100">
-            <div class="grid gap-2 grid-cols-5 sm:gap-x-0 border-b border-cream-100 py-2">
+        <div class="text-body-3 border border-gray-209">
+            <div class="grid gap-2 grid-cols-5 sm:gap-x-0 border-b border-gray-209 py-2">
                 <div class="flex items-center justify-center">
                     <p class="text-black-60 text-center font-semibold">Direccion</p>
                 </div>
@@ -130,7 +142,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.direccion.label }}
-                            {{ form.direccion(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="direccion", autocomplete="off") }}<br>
+                            {{ form.direccion(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="direccion", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.direccion.errors %}
@@ -140,20 +152,22 @@
                 <div class="mt-3 order-2">
                     <div class="relative">
                         <div class="w-full block">
-                            {{ form.ubicacion_gps.label }}
-                        </div>
-                        <div class="flex rounded-xxs border border-gray-400">
-                            <div class="w-9/12">
-                                {{ form.ubicacion_gps(class="text-sm w-full px-4 py-3 border-gray-400", placeholder="Ubicacion gps", autocomplete="off") }}<br>
-                            </div>
-                            <div class="text-sm relative w-3/12">
-                                <div class="border-l border-gray-400 px-4 py-3 flex items-center justify-center cursor-pointer relative">
-                                    link
-                                </div>
-                            </div>
+                            {{ form.latitud.label }}
+                            {{ form.latitud(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="GPS Latitud", autocomplete="off") }}<br>
                         </div>
                     </div>
-                    {% for error in form.ubicacion_gps.errors %}
+                    {% for error in form.latitud.errors %}
+                    <span class="text-red-600 text-xs">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="mt-3 order-2">
+                    <div class="relative">
+                        <div class="w-full block">
+                            {{ form.longitud.label }}
+                            {{ form.longitud(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="GPS Longitud", autocomplete="off") }}<br>
+                        </div>
+                    </div>
+                    {% for error in form.longitud.errors %}
                     <span class="text-red-600 text-xs">{{ error }}</span>
                     {% endfor %}
                 </div>
@@ -161,7 +175,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.departamento.label }}
-                            {{ form.departamento(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Departamento", autocomplete="off") }}<br>
+                            {{ form.departamento(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Departamento", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.departamento.errors %}
@@ -172,7 +186,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.provincia.label }}
-                            {{ form.provincia(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Provincia", autocomplete="off") }}<br>
+                            {{ form.provincia(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Provincia", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.provincia.errors %}
@@ -183,7 +197,7 @@
                     <div class="relative">
                         <div class="w-full block">
                             {{ form.distrito.label }}
-                            {{ form.distrito(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Distrito", autocomplete="off") }}<br>
+                            {{ form.distrito(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Distrito", autocomplete="off") }}<br>
                         </div>
                     </div>
                     {% for error in form.distrito.errors %}

@@ -36,6 +36,18 @@
             </div>
             Rutas
         </a>
+        <a href="{{url_for('control.listar_controles')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/control.svg') }}" height="24px" width="24px" alt="panel controles" srcset="" class="block q-icon-normal">
+            </div>
+            Controles
+        </a>
+        <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-icon-costumer bottom-0">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/icon-config.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-normal">
+            </div>
+            Configuración
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
@@ -49,19 +61,19 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('propietario.listar_propietarios') }}" class="btn--base">
-    <p class="text-h7">Lista de propietarios</p>
+    <p class="text-h3">Lista de propietarios</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Editar datos del propietario</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Editar datos del propietario</p>
 </a>
 {% endblock %}
 {% block content %}

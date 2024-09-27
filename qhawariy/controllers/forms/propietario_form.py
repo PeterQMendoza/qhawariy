@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from wtforms import SearchField
 from wtforms.fields import StringField,IntegerField,SelectField, SubmitField, PasswordField, BooleanField, DateTimeField,DateField,EmailField
 from wtforms.widgets import DateTimeInput,DateInput
 from wtforms_html5 import AutoAttrMeta
@@ -26,5 +27,5 @@ class CambiarPropietarioForm(FlaskForm):
 class BuscarPropietarioForm(FlaskForm):
     class Meta(AutoAttrMeta):
         csrf=True
-    dni=StringField('Buscar por DNI', validators=[InputRequired("Ingrese un documento de identidad"),Length(max=10),Regexp("^[0-9]*$",0,"El Numero de documento deben contener solo numeros")])
+    dni=SearchField('Buscar por DNI', validators=[InputRequired("Ingrese un documento de identidad"),Length(max=10),Regexp("^[0-9]*$",0,"El Numero de documento deben contener solo numeros")])
     submit=SubmitField("Buscar")

@@ -48,7 +48,7 @@
         </div>
         Controles
     </a>
-    <a href="{{url_for('admin.configurar')}}" class="q-link-active q-link-exact-active">
+    <a href="{{url_for('admin.configurar',config_id=1)}}" class="q-link-active q-link-exact-active">
         <div class="mr-4 w-6 h-6">
             <img src="{{ url_for('static', filename='img/icon-config-blue.svg') }}" height="24px" width="24px" alt="panel configurar" srcset="" class="block q-icon-active">
         </div>
@@ -68,15 +68,116 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" height="12px" width="8px" alt="" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Configuración</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Configuración</p>
 </a>
 {% endblock %}
 {% block content %}
-    
+<div class="col-span-6 md:col-span-3 lg:col-span-2">
+    <div class="block w-full pt-6 border-b border-cream-100">
+      <div class="flex text-xs">
+        <div class="uppercase flex-1 text-black-60 font-semibold">Cambiar configuración</div>
+        <div class="btn-toggle3 flex justify-center items-center cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="12px" height="7px" version="1.1" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd"
+          viewBox="0 0 5.562 3.029"
+          xmlns:xlink="http://www.w3.org/1999/xlink">
+            <path fill="#707070" fill-rule="nonzero" d="M0.529 0.089c-0.124,-0.12 -0.321,-0.118 -0.441,0.006 -0.12,0.123 -0.117,0.32 0.006,0.44l2.48 2.404 0.218 -0.223 -0.218 0.225c0.124,0.12 0.322,0.116 0.442,-0.007 0.003,-0.004 0.006,-0.007 0.01,-0.011l2.442 -2.388c0.123,-0.12 0.126,-0.317 0.006,-0.44 -0.12,-0.124 -0.317,-0.127 -0.44,-0.007l-2.243 2.194 -2.262 -2.193 0 0z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="field-form3">
+        <div class="py-4">
+          <div class="w-full relative">
+            <div class="w-full block mb-3">
+              <div class="relative w-full block">
+                <form action="" method="post">
+                    {{form.hidden_tag()}}
+                    <div class="mt-3 order-2">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.tiempo_espera_vehiculo.label }}
+                                {{ form.tiempo_espera_vehiculo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="", autocomplete="on") }}<br>
+                            </div>
+                        </div>
+                        {% for error in form.tiempo_espera_vehiculo.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 order-2">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.tiempo_total_en_recorrido.label }}
+                                {{ form.tiempo_total_en_recorrido(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="", autocomplete="on") }}<br>
+                            </div>
+                        </div>
+                        {% for error in form.tiempo_total_en_recorrido.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 order-2">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.horario_inicio.label }}
+                                {{ form.horario_inicio(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="", autocomplete="on") }}<br>
+                            </div>
+                        </div>
+                        {% for error in form.horario_inicio.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 order-2">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.horario_fin.label }}
+                                {{ form.horario_fin(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="", autocomplete="on") }}<br>
+                            </div>
+                        </div>
+                        {% for error in form.horario_fin.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 order-2">
+                        <div class="relative">
+                            <div class="w-full block">
+                                {{ form.cantidad_vehiculos_a_programar.label }}
+                                <div class="flex items-center">
+                                    {{ form.cantidad_vehiculos_a_programar(class="pointer rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="", autocomplete="on") }}<br>
+                                    <p class="ml-2">Cantidad:<output id="value"></output></p>
+                                </div>
+                            </div>
+                        </div>
+                        {% for error in form.cantidad_vehiculos_a_programar.errors %}
+                        <span class="text-red-600 text-xs">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="col-span-2 sm:col-span-1 mt-3 order-12">
+                        <div class="mt-4 mb-5">
+                            {{ form.submit(class="btn btn--base btn-green-600 w-full md:w-auto block text-center") }}
+                        </div>
+                    </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block javascript %}
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded",()=>{
+        const value=document.querySelector("#value");
+        const input=document.querySelector("#cantidad_vehiculos_a_programar");
+        value.textContent=input.value;
+        input.addEventListener("input",(event)=>{
+            value.textContent=event.target.value;
+        })
+    });
+</script>
 {% endblock %}
