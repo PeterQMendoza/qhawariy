@@ -1,3 +1,4 @@
+![Qhawariy](https://github.com/PeterQMendoza/qhawariy/qhawariy/static/img/logo_qhawariy.svg)
 # Qhawariy
 Sistema para la administración y control de flotas de vehículos de transporte público
 
