@@ -22,6 +22,12 @@
             </div>
             Programaciones
         </a>
+        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Plan de flota
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
@@ -57,7 +63,7 @@
             <p class="text-h6 text-black-100">Información para establecer programacion
             </p>
         </div>
-        <div class="grid gap-2 grid-cols-1 sm:gap-x-0 pr-4 py-2 border-b border-cream-100 text-body-3">
+        <div class="grid gap-2 grid-cols-1 sm:gap-x-0 pr-4 py-2 border-b border-gray-209 text-body-3">
             <div class="flex items-center justify-center">
                 <p></p>
             </div>
@@ -69,8 +75,8 @@
                 <span class="text-blue-100 font-semibold">{{programa.fecha.fecha | date_time('date')}}</span>
             </p>
         </div>
-        <div class=" border border-cream-100">
-            <div class="grid gap-2 grid-cols-5 sm:gap-x-0 pr-4 py-2 border-b border-cream-100 text-body-3">
+        <div class=" border border-gray-209">
+            <div class="grid gap-2 grid-cols-5 sm:gap-x-0 pr-4 py-2 border-b border-gray-209 text-body-3">
                 <div class="flex items-center justify-center">
                     <p class="text-black-60 text-center font-semibold">Nº</p>
                 </div>
@@ -157,7 +163,7 @@
                         <div class="relative">
                             <div class="w-full block">
                                 {{ form.vehiculo.label }}
-                                {{ form.vehiculo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", autocomplete="off", maxlength="20") }}<br>
+                                {{ form.vehiculo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", autocomplete="off", maxlength="20") }}<br>
                             </div>
                         </div>
                         {% for error in form.vehiculo.errors %}
@@ -168,7 +174,7 @@
                         <div class="relative">
                             <div class="w-full block">
                                 {{ form.tiempo.label }}
-                                {{ form.tiempo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Hora", autocomplete="off", maxlength="20") }}<br>
+                                {{ form.tiempo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Hora", autocomplete="off", maxlength="20") }}<br>
                             </div>
                         </div>
                         {% for error in form.tiempo.errors %}

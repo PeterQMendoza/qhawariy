@@ -2,7 +2,7 @@ from qhawariy import db
 
 class ControlTiempo(db.Model):
     """
-    Modelo ControlTiempo:
+    Modelo ControlTiempo: Contiene los tiempos de los vehiculos a pasar por los puntos de control
 
     """
     __tablename__='controles_tiempos'

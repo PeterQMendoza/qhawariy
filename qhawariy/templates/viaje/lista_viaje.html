@@ -32,19 +32,19 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{url_for('viaje.listar_calendario')}}" class="btn--base">
-    <p class="text-h7">Fechas</p>
+    <p class="text-h3">Fechas</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Reportar viajes</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Reportar viajes</p>
 </a>
 {% endblock %}
 {% block content %}
@@ -55,8 +55,8 @@
                 <span class="text-blue-100">{{fecha.fecha|date_time('date')}}</span>
             </p>
         </div>
-        <div class="block w-full border border-cream-100 text-body-3">
-            <div class="py-2 grid gap-2 grid-cols-6 sm:gap-x-0 border-b border-cream-100 pr-4">
+        <div class="block w-full border border-gray-209 text-body-3">
+            <div class="py-2 grid gap-2 grid-cols-6 sm:gap-x-0 border-b border-gray-209 pr-4">
                 <div class="flex items-center justify-center">
                     <p class="text-black-60 text-center font-semibold">Nº recorrido</p>
                 </div>
@@ -110,9 +110,7 @@
             </div>
         </div>
     </div>
-    {% for v in vehiculos %}
-    {{v}}
-    {% endfor %}
+    
     <div class="order-2">
         <!-- <div class="grid grid-cols-2-1-3 gap-2 sm:gap-x-0 text-white bg-blue-darksky-g p-2 rounded">
             <div class="flex items-center justify-center col-span-2">
@@ -138,7 +136,7 @@
                         <div class="relative">
                             <div class="w-full block">
                                 {{ form.vehiculo.label }}
-                                {{ form.vehiculo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Vehiculo", autocomplete="on", maxlength="20") }}<br>
+                                {{ form.vehiculo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Vehiculo", autocomplete="on", maxlength="20") }}<br>
                             </div>
                         </div>
                         {% for error in form.vehiculo.errors %}
@@ -149,7 +147,7 @@
                         <div class="relative">
                             <div class="w-full block">
                                 {{ form.ruta.label }}
-                                {{ form.ruta(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Ruta", autocomplete="on", maxlength="20") }}<br>
+                                {{ form.ruta(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Ruta", autocomplete="on", maxlength="20") }}<br>
                             </div>
                         </div>
                         {% for error in form.ruta.errors %}
@@ -160,7 +158,7 @@
                         <div class="relative">
                             <div class="w-full block">
                                 {{ form.orden.label }}
-                                {{ form.orden(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Numero de recorrido", autocomplete="off", maxlength="20") }}<br>
+                                {{ form.orden(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Numero de recorrido", autocomplete="off", maxlength="20") }}<br>
                             </div>
                         </div>
                         {% for error in form.orden.errors %}

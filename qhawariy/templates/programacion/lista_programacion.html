@@ -21,6 +21,12 @@
             </div>
             Programaciones
         </a>
+        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Plan de flota
+        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
@@ -56,8 +62,8 @@
     </a>
 </div>
 <div class="grid grid-cols-2-1-3 gap-2 sm:gap-x-0 sm:grid-cols-1 py-2">
-    <div class="text-body-3 w-full border border-cream-100">
-        <div class="grid gap-2 grid-cols-4 sm:gap-x-0 py-2  border-cream-100 border-b pr-4">
+    <div class="text-body-3 w-full border border-gray-209">
+        <div class="grid gap-2 grid-cols-4 sm:gap-x-0 py-2  border-gray-209 border-b pr-4">
             <div class="flex items-center justify-center">
                 <p class="text-black-60 text-center font-semibold">Ruta</p>
             </div>
@@ -127,7 +133,7 @@
                             <div class="relative">
                                 <div class="w-full block">
                                     {{ form.ruta.label }}
-                                    {{ form.ruta(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400", placeholder="Codigo de ruta", autocomplete="on", maxlength="20") }}<br>
+                                    {{ form.ruta(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Codigo de ruta", autocomplete="on", maxlength="20") }}<br>
                                 </div>
                             </div>
                             {% for error in form.ruta.errors %}
@@ -138,7 +144,7 @@
                             <div class="relative">
                                 <div class="w-full block">
                                     {{ form.fecha_programa.label }}
-                                    {{ form.fecha_programa(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-400",type="date", placeholder="Fecha de programa", autocomplete="on", maxlength="20") }}<br>
+                                    {{ form.fecha_programa(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209",type="date", placeholder="Fecha de programa", autocomplete="on", maxlength="20") }}<br>
                                 </div>
                             </div>
                             {% for error in form.fecha_programa.errors %}

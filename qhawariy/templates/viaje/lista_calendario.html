@@ -35,13 +35,13 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Fechas</p>
+<a href="#" class="btn--base">
+    <p class="text-h3">Fechas</p>
 </a>
 {% endblock %}
 {% block content %}
@@ -49,7 +49,7 @@
     <div class="flex items-center justify-between py-2">
         <p class="text-h5 text-black-100">Calendario de programaciones realizadas</p>
     </div>
-    <div class="border border-cream-100 p-4 rounded-sm bg-gray-250">
+    <div class="border border-gray-209 p-4 rounded-sm bg-gray-250">
         <div class="flex items-center justify-center py-2">
             <p class="text-h3 text-blue-100">{{data|date_time('month_year')}}</p>
         </div>

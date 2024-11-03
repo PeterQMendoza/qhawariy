@@ -99,7 +99,7 @@
                                 </div> -->
                                 <div class="relative">
                                     <div class="menu-desktop lg:block">
-                                        <img src="{{ url_for('static', filename='img/icon-menu.svg') }}" height="42px" width="42px" class="btn-menu px-2 sm:px-1.5 cursor-pointer" alt>
+                                        <img src="{{ url_for('static', filename='img/icon-menu.svg') }}" height="36px" width="36px" class="btn-menu px-2 sm:px-1.5 cursor-pointer" alt>
                                         <div class="menu-element absolute bg-white right-0 z-1100 menu-dropdown rounded border shadow-custom border-gray-100 text-xs hidden">
                                             <a href="/" class="block px-4 py-3">¿Quienes somos?</a>
                                             <a href="/" class="block px-4 py-3">Opina sobre
@@ -120,7 +120,7 @@
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages%}
                 {% for category, message in messages %}
-                <div class="absolute modal-notificacion z-1100">
+                <div class="fixed modal-notificacion z-1100">
                     <div class="rounded shadow-custom bg-white text-black-100 p-4">
                         <div class="">
                             <div class="flex items-center">
@@ -168,7 +168,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <!-- COOKIE -->
                     <!-- No debe ir por que no requiere informacion personal de la poblacion -->
                     <div>
@@ -322,6 +321,7 @@
                                     seqhawariy@expert.com
                                 </a>
                                 <p class="p-title mt-3 mb-2">Legal</p>
+                                
                                 <a href="" class="py-2">Terminos y condiciones</a>
                                 <a href="" class="py-2">Politicas de privacidad</a>
                                 <p class="p-copy mt-3">© Copyright 2024 - Todos los derechos reservados</p>

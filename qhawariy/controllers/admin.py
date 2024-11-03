@@ -78,7 +78,7 @@ def editar_usuario(user_id):
     if user is None:
         logger.info(f"El usuario {user_id} no existe")
         abort(404)
-    form=UserAdminForm(obj=user)
+    form=UserAdminForm(obj=ur)
     form.rol.choices=[(r.id_rol,r.rol) for r in roles]
     if form.validate_on_submit():
         ur.id_rol=form.rol.data

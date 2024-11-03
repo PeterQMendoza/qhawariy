@@ -93,7 +93,7 @@
 {% endblock %}
 {% block javascript %}
     <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded",()=>{
+        document.addEventListener('DOMContentLoaded',()=>{
             window.location.replace('{{path|safe}}{{filename|safe}}');
         });
     </script>

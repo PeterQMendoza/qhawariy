@@ -14,6 +14,7 @@ from logging.config import dictConfig
 from flask import Flask,render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
+from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy.orm import declarative_base
 from flask_assets import Environment
 from flask_login import LoginManager
@@ -96,13 +97,14 @@ def create_app(test_config=None):
         if is_debug_mode() and not is_werkzeug_reloader_process():
             pass
         else:
-            from qhawariy.models.timer import tareas
-            scheduler.start()
+            pass
+            # from qhawariy.models.timer import tareas
+            # scheduler.start()
     # configuracion para asignacion de memoria cache con
     # flask-caching y Redis
     # https://redis.io/docs/latest/develop/connect/clients/python/
     # redis_client=redis.Redis(host='localhost',port=6379, db=0)
-    cache.init_app(app,config={'CACHE_TYPE':"SimpleCache",'CACHE_DEFAULT_TIMEOUT':300,'CACHE_KEY_PREFIX':'qhawariy'})
+    cache.init_app(app,config={'CACHE_TYPE':"SimpleCache",'CACHE_DEFAULT_TIMEOUT':80000,'CACHE_KEY_PREFIX':'qhawariy'})
 
     # Configuracion de Login
     login_manager.init_app(app)
@@ -154,7 +156,7 @@ def create_app(test_config=None):
     # Ejecutar antes de cada solicitud
 
     # Registro de Blueprints
-    from qhawariy.controllers import auth,home,admin,vehiculo,ruta,propietario,viaje,programacion,estadistica,control,control_tiempo
+    from qhawariy.controllers import auth,home,admin,vehiculo,ruta,propietario,viaje,programacion,estadistica,control,control_tiempo,permiso_vehiculo,coordenadas
     from qhawariy.models.timer import eventos
     app.register_blueprint(home.bp)
     app.register_blueprint(auth.bp)
@@ -167,6 +169,8 @@ def create_app(test_config=None):
     app.register_blueprint(estadistica.bp)
     app.register_blueprint(control.bp)
     app.register_blueprint(control_tiempo.bp)
+    app.register_blueprint(permiso_vehiculo.bp)
+    app.register_blueprint(coordenadas.bp)
 
     # Manejador de errores #analisis
     register_error_handler(app)

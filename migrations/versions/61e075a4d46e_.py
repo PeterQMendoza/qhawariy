@@ -106,6 +106,14 @@ def upgrade():
     sa.PrimaryKeyConstraint('id_vehiculo'),
     sa.UniqueConstraint('placa')
     )
+    op.create_table('disponibles_vehiculos',
+    sa.Column('id_dv',sa.Integer(),nullable=False),
+    sa.Column('fecha_inicio',sa.DateTime(),nullable=False),
+    sa.Column('fecha_final',sa.DateTime(),nullable=False),
+    sa.Column('id_vehiculo',sa.Integer(),nullable=False),
+    sa.ForeignKeyConstraint(['id_vehiculo'],['vehiculos.id_vehiculo'],),
+    sa.PrimaryKeyConstraint('id_dv')
+    )
     op.create_table('programaciones',
     sa.Column('id_programacion', sa.Integer(), nullable=False),
     sa.Column('id_fecha', sa.Integer(), nullable=False),
@@ -214,6 +222,7 @@ def downgrade():
     op.drop_table('propietarios_vehiculos')
     op.drop_table('programaciones')
     op.drop_table('vehiculos')
+    op.drop_table('disponibles_vehiculos')
     op.drop_table('usuarios')
     op.drop_table('rutas')
     op.drop_table('roles')

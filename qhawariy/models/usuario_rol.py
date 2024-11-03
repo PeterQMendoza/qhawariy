@@ -41,7 +41,7 @@ class UsuarioRol(db.Model):
 
     @staticmethod
     def obtener_usuarios_por_idrol(idrol):
-        return UsuarioRol.query.query.filter_by(id_rol=idrol)
+        return UsuarioRol.query.filter_by(id_rol=idrol)
 
     @staticmethod
     def obtener_por_id_usuario(idusuario):

@@ -9,6 +9,7 @@ from sqlalchemy import asc,desc
 from sqlalchemy.sql import func
 
 from qhawariy import db
+from qhawariy.utilities.builtins import LIMA_TZ
 
 class Vehiculo(db.Model):
     """" Modelo Vehiculo de administracion de vehiculos
@@ -28,14 +29,14 @@ class Vehiculo(db.Model):
     placa = db.Column(db.String(8),unique=True,nullable=False)
     marca = db.Column(db.String(45),nullable=False)
     modelo = db.Column(db.String(45),nullable=False)
-    lima_tz=pytz.timezone('America/Lima')
-    fecha_fabricacion = db.Column(db.DateTime,default=datetime.datetime.now(tz=lima_tz))
+    fecha_fabricacion = db.Column(db.DateTime,default=datetime.datetime.now(tz=LIMA_TZ))
     numero_asientos = db.Column(db.Integer,nullable=False)
     activo=db.Column(db.Boolean, default=False)
     estado=db.Column(db.Integer,nullable=False)
 
     # Establecer relacion inversa {Tabla2}*1-->1{Tabla1}
     vehiculos=db.relationship("VehiculoProgramado",back_populates="vehiculo",cascade="all,delete-orphan")
+    vehiculos_disponibles=db.relationship("DisponibleVehiculo",back_populates="vehiculo",cascade="all,delete-orphan")
     
     def __init__(self,flota, placa, marca, modelo, fecha_fabricacion, numero_asientos):
         self.flota=flota
