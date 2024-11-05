@@ -1,4 +1,5 @@
-# Qhawariy
+![Qhawariy](https://github.com/PeterQMendoza/qhawariy.git/qhawariy/static/img/logo_qhawariy.svg)
+# Qhawariy [![Flask ]]![Leaflet 1.9.4 compatible](https://leafletjs.com)
 Sistema para la administración y control de flotas de vehículos de transporte público
 
 ## Instalación
