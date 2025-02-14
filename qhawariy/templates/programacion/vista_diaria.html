@@ -19,11 +19,8 @@
                 <div class="admin-module-info p-6 md:w-full md:block block w-full">
                     <div class="px-0 md:px-6">
                         <div class="block grid gap-4 grid-cols-1 p-2">
-                            <div class="flex items-center justify-center">{{p|tojson|safe}}</div>
-                            <div class="h-[120px] flex items-center justify-center">
-                                <!-- linear chart -->
-                                <canvas id="chart"></canvas>
-                            </div>
+                            <div class="flex items-center justify-center">{{data1|safe}}</div>
+                            <div class="flex items-center justify-center">{{data2|safe}}</div>
                         </div>
                     </div>
                 </div>
@@ -31,91 +28,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-{% block javascript %}
-    <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded",()=>{
-
-            var can=document.getElementById('chart');
-            var pesos=JSON.parse('{{p|tojson|safe}}');
-            const config={
-                type: 'bubble',
-                data: {
-                    datasets: [
-                        {
-                            data: pesos,
-                            label:"cantidad",
-                            backgroundColor:'#eb0046',
-                            borderColor:'#eb0046',
-                            fill:"#eb0046",
-                        },
-                    ]
-                },
-                options:{
-                    responsive: true,
-                    indexAxis: 'x',
-                    parsing: {
-                        xAxisKey: 'x',
-                        yAxisKey: 'y'
-                    },
-                    maintainAspectRatio: false,
-                    aspectRatio:2,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Programacion de recorrido por ruta'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            stacked: true,
-                            grid: {
-                                display: true,
-                                color: "rgba(255,99,132,0.2)",
-                                drawOnChartArea: true,
-                                drawTicks: true,
-                            },
-                            min: -0.1,
-                            max: 0.5,
-                            ticks: {
-                                // forces step size to be 50 units
-                                stepSize: 1
-                            },
-                        },
-                        x: {
-                            min: 0,
-                            max: 23100,
-                            ticks: {
-                                // forces step size to be 50 units
-                                stepSize: 1000
-                            },
-                            grid: {
-                                display: true
-                            },
-                            title:{
-                                text:"Distancia",
-                                display:true
-                            }
-                        }
-                    }
-                }
-            }
-            var chart=new Chart(can,config);
-            // window.addEventListener('beforeprint', () => {
-            //     chart.resize(800, 800);
-            // });
-            // window.addEventListener('afterprint', () => {
-            //     chart.resize();
-            // });
-
-        });
-
-        // window.addEventListener("resize",()=>{
-        //     establecer_posiciones(pe);
-        // });
-
-    </script>
 {% endblock %}

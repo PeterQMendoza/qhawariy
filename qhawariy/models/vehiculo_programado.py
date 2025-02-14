@@ -1,5 +1,6 @@
 
 import datetime
+from typing import List
 import pytz
 
 from sqlalchemy import (asc,desc)
@@ -7,7 +8,6 @@ from sqlalchemy.sql import func
 
 from qhawariy import db
 from qhawariy.models.ruta_terminal import RutaTerminal
-from qhawariy.models.terminal import Terminal
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.programacion import Programacion
@@ -19,18 +19,26 @@ class VehiculoProgramado(db.Model):
     """
     __tablename__ = "vehiculos_programados"
     id_vp = db.Column(db.Integer,primary_key=True)
-    tiempo=db.Column(db.Time,default=datetime.datetime.now(tz=LIMA_TZ).time())
+    tiempo=db.Column(db.Time,default=None)
+    # La propiedad de vehiculo_en_espera se utiliza para informar que el vehiculo puede iniciar el viaje en cualquier momento
+    # Por ejemplo: a consecuencia de un desperfecto, o algun evento un vehiculo deja su programacion, y para solucionarlo
+    # se reemplaza el vehiculo por otro para cubrir su puesto
+    vehiculo_en_espera=db.Column(db.Boolean,default=False)
     id_vehiculo = db.Column(db.Integer,db.ForeignKey("vehiculos.id_vehiculo"),nullable=False)
     id_programacion = db.Column(db.Integer,db.ForeignKey("programaciones.id_programacion"),nullable=False)
 
     # Establecer relaciones {Table1}*1-->1{Table2}
     vehiculo = db.relationship("Vehiculo",back_populates="vehiculos",uselist=False,single_parent=True)
-    programa = db.relationship("Programacion",back_populates="programas",uselist=False,single_parent=True)
+    programa = db.relationship("Programacion",back_populates="programas_vehiculos",uselist=False,single_parent=True)
 
     #Establecer relacion inversa {Tabla2}*1-->1{Tabla1}
 
-    def __init__(self,tiempo, id_vehiculo, id_programacion):
-        self.tiempo=tiempo
+    def __init__(self,tiempo:datetime.datetime,vehiculo_en_espera:bool, id_vehiculo:int, id_programacion:int):
+        if vehiculo_en_espera==True:
+            self.tiempo=None
+        else:
+            self.tiempo=tiempo
+        self.vehiculo_en_espera=vehiculo_en_espera
         self.id_vehiculo=id_vehiculo
         self.id_programacion=id_programacion
 
@@ -78,6 +86,23 @@ class VehiculoProgramado(db.Model):
             Programacion,Programacion.id_programacion==VehiculoProgramado.id_programacion
         ).join(
             Fecha,Fecha.id_fecha==Programacion.id_fecha
+        ).where(
+            VehiculoProgramado.vehiculo_en_espera==False
+        ).filter(
+            desde<=Fecha.fecha,hasta>=Fecha.fecha
+        ).order_by(
+            desc(Fecha.fecha)
+        ).all()
+        return resultado
+    
+    @staticmethod
+    def obtener_todos_vp_en_espera_fecha(desde,hasta):
+        resultado=VehiculoProgramado.query.join(
+            Programacion,Programacion.id_programacion==VehiculoProgramado.id_programacion
+        ).join(
+            Fecha,Fecha.id_fecha==Programacion.id_fecha
+        ).where(
+            VehiculoProgramado.vehiculo_en_espera==True
         ).filter(
             desde<=Fecha.fecha,hasta>=Fecha.fecha
         ).order_by(
@@ -91,6 +116,19 @@ class VehiculoProgramado(db.Model):
             Programacion,Programacion.id_programacion==VehiculoProgramado.id_programacion
         ).join(
             Fecha,Fecha.id_fecha==Programacion.id_fecha
+        ).order_by(
+            desc(Fecha.fecha)
+        ).first()
+        return resultado
+
+    @staticmethod
+    def obtener_vp_ultimo_espera():
+        resultado=VehiculoProgramado.query.join(
+            Programacion,Programacion.id_programacion==VehiculoProgramado.id_programacion
+        ).join(
+            Fecha,Fecha.id_fecha==Programacion.id_fecha
+        ).where(
+            VehiculoProgramado.vehiculo_en_espera==True
         ).order_by(
             desc(Fecha.fecha)
         ).first()
@@ -123,7 +161,7 @@ class VehiculoProgramado(db.Model):
         return resultado
     
     @staticmethod
-    def obtener_vp_join_vehiculo(id):
+    def obtener_vp_join_vehiculo(id:int):
         resultado=VehiculoProgramado.query.filter_by(
             id_programacion=id
         ).join(
@@ -132,6 +170,7 @@ class VehiculoProgramado(db.Model):
             VehiculoProgramado.id_vp,
             VehiculoProgramado.id_programacion,
             VehiculoProgramado.tiempo,
+            VehiculoProgramado.vehiculo_en_espera,
             Vehiculo.id_vehiculo,
             Vehiculo.flota,
             Vehiculo.placa
@@ -160,6 +199,23 @@ class VehiculoProgramado(db.Model):
         ).group_by(
             Programacion.fecha_programa
         )
+
+        return resultado
+    
+    @staticmethod
+    def vista_diaria(fecha:datetime.datetime,ruta_id:int):
+        resultado=VehiculoProgramado.query.join(
+            Vehiculo,Vehiculo.id_vehiculo==VehiculoProgramado.id_vehiculo
+        ).join(
+            Programacion,Programacion.id_programacion==VehiculoProgramado.id_programacion
+        ).join(
+            Ruta,Ruta.id_ruta==Programacion.id_ruta
+        ).join(
+            Fecha,Fecha.id_fecha==Programacion.id_fecha
+        ).where(
+            Fecha.fecha==fecha,
+            Ruta.id_ruta==ruta_id
+        ).all()
 
         return resultado
 

@@ -148,7 +148,7 @@ def mostrar_estadisticas():
     #GRAFICO DE TIEMPOS
     # Para grafico de puntos
     vp=VehiculoProgramado.estadistica_vp_tiempos()
-    tiempos=[{'tiempo':t.strftime("%H:%M"),'cantidad':c} for v,t,c in vp]
+    tiempos=[{'tiempo':t.strftime("%H:%M"),'cantidad':c} for v,t,c in vp if t!=None]
 
     # Estadistica para viajes
     # Cantidad de viajes hechos por vehiculos

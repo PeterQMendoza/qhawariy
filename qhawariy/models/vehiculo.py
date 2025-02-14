@@ -37,6 +37,7 @@ class Vehiculo(db.Model):
     # Establecer relacion inversa {Tabla2}*1-->1{Tabla1}
     vehiculos=db.relationship("VehiculoProgramado",back_populates="vehiculo",cascade="all,delete-orphan")
     vehiculos_disponibles=db.relationship("DisponibleVehiculo",back_populates="vehiculo",cascade="all,delete-orphan")
+    vehiculos_viajes=db.relationship("Viaje",back_populates="vehiculo",cascade="all,delete-orphan")
     
     def __init__(self,flota, placa, marca, modelo, fecha_fabricacion, numero_asientos):
         self.flota=flota

@@ -15,7 +15,9 @@ class Control(db.Model):
     latitud=db.Column(db.String(25),nullable=True)
     longitud=db.Column(db.String(25),nullable=True)
 
+    # Relacion de muchos a uno
     controles=db.relationship("ControlTiempo",back_populates="control",cascade="all,delete-orphan")
+    controles_rutas=db.relationship("SecuenciaControlRuta",back_populates="control",cascade="all,delete-orphan")
 
     def __init__(self,codigo,latitud,longitud):
         self.codigo=codigo

@@ -10,25 +10,25 @@
     {% if current_user.is_authenticated %}
         <a href="{{url_for('home.index')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/home.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+                <object type="image/svg+xml" data="{{ url_for('static', filename='img/home.svg') }}" class="block q-icon-normal" height="24px" width="24px"></object>
             </div>
             Inicio
         </a>
+        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma' ,busca='todos')}}" class="q-link-active q-link-exact-active ">
+            <div class="mr-4 w-6 h-6">
+                <object type="image/svg+xml" data="{{ url_for('static', filename='img/schedule_vehicle_blue.svg') }}" class="block q-icon-active" height="24px" width="24px"></object>
+            </div>
+            Asignación de flota
+        </a>
         <a href="{{url_for('programacion.agregar_programacion')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/schedule.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+                <object type="image/svg+xml" data="{{ url_for('static', filename='img/schedule.svg') }}" class="block q-icon-normal" height="24px" width="24px"></object>
             </div>
             Programaciones
         </a>
-        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma' ,busca='todos')}}" class="q-link-active q-link-exact-active ">
-            <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/schedule_vehicle_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
-            </div>
-            Plan de flota
-        </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/statistic.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+                <object type="image/svg+xml" data="{{ url_for('static', filename='img/statistic.svg') }}" class="block q-icon-normal" height="24px" width="24px"></object>
             </div>
             Estadisticas
         </a>
@@ -36,37 +36,36 @@
 {% endblock %}
 {% block linker %}
 <div class="flex">
-    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+    <object type="image/svg+xml" data="{{url_for('static', filename='img/icon-angle-right.svg')}}" width="7px" height="13px"></object>
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
     <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
-    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+    <object type="image/svg+xml" data="{{url_for('static', filename='img/icon-angle-right.svg')}}" width="7px" height="13px"></object>
 </div>
 <a href="#" class="btn--base">
-    <p class="text-h3">Cronograma de plan de flota</p>
+    <p class="text-h3">Asignación de flota</p>
 </a>
 {% endblock %}
 {% block content %}
 <div class="flex items-center justify-between py-2 relative">
-    <div class="">
-        <p class="text-h4 text-black-100 md:mt-12">{{titulo|safe}}</p>
+    <div class="flex-1">
+        <a href="{{url_for('cronograma_vehiculos.agregar_permiso') }}" class="btn btn--base btn-gray-111">
+            <div class="flex justify-center items-center">
+                <object type="image/svg+xml" data="{{url_for('static', filename='img/planet.svg')}}" width="24px" height="24px"></object>
+                <p class="ml-2 text-xs sm:hidden">Agregar actividad</p>
+            </div>
+        </a>
     </div>
-    <a href="{{url_for('cronograma_vehiculos.agregar_permiso') }}" class="btn btn--base btn-gray-111">
-        <div class="flex justify-center items-center">
-            <img src="{{url_for('static', filename='img/planet.svg')}}" alt="Mapa" class="">
-            <p class="ml-2 text-xs sm:hidden">Dar permiso</p>
-        </div>
-    </a>
     <div class="flex flex-col items-center justify-center right-0">
         <form action="" method="post" class="" novalidate>
             {{form_busca.hidden_tag()}}
             <div class="flex items-center relative">
                 <div class=" inline-flex translateY-[-50%] right-unset left-3 absolute top-[50%]">
-                    <img src="{{ url_for('static', filename='img/icon-len.svg') }}" height="24px" width="24px" alt>
+                    <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-len.svg') }}" width="24px" height="24px"></object>
                 </div>
-                {{ form_busca.busca(class="h-[42px] w-full rounded-full text-gris-900 px-12 border border-gray-209", placeholder="Buscar", autocomplete="on") }}<br>
+                {{ form_busca.busca(class="h-[42px] w-full rounded-full text-gris-900 pr-3 pl-12 border border-gray-209", placeholder="Buscar por flota", autocomplete="on") }}<br>
             </div>
             <div class="mt-3">
                 {% for error in form_busca.busca.errors %}
@@ -76,39 +75,69 @@
         </form>
     </div>
 </div>
-<div role="gantt-chart" class="relative">
-    <div class="fixed modal-cronogram z-6 shadow shadow-custom bg-white border border-cream-100 p-4">
-        <div class="relative">
-
-            <a href="{#{ url_for('cronograma_vehiculos.eliminar_permiso', permiso_id=vp.id_vp) }#}" class="btn btn--base bg-red-600 rounded text-white">
-                <div class="flex justify-center items-center">
-                    <img src="{{url_for('static', filename='img/delete.svg')}}" alt="Descargar" class="">
-                    <p class="ml-2 text-xs sm:hidden">Eliminar</p>
-                </div>
-            </a>
-        </div>
-    </div>
+<div role="grid" class="relative">
 </div>
 {% endblock %}
 {% block javascript %}
 <script  type="module">
+    // 
     import { GanttChart } from "{{ url_for('static', filename='source/js/gantt/gantt-chart.js') }}";
     document.addEventListener("DOMContentLoaded",()=>{
 
         const tasks=JSON.parse('{{vehiculos|tojson|safe}}');
         const taskDurations=JSON.parse('{{permisos|tojson|safe}}')
         const date=JSON.parse('{{date|tojson|safe}}');
+        const link=JSON.parse('{{ url_for("cronograma_vehiculos.eliminar_permiso", permiso_id=0)|tojson|safe}}').slice(0,-1);
         
         //convertir string a Date
         taskDurations.forEach((taskDuration)=>{
             taskDuration.start=new Date(taskDuration.start);
             taskDuration.end=new Date(taskDuration.end);
-        })
-        console.log(taskDurations)
+        });
 
-        const ganttCharts=document.querySelectorAll('[role="gantt-chart"]');
+        const ganttCharts=document.querySelectorAll('[role="grid"]');
         ganttCharts.forEach((ganttChart)=>{
-            new GanttChart(ganttChart,tasks,taskDurations,date.month,date.year);
+            new GanttChart(ganttChart,tasks,taskDurations,date.month,date.year,link);
+        });
+
+        // Para el desplazamiento a traves de la gantt
+        const contenedor=document.querySelector("#gantt-grid-container__time");
+
+        let isDown=false;
+        let startX;
+        let startY;
+        let scrollLeft;
+        let scrollTop;
+
+        contenedor.addEventListener("mousedown",(e)=>{
+            isDown=true;
+            contenedor.classList.add('active');
+            startX=e.pageX-contenedor.offsetLeft;
+            startY=e.pageY-contenedor.offsetTop;
+            scrollLeft=contenedor.scrollLeft;
+            scrollTop=contenedor.scrollTop;
+            // e.preventDefault();
+        });
+
+        contenedor.addEventListener("mouseleave",()=>{
+            isDown=false;
+            contenedor.classList.remove('active');
+        });
+        
+        contenedor.addEventListener("mouseup",()=>{
+            isDown=false;
+            contenedor.classList.remove('active');
+        });
+
+        contenedor.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - contenedor.offsetLeft;
+            const y = e.pageY - contenedor.offsetTop;
+            const walkX = (x - startX) * 2; // Multiplica por 2 para aumentar la velocidad de desplazamiento
+            const walkY = (y - startY) * 2; // Multiplica por 2 para aumentar la velocidad de desplazamiento
+            contenedor.scrollLeft = scrollLeft - walkX;
+            contenedor.scrollTop = scrollTop - walkY;
         });
     });
 </script>

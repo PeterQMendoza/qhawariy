@@ -1,7 +1,4 @@
 import datetime
-import locale
-import pytz
-import calendar
 
 import logging
 import pandas as pd
@@ -13,6 +10,7 @@ from flask_login import current_user, login_required
 from urllib.parse import urlparse
 
 from qhawariy.controllers.decorators.auth import operacion_required
+from qhawariy.models.disponible_vehiculo import DisponibleVehiculo
 from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.programacion import Programacion
@@ -20,6 +18,7 @@ from qhawariy.models.ruta_terminal import RutaTerminal
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.vehiculo_programado import VehiculoProgramado
 from qhawariy.controllers.forms.programacion_form import ProgramacionForm,AgregaVehiculoProgramadoForm,BuscarProgramacionForm
+from qhawariy.controllers.datasets.dataset_factory import DatasetFactory
 from qhawariy.utilities.files import FactoryExcel
 from qhawariy.utilities.helpers import convertir_DataFrame
 from qhawariy.utilities.builtins import LIMA_TZ
@@ -34,10 +33,10 @@ bp=Blueprint("programacion",__name__,url_prefix="/programacion")
 @operacion_required
 def agregar_programacion():
     """"
-    Muestra la lista de programaciones realizadas.
+    Muestra la lista de programaciones guardadas.
     Ademas permite agregar una nueva programacion
     """
-    busqueda=Programacion.obtener_programa_join_ruta()
+    busqueda=Programacion.obtener_programas()
     rutas=Ruta.obtener_todos_rutas()
 
     form=ProgramacionForm()
@@ -69,28 +68,42 @@ def agregar_programacion():
                 return redirect(siguiente_pagina)
             else:
                 flash(message="La ya existe una programación con fecha: {t} y ruta con código:{r}".format(t=fecha_programa,r=Ruta.obtener_ruta_por_id(ruta_f).codigo),category='error')
-    return render_template("programacion/lista_programacion.html",form=form,programas=busqueda)
+    return render_template("programacion/lista_programacion.html",form=form,programas=busqueda,rutas=rutas)
 
 #
 @bp.route("/agrega_vehiculo/<int:programacion_id>/",methods=["GET","POST"])
 @login_required
 @operacion_required
 def agregar_vehiculo_programado(programacion_id):
+    """Ruta que permite agregar vehiculos a una programacion
+        param: programacion_id valor entero que representa el id de programacion
+    """
     pro=Programacion.obtener_programacion_por_id(programacion_id)
     ruta=Ruta.obtener_ruta_por_id(pro.id_ruta)
     lista_vp=VehiculoProgramado.obtener_vp_join_vehiculo(programacion_id)
-    vehiculos=Vehiculo.obtener_todos_vehiculos_activos()
+
+    # Mostrar solo los vehiculos disponibles de acuerdo a la fecha establecido en el programa
+    fecha=pro.fecha
+    dv=DisponibleVehiculo.obtener_vehiculos_disponibles(fecha.fecha)
+    vehiculos=[]
+    if dv!=None:
+        for v in dv:
+            vehiculos.append(v.vehiculo)
+    else:
+        vehiculos=Vehiculo.obtener_todos_vehiculos_activos()
+
     form=AgregaVehiculoProgramadoForm()
-    form.vehiculo.choices=[(v.id_vehiculo,str(v.flota)+" - "+v.placa)for v in vehiculos]
+    form.vehiculo.choices=[(v.id_vehiculo,str(v.flota)+": "+v.placa)for v in vehiculos]
     if form.validate_on_submit():
         vp=form.vehiculo.data
         tiempo=form.tiempo.data
-        # Realizar programaccion una vez por vehiculo y con tiempo unico
+        vehiculo_en_espera=form.vehiculo_en_espera.data
+        # Realizar programacion una vez por vehiculo y con tiempo unico
         vehiculo_unico=VehiculoProgramado.obtener_vp_por_programacion_y_id_vehiculo(programacion_id=programacion_id,vehiculo_id=vp)
         if vehiculo_unico is None:
             tiempo_unico=VehiculoProgramado.obtener_vp_por_programacion_y_tiempo(programacion_id=programacion_id,tiempo=tiempo)
             if tiempo_unico is None:
-                vehiculo_programado=VehiculoProgramado(tiempo,vp,programacion_id)
+                vehiculo_programado=VehiculoProgramado(tiempo,vehiculo_en_espera,vp,programacion_id)
                 vehiculo_programado.guardar()
                 siguiente_pagina=request.args.get("next",None)
                 if not siguiente_pagina or urlparse(siguiente_pagina).netloc!='':
@@ -143,7 +156,7 @@ def cargar_resumen():
 @login_required
 @operacion_required
 def mostrar_resumen_semana(fecha):
-    # CORREGIR SI EXISTE MAS RUTAS
+    # CORREGIR ERROR CUANDO NO SE TIENE PROGRAMACIONES
     # Formulario de busqueda
     try:
         ahora=datetime.datetime.strptime(fecha,"%Y-%m-%d")
@@ -166,9 +179,15 @@ def mostrar_resumen_semana(fecha):
     # obtener los vehiculos programados de la semana (no todos)
     vehiculos=VehiculoProgramado.obtener_todos_vp_fecha(desde=inicio_semana,hasta=fin_semana)
 
+    #obtener vehiculos en espera
+    vehiculos_en_espera=VehiculoProgramado.obtener_todos_vp_en_espera_fecha(desde=inicio_semana,hasta=fin_semana)
+
     if vehiculos==[]:
-        vehiculos=[VehiculoProgramado.obtener_vp_ultimo()]
+        vehiculos=[VehiculoProgramado.obtener_vp_ultimo()]#es necesario tener una programacion de vehiculo
         flash("Todavia no has realizados programaciones para esta fecha","info")
+
+    if vehiculos_en_espera==[]:
+        vehiculos_en_espera=[VehiculoProgramado.obtener_vp_ultimo_espera()]
 
 
     # obtener informacion por cada rutas
@@ -179,7 +198,10 @@ def mostrar_resumen_semana(fecha):
 
     # procesar los datos
     rutas_vehiculos=[RutaTerminal.obtener_rt_por_ruta(a.programa.id_ruta).ruta.codigo for a in vehiculos]
+
     resumen=procesar_data(vehiculos,rutas_vehiculos)
+    # de espera
+    data_espera=procesar_data_espera(vehiculos_en_espera,ahora)
 
     #obtener df por cada ruta
     list_df=[]
@@ -191,22 +213,29 @@ def mostrar_resumen_semana(fecha):
 
     # Crear archivo excel para el resumen
     filename='Resumen_programacion'+"_"+inicio_semana.strftime("%d-%m-%Y")+"_"+fin_semana.strftime("%d-%m-%Y")
-    
+
+    # Agregar la tabla de vehiculos en espera al final
+    rutas.append("Vehiculos en espera")
+    list_df.append(data_espera)
+    dict_df.append({rutas[-1]:data_espera})
+    recorridos.append("Lista de vehiculos en espera")
+
     excel=FactoryExcel()
     excel.crearArchivo(filename=filename,dataframe=list_df,recorrido=recorridos,date=date_str,sheetnames=rutas,tipo='resumen').guardar()
-
+    
     return render_template("programacion/resumen_programacion.html",
-                           filename=filename+".xlsx",
-                           data1=list_df[0],
-                           data2=list_df[1],
-                           data3=list_df[2],
-                           df=dict_df,
-                           test=resumen,
-                           rt=rutas_terminal,
-                           form=form,
-                           fecha_inicio=inicio_semana,
-                           fecha_fin=fin_semana
-                           )
+                        filename=filename+".xlsx",
+                        data1=list_df[0],
+                        data2=list_df[1],
+                        data3=list_df[2],
+                        data4=list_df[3],
+                        df=dict_df,
+                        test=resumen,
+                        rt=rutas_terminal,
+                        form=form,
+                        fecha_inicio=inicio_semana,
+                        fecha_fin=fin_semana
+                        )
 
 
 @bp.route("/ver_diaria",methods=["GET","POST"])
@@ -214,32 +243,38 @@ def mostrar_resumen_semana(fecha):
 @operacion_required
 def ver_diario_programacion():
     # obtener la programacion de vehiculos por fecha
-    ahora=datetime.datetime.now(LIMA_TZ).strftime("%Y-%m-%d")
-    hoy=Programacion.obtener_por_fecha(ahora)
-    diario=''
-    l=[]
-    if hoy is not None:
-        vps=VehiculoProgramado.obtener_vp_y_vehiculo(id=hoy.id_programacion)
-        diario=[{'tiempo':t,'flota':f} for vp,t,f in vps]
-        tiempos=[d['tiempo'] for d in diario]
-        pesos=[]
-        for a in range(1,len(tiempos)):
-            tf=datetime.timedelta(hours=tiempos[a].hour,minutes=tiempos[a].minute,seconds=tiempos[a].second)
-            ti=datetime.timedelta(hours=tiempos[a-1].hour,minutes=tiempos[a-1].minute,seconds=tiempos[a-1].second)
-            elapsed=tf-ti
-            pesos.append(elapsed.total_seconds())
+    ahora=datetime.datetime.now(LIMA_TZ)
+    ahora=ahora.replace(hour=0,minute=0,second=0,microsecond=0)
+    rutas=Ruta.obtener_todos_rutas()
 
-        #al
-        suma=sum(pesos)
-        L=23000
-        aux=0
-        for i in range(len(pesos)):
-            aux=aux+(pesos[i]*(L/suma))
-            l.append({"x":aux,"y":0,"r":2})
-    else:
-        flash(message="No se tiene programacion para hoy:{t}".format(t=ahora),category='error')
+    #
+    ida=[]
+    vuelta=[]
+    vehiculos_ida=[]
+    vehiculos_vuelta=[]
+    for r in rutas:
+        vp=VehiculoProgramado.vista_diaria(ahora,r.id_ruta)
+        if r.id_ruta==1:
+            ida.extend(vp)
+            vehiculos_ida.extend([ v.vehiculo for v in vp])
 
-    return render_template("programacion/vista_diaria.html",data=diario,p=l)
+        if r.id_ruta==2 or r.id_ruta==3:
+            vuelta.extend(vp)
+            vehiculos_vuelta.extend([ v.vehiculo for v in vp])
+
+    if vehiculos_ida==[] and vehiculos_vuelta==[]:
+        flash(f"No existe programacion para hoy {ahora}","info")
+        return render_template("programacion/vista_diaria.html",data1='',data2='')
+
+    dataset=DatasetFactory()
+    dts_ida=dataset.create_dataset(ida,vehiculos_ida)
+    dts_ida.process_dataframe()
+    dts_ida_html=dts_ida._dataframe.to_html(classes='table table-striped',index=True,escape=False)
+    dts_vuelta=dataset.create_dataset(vuelta,vehiculos_vuelta)
+    dts_vuelta.process_dataframe()
+    dts_vuelta_html=dts_vuelta._dataframe.to_html(classes='table table-striped',index=True,escape=False)
+
+    return render_template("programacion/vista_diaria.html",data1=dts_ida_html,data2=dts_vuelta_html)
 
 def procesar_data(data,rutas):
     resumen=convertir_DataFrame(data)
@@ -257,6 +292,43 @@ def procesar_data(data,rutas):
     #cambiar el orden de las columnas
     resumen=resumen.reindex(columns=['fecha_programa', 'Tiempo', 'flota','ruta'])
     return resumen
+
+def procesar_data_espera(data:list,date:datetime.datetime):
+    resumen=convertir_DataFrame(data)
+    resumen=resumen.drop(columns=["tiempo","vehiculo_en_espera"])
+    resumen=resumen.rename(columns={"id_vp":"vp"})
+
+    resumen.id_programacion=[a.programa.fecha.fecha.date() for a in data]
+    resumen.id_vehiculo=[str(a.vehiculo.flota) for a in data]
+
+
+    tiempo=date
+    # Generamos una lista de las fechas de las semana
+    lista_fecha=[]
+    aux=tiempo.weekday()
+    for a in range(aux):
+        t=tiempo-datetime.timedelta(days=(aux-a))
+        lista_fecha.append(t)
+    for c in range(7-aux):
+        t=tiempo+datetime.timedelta(days=c)
+        lista_fecha.append(t)
+    # crear dataframe por cada dia de la semana
+    df_espera=pd.DataFrame(data=resumen.vp)
+    df_espera=df_espera.drop_duplicates()
+    df_espera=df_espera.set_index("vp")
+    # a=ruta
+    for b in range(len(lista_fecha)):
+        d_aux=resumen.loc[resumen.id_programacion==lista_fecha[b].date()]
+        #Salida_1
+        #eliminamos todas las columnas no necesarias
+        d_aux=d_aux.drop(columns=['id_programacion'])
+        d_salida=d_aux.set_index('vp')
+        df_espera[lista_fecha[b].strftime('%A %d')]=d_salida
+    df_espera=df_espera.sort_index()
+    df_espera=df_espera.dropna(how='all')
+    df_espera=df_espera.fillna(value='')
+
+    return df_espera
 
 # funcion auxiliar para crear tablas
 def tabla(ruta,data,rutas,date):

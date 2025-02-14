@@ -1,4 +1,10 @@
+import datetime
 from qhawariy import db
+from qhawariy.models.control import Control
+from qhawariy.models.fecha import Fecha
+from qhawariy.models.ruta import Ruta
+from qhawariy.models.vehiculo import Vehiculo
+from qhawariy.models.viaje import Viaje
 
 class ControlTiempo(db.Model):
     """
@@ -12,7 +18,7 @@ class ControlTiempo(db.Model):
     id_viaje=db.Column(db.Integer,db.ForeignKey('viajes.id_viaje'),nullable=False)
 
     control=db.relationship("Control",back_populates="controles",uselist=False,single_parent=True)
-    viaje=db.relationship("Viaje",back_populates="viajes",uselist=False,single_parent=True)
+    viaje=db.relationship("Viaje",back_populates="viajes",uselist=False,single_parent=True,lazy=True)
 
     def __init__(self,tiempo,id_control,id_viaje):
         self.tiempo=tiempo
@@ -49,4 +55,23 @@ class ControlTiempo(db.Model):
     @staticmethod
     def obtener_por_viaje(id_viaje):
         resultado=ControlTiempo.query.filter_by(id_viaje=id_viaje).all()
+        return resultado
+    
+    @staticmethod
+    def vista_diaria(date:datetime.datetime,ruta_id:int):
+        resultado=ControlTiempo.query.join(
+            Viaje,Viaje.id_viaje==ControlTiempo.id_viaje
+        ).join(
+            Control,Control.id_control==ControlTiempo.id_control
+        ).join(
+            Fecha,Fecha.id_fecha==Viaje.id_fecha
+        ).join(
+            Ruta,Ruta.id_ruta==Viaje.id_ruta
+        ).join(
+            Vehiculo,Vehiculo.id_vehiculo==Viaje.id_vehiculo
+        ).where(
+            Ruta.id_ruta==ruta_id,
+            Fecha.fecha==date
+        ).all()
+
         return resultado

@@ -65,99 +65,80 @@
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base">
+<a href="{{url_for('control.listar_controles')}}" class="btn--base">
     <p class="text-h3">Lista de putos de control</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="#" class="btn--base">
+    <p class="text-h3">Agregar secuencia de controles en ruta</p>
 </a>
 {% endblock %}
 {% block content %}
 <div class="flex items-center justify-between py-2">
-    <p class="text-h5 text-black-100">Lista puntos de control</p>
-    <a href="{{url_for('control.listar_control_ruta')}}" class="btn btn--base btn-gray-111">
-        <div class="flex justify-center items-center">
-            <img src="{{url_for('static', filename='img/control_route.svg')}}" height="24px" width="24px" alt="" class="">
-            <p class="ml-2 sm:hidden">Controles en ruta</p>
-        </div>
-    </a>
+    <p class="text-h5 text-black-100"></p>
 </div>
 <div class="list-users pb-6 block w-full grid sm:grid-cols-1 grid-cols-2-1-3 gap-2 sm:gap-x-0">
-    <div class="border border-gray-209 py-2">
-        <div class="text-body-3 grid gap-2 grid-cols-4 py-2 sm:gap-x-0 border-b border-gray-209">
-            <div class="flex items-center justify-center">
-                <p class="text-black-60 text-center font-semibold">Codigo</p>
+    <div class="p-4">
+        {% for r in rutas %}
+        <div class="mb-5">
+            <div class="">
+                <p class="text-h6">
+                    <span class="text-black-60">{{r.codigo}}</span>
+                </p>
             </div>
-            <div class="flex items-center justify-center">
-                <p class="text-black-60 text-center font-semibold">Latitud</p>
-            </div>
-            <div class="flex items-center justify-center">
-                <p class="text-black-60 text-center font-semibold">Longitud</p>
-            </div>
-            <div class="flex items-center justify-center">
-                <p class="text-black-60 text-center font-semibold"></p>
-            </div>
-        </div>
-        <div class="text-body-3 grid gap-2 grid-cols-4 sm:gap-x-0 bg-gray-250 py-2">
-            {% for control in controles %}
-            <div class="flex items-center justify-center">
-                <p>{{control.codigo|safe}}</p>
-            </div>
-            <div class="flex items-center justify-center">
-                <p>{{control.latitud|safe}}</p>
-            </div>
-            <div class="flex items-center justify-center">
-                <p>{{control.longitud|safe}}</p>
-            </div>
-            <div class="flex items-center justify-center">
-                <a href="{{ url_for('control.eliminar_control', control_id=control.id_control) }}" class="btn btn--base btn-red-600">
-                    <div class="flex justify-center items-center">
-                        <img src="{{url_for('static', filename='img/delete.svg')}}" alt="Descargar" class="">
-                        <p class="ml-2 text-xs sm:hidden">Eliminar</p>
+            <div class="route">
+                {% for secuencia in secuencias %}
+                {% if r.id_ruta==secuencia.ruta.id_ruta %}
+                <div class="checkpoint">
+                    <div class="icon shadow-custom">{{secuencia.secuencia}}</div>
+                    <div class="label flex items-center justify-center">
+                        <span class="text-body-3 text-gray-900">{{secuencia.control.codigo}}</span>
                     </div>
-                </a>
+                    <a href="{{url_for('control.eliminar_control_ruta',scr_id=secuencia.id_scr)}}" class="btn btn--sm btn-red-600">
+                        <div class="flex justify-center items-center">
+                            <img src="{{url_for('static', filename='img/delete.svg')}}" alt="Eliminar" class="">
+                        </div>
+                    </a>
+                </div>
+                <div class="progress-bar" style="width: 100%;"></div>
+                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
-    <div class="order-2 shadow-custom rounded-[10px] border border-gray-209 flex flex-col items-center justify-center">
-        <div class="flex items-center justify-center">
-            <p class="text-h5 text-black-100">Agregar control</p>
+    <div class="order-2 shadow-custom rounded-[10px] border border-gray-209 p-4 flex flex-col justify-center">
+        <div class="">
+            <p class="text-h5 text-black-100 text-center">Agregar secuencia de controles en ruta</p>
         </div>
         <form action="" method="post" novalidate>
             {{form.hidden_tag()}}
-            <div class="grid grid-cols-2 gap-x-4 sm:gap-x-2 sm:grid-cols-1">
-                <div class="mt-3 col-span-2 order-1 sm:order-no">
+            <div class="grid grid-cols-1 gap-x-4 sm:gap-x-2 ">
+                <div class="mt-3 order-1 sm:order-no">
                     <div class="relative">
                         <div class="w-full block">
-                            {{ form.codigo.label }}
-                            {{ form.codigo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Codigo", autocomplete="on", maxlength="20") }}<br>
+                            {{ form.ruta.label }}
+                            {{ form.ruta(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Ruta", autocomplete="on", maxlength="20") }}<br>
                         </div>
                     </div>
-                    {% for error in form.codigo.errors %}
+                    {% for error in form.ruta.errors %}
                     <span class="text-red-600 text-xs">{{ error }}</span>
                     {% endfor %}
                 </div>
-                <div class="mt-3 col-span-2 order-2 sm:order-no">
+                <div class="mt-3 order-2 sm:order-no">
                     <div class="relative">
                         <div class="w-full block">
-                            {{ form.latitud.label }}
-                            {{ form.latitud(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Latitud", autocomplete="on", maxlength="20") }}<br>
+                            {{ form.control.label }}
+                            {{ form.control(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Control", autocomplete="on", maxlength="20") }}<br>
                         </div>
                     </div>
-                    {% for error in form.latitud.errors %}
+                    {% for error in form.control.errors %}
                     <span class="text-red-600 text-xs">{{ error }}</span>
                     {% endfor %}
                 </div>
-                <div class="mt-3 col-span-2 order-2 sm:order-no">
-                    <div class="relative">
-                        <div class="w-full block">
-                            {{ form.longitud.label }}
-                            {{ form.longitud(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Longitud", autocomplete="on", maxlength="20") }}<br>
-                        </div>
-                    </div>
-                    {% for error in form.longitud.errors %}
-                    <span class="text-red-600 text-xs">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div class="mt-3 col-span-2 order-6 sm:order-no">
+                <div class="mt-3 order-4 sm:order-no">
                     <div class="mt-4 mb-5">
                         {{ form.submit(class="btn btn--base btn-green-600 text-white w-full md:w-auto block text-center") }}
                     </div>

@@ -13,9 +13,11 @@ class Ruta(db.Model):
     fin_vigencia = db.Column(db.DateTime,default=datetime.datetime.now(lima_tz),nullable=False)
     documento = db.Column(db.String(300),nullable=False)
 
-    # Relaciones
-    rutas = db.relationship("Programacion",back_populates="ruta",cascade="all,delete-orphan")
+    # Relaciones de muchos a uno
+    rutas_programas = db.relationship("Programacion",back_populates="ruta",cascade="all,delete-orphan")
+    rutas_viajes = db.relationship("Viaje",back_populates="ruta",cascade="all,delete-orphan")
     rutas_terminal = db.relationship("RutaTerminal",back_populates="ruta",cascade="all,delete-orphan")
+    rutas_controles=db.relationship("SecuenciaControlRuta",back_populates="ruta",cascade="all,delete-orphan")
 
     def __init__(self,codigo,inicio_vigencia,fin_vigencia,documento):
         self.codigo=codigo
@@ -43,6 +45,7 @@ class Ruta(db.Model):
     @staticmethod
     def obtener_ruta_por_direccion_destino_origen(direccion_origen,direccion_destino):
         return Ruta.query.filter_by(direccion_destino=direccion_destino,direccion_origen=direccion_origen).first()
+    
 
     @staticmethod
     def obtener_todos_rutas():

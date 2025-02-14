@@ -64,17 +64,17 @@
         </a>
         {% endif %}
         {% if rol.rol == "Operacion"%}
-        <a href="{{url_for('programacion.agregar_programacion')}}" class="q-icon-costumer">
-            <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/schedule.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
-            </div>
-            Programaciones
-        </a>
         <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
             </div>
             Plan de flota
+        </a>
+        <a href="{{url_for('programacion.agregar_programacion')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/schedule.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Programaciones
         </a>
         {% endif %}
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-link-active q-link-exact-active">

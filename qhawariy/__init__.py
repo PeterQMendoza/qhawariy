@@ -26,7 +26,7 @@ from flask_apscheduler import APScheduler
 
 import redis
 
-from qhawariy.utilities.filters import format_datetime,format_time
+from qhawariy.utilities.filters import format_datetime,format_time, is_datetime
 from qhawariy.utilities.assets import (compile_stylesheet_bundles,compile_js_assets)
 
 Base=declarative_base()
@@ -156,7 +156,9 @@ def create_app(test_config=None):
     # Ejecutar antes de cada solicitud
 
     # Registro de Blueprints
-    from qhawariy.controllers import auth,home,admin,vehiculo,ruta,propietario,viaje,programacion,estadistica,control,control_tiempo,permiso_vehiculo,coordenadas
+    from qhawariy.controllers import (auth,home,admin,vehiculo,ruta,propietario,viaje,
+                                      programacion,estadistica,control,control_tiempo,
+                                      permiso_vehiculo,coordenadas)
     from qhawariy.models.timer import eventos
     app.register_blueprint(home.bp)
     app.register_blueprint(auth.bp)
@@ -223,6 +225,7 @@ def register_error_handler(app):
 def register_filters(app):
     app.jinja_env.filters["date_time"]=format_datetime
     app.jinja_env.filters["time"]=format_time
+    app.jinja_env.filters["is_datetime"]=is_datetime
 
 def configure_logging(app):
     """

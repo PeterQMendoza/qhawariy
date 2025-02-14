@@ -1,9 +1,12 @@
 import datetime
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, IntegerRangeField, TimeField,Form
+from wtforms import IntegerField, IntegerRangeField, TimeField, FormField, FieldList
 from wtforms.fields import SelectField, SubmitField
 from wtforms_html5 import AutoAttrMeta
-from wtforms.validators import DataRequired,NumberRange
+from wtforms.validators import DataRequired,Optional,NumberRange
+
+class NumeroForm(FlaskForm):
+    control=SelectField('Control', validators=[Optional()],id='id_control_config',coerce=int)
 
 # Formulario para asignar, cambiar rol a un usuario
 class UserAdminForm(FlaskForm):
@@ -43,4 +46,7 @@ class ConfiguracionForm(FlaskForm):
         validators=[DataRequired(),NumberRange(min=0,max=44)],
         render_kw={"step":"1"},
     )
-    submit=SubmitField(label="Guardar")
+    secuencia_control_ida=FieldList(FormField(NumeroForm),min_entries=5)
+    secuencia_control_vuelta=FieldList(FormField(NumeroForm),min_entries=5)
+
+    submit=SubmitField(label="Guardar todo")

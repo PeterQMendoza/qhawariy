@@ -57,7 +57,13 @@ class Calendario():
         self.year=year
         self.month=month
         self.actual=datetime.date(year=year,month=month,day=primer_dia_lista)
-        self.ultimo=datetime.date(year=year,month=month+1,day=1)-datetime.timedelta(days=1)
+        if(month>=12):
+           next_month=1
+           next_year=self.year+1
+        else:
+           next_month=self.month+1
+           next_year=self.year
+        self.ultimo=datetime.date(year=next_year,month=next_month,day=1)-datetime.timedelta(days=1)
         self.primer_dia_semana=primer_dia_semana
         self.ultimo_dia_mes=self.ultimo.day
         self.dia=0

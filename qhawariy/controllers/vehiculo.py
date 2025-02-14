@@ -35,7 +35,7 @@ def listar_vehiculos():
     # Probar
     busqueda=Vehiculo.obtener_todos_vehiculos()
     form=BuscarVehiculoForm()
-    title="Lista de vehiculos"
+    title="Lista de todos los vehiculos registrados"
     # El filtro de busqueda
     # 0: por defecto en Placa
     # 1: por nª Flota
@@ -67,7 +67,7 @@ def buscar_vehiculo(buscar,filtro):
     
     form=BuscarVehiculoForm()
     form.filter.choices=[(0,"Placa"),(1,"Nº flota"),(2,"Marca"),(3,"Modelo")]
-    title="Resultado de buscar: {b} por {o}".format(b=buscar,o=form.filter.choices[filtro][1])
+    title="Resultado de buscar vehiculo: {b} por {o}".format(b=buscar,o=form.filter.choices[filtro][1])
     if form.validate_on_submit():
         busca=form.busca.data
         filtro=form.filter.data

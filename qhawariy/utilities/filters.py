@@ -1,3 +1,6 @@
+import datetime
+
+
 def format_datetime(value,format="short"):
     """Filtro que transforma un datetime en str con formato.
 
@@ -41,3 +44,6 @@ def format_time(value,format='short'):
     if format=="HM":
         value_str=value.strftime("%H:%M %p")
     return value_str
+
+def is_datetime(value):
+    return isinstance(value,datetime.datetime)

@@ -7,14 +7,16 @@ from qhawariy.utilities.builtins import LIMA_TZ
 
 ahora=datetime.datetime.now(tz=LIMA_TZ)
 class Fecha(db.Model):
-    """Modelo Fecha:
+    """Modelo Fecha: contiene la fecha en la cual de realizan las programaciones, tambien es utilzado para reportar
+    los viejas
     """
     __tablename__ = "fechas"
     id_fecha = db.Column(db.Integer,primary_key=True)
     fecha = db.Column(db.DateTime,default=datetime.datetime(year=ahora.year,month=ahora.month,day=ahora.day,hour=0,minute=0,second=0))
 
-    # Relacione
-    fecha_programas = db.relationship("Programacion",back_populates="fecha",cascade="all,delete-orphan")
+    # Relaciones
+    fechas_programas = db.relationship("Programacion",back_populates="fecha",cascade="all,delete-orphan")
+    fechas_viajes = db.relationship("Viaje",back_populates="fecha",cascade="all,delete-orphan")
 
     def __init__(self, fecha):
         self.fecha=fecha

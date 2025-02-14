@@ -180,16 +180,16 @@
                 {% endfor %}
             </div>
             <div class="col-span-2 mt-3 sm:col-span-1">
-                <div class="mt-4 mb-5">
-                    {{ form.submit(class="btn btn--base bg-green-600 text-white w-full md:w-auto block text-center") }}
+                <div class="mt-4 flex items-center justify-center">
+                    {{ form.submit(class="btn btn--base bg-green-600 text-white w-auto block text-center") }}
                 </div>
             </div>
         </div>
     </form>
     <form action="{{ url_for('vehiculo.eliminar_vehiculo', id_vehiculo=vehiculo.id_vehiculo) }}" method="post" novalidate>
         {{form.csrf_token}}
-        <div class="mt-4 mb-5">
-            <input type="submit" value="Eliminar" class="btn btn--base bg-red-600 block text-center text-white w-full md:w-auto"/>
+        <div class="mt-4 mb-5 flex items-center justify-center">
+            <input type="submit" value="Eliminar" class="btn btn--base bg-red-600 block text-center text-white w-auto"/>
         </div>
     </form>
 </div>

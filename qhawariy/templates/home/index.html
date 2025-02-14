@@ -62,17 +62,17 @@
         </a>
         {% endif %}
         {% if rol.rol == "Operacion"%}
+        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Asignación de flota
+        </a>
         <a href="{{url_for('programacion.agregar_programacion')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/schedule.svg') }}" height="24px" width="24px" alt="panel programaciones" srcset="" class="block q-icon-normal">
             </div>
             Programaciones
-        </a>
-        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
-            <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
-            </div>
-            Plan de flota
         </a>
         {% endif %}
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
@@ -172,6 +172,15 @@
                 {% endif %}
                 {% if rol.rol == "Operacion"%}
                 <!-- Operacion -->
+                <a class="flex items-center justify-center p-4" href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}">
+                    <div class="flex items-center flex-col justify-center">
+                        <img src="{{url_for('static', filename='img/schedule_vehicle.svg')}}" height="48px" width="48px" alt="inicio programaciones" class=" sm:hidden">
+                        <span class="h-auto mt-4">
+                            <p class="font-bold">Asignación de flota</p>
+                        </span>
+                        <p class="text-body-4 pt-2">Realizar asignación de vehiculos, de acuerdo a un cronograma</p>
+                    </div>
+                </a>
                 <a class="flex items-center justify-center p-4" href="{{url_for('programacion.agregar_programacion')}}">
                     <div class="flex items-center flex-col justify-center">
                         <img src="{{url_for('static', filename='img/schedule.svg')}}" height="48px" width="48px" alt="inicio programaciones" class=" sm:hidden">
@@ -179,15 +188,6 @@
                             <p class="font-bold">Programaciones</p>
                         </span>
                         <p class="text-body-4 pt-2">Realizar programaciones de horarios de salidas de vehiculos</p>
-                    </div>
-                </a>
-                <a class="flex items-center justify-center p-4" href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}">
-                    <div class="flex items-center flex-col justify-center">
-                        <img src="{{url_for('static', filename='img/schedule_vehicle.svg')}}" height="48px" width="48px" alt="inicio programaciones" class=" sm:hidden">
-                        <span class="h-auto mt-4">
-                            <p class="font-bold">Plan de flota</p>
-                        </span>
-                        <p class="text-body-4 pt-2">Realizar planificacion de vehiculos, establecer permisos a vehiculos</p>
                     </div>
                 </a>
                 {% endif %}

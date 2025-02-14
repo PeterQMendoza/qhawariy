@@ -19,3 +19,10 @@ class ControlForm(FlaskForm):
     latitud=StringField("Latitud",validators=[DataRequired("Ingrese la ubicacion del punto de control")])
     longitud=StringField("Longitud",validators=[DataRequired("Ingrese la ubicacion del punto de control")])
     submit=SubmitField("Agregar")
+
+class ControlRutaForm(FlaskForm):
+    class Meta(AutoAttrMeta):
+        csrf=True
+    ruta=SelectField("Seleccione ruta",validators=[DataRequired()],id="controlRuta_ruta_selected_1",coerce=int)
+    control=SelectField("Seleccione control",validators=[DataRequired()],id="controlRuta_control_selected_1",coerce=int)
+    submit=SubmitField("Agregar")

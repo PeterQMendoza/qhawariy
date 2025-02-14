@@ -1,3 +1,4 @@
+
 // CLASES QUE SON UTILIZADOS EN LA APPLICACION WEB QHAWARIY
 class ButtonToggle
     {
@@ -28,7 +29,7 @@ class ButtonToggle
             {
               this.btn.innerHTML=this.icon.open;
             }
-            thielement.classList.toggle("hidden");
+            this.element.classList.toggle("hidden");
           });
         }
         if(this.type_toggle==='passwordToggle'){
@@ -188,5 +189,42 @@ document.addEventListener('DOMContentLoaded',()=>{
             modal.classList.remove("hidden");
         }
     });
+
+    class Popover{
+        constructor(button,content){
+            this.button=document.querySelector(button);
+            this.content=document.querySelector(content);
+
+            this.init();
+        }
+
+        init(){
+            this.button.addEventListener('click',()=>{
+                this.toggle();
+            });
+
+            document.addEventListener('click',(event)=>{
+                if(!this.button.contains(event.target) && !this.content.contains(event.target)){
+                    this.hide();
+                }
+            });
+        }
+
+        toggle(){
+            if(this.content.style.display==='block'){
+                this.hide();
+            } else {
+                this.show();
+            }
+        }
+
+        show(){
+            this.content.style.display='block';
+        }
+
+        hide(){
+            this.content.style='none';
+        }
+    }
 
 });

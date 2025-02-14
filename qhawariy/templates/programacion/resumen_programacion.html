@@ -11,17 +11,17 @@
             </div>
             Inicio
         </a>
+        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
+            <div class="mr-4 w-6 h-6">
+                <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
+            </div>
+            Asignación de flota
+        </a>
         <a href="{{url_for('programacion.agregar_programacion')}}" class="q-link-active q-link-exact-active">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/schedule_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
             </div>
             Programaciones
-        </a>
-        <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma',busca='todos')}}" class="q-icon-costumer">
-            <div class="mr-4 w-6 h-6">
-                <img src="{{ url_for('static', filename='img/schedule_vehicle.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal">
-            </div>
-            Plan de flota
         </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
@@ -82,12 +82,14 @@
     </div>
 </div>
 <div class="flex items-center justify-between py-2 border-b border-cream-100">
+    {% if filename!='' %}
     <a href="{{ url_for('programacion.descargar_resumen',name=filename)}}" class="btn btn--base btn-blue-100">
         <div class="flex justify-center items-center">
             <img src="{{url_for('static', filename='img/download.svg')}}" alt="Descargar" class="">
             <p class="ml-2 text-xs sm:hidden">Descargar</p>
         </div>
     </a>
+    {% endif %}
 </div>
 <div class="grid grid-cols-1 pt-2 gap-y-4 h-full flex justify-center">
     <!-- Lista de DataFrame por ruta -->
@@ -110,7 +112,11 @@
             {% endfor %}
             {% for index, row in value.iterrows() %}
             <div class="flex items-center justify-center border-b border-gray-209 py-2">
+                {% if index |is_datetime %}
                 <p class="text-body-3 uppercase">{{index|time("HM")}}</p>
+                {% else %}
+                <p class="text-body-3 uppercase">{{index}}</p>
+                {% endif %}
             </div>
             {% for col in row %}
             {% if col != '' %}

@@ -1,7 +1,7 @@
 import datetime
 import locale
 import os
-from flask import (Blueprint,render_template,current_app)
+from flask import (Blueprint,render_template,current_app, send_from_directory)
 from flask_login import current_user, login_required
 import pytz
 
@@ -27,3 +27,12 @@ def index():
         rol=None
 
     return render_template("home/index.html",rol=rol)
+
+# servir archivo de manifiesto web
+@bp.route('/manifest.json')
+def manifest():
+    return send_from_directory('static/source/js/service/', 'manifest.json')
+
+@bp.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static/source/js/service/', 'service-worker.js')

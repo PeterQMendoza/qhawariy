@@ -8,7 +8,7 @@ from wtforms.fields import StringField,TimeField,SelectField, SubmitField, Passw
 from wtforms_html5 import AutoAttrMeta
 from wtforms.validators import DataRequired,InputRequired
 
-LIMA_TZ=pytz.timezone('America/Lima')
+from qhawariy.utilities.builtins import LIMA_TZ
 
 class ProgramacionForm(FlaskForm):
     class Meta(AutoAttrMeta):
@@ -22,6 +22,7 @@ class AgregaVehiculoProgramadoForm(FlaskForm):
         csrf=True
     vehiculo=SelectField('Seleccione un vehiculo', validators=[DataRequired("selecciona un vehiculo")], id='select_vehiculo',coerce=int)
     tiempo=TimeField("Tiempo de salida (HH:MM:SS)",format="%H:%M:%S",validators=[DataRequired("Necesitamos esta informacion"),validators.InputRequired()],render_kw={"step": "1"})
+    vehiculo_en_espera=BooleanField("Establecer en espera")
     submit=SubmitField("Agregar vehiculo")
 
 class BuscarProgramacionForm(FlaskForm):

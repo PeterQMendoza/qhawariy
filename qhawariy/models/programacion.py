@@ -18,11 +18,10 @@ class Programacion(db.Model):
     id_fecha = db.Column(db.Integer,db.ForeignKey("fechas.id_fecha"),nullable=False)
     id_ruta = db.Column(db.Integer,db.ForeignKey("rutas.id_ruta"),nullable=False)
     # Establecer relaciones {Table1}*1-->1{Table2}
-    ruta = db.relationship("Ruta",back_populates="rutas",uselist=False,single_parent=True)
-    fecha = db.relationship("Fecha",back_populates="fecha_programas",uselist=False,single_parent=True)
+    ruta = db.relationship("Ruta",back_populates="rutas_programas",uselist=False,single_parent=True)
+    fecha = db.relationship("Fecha",back_populates="fechas_programas",uselist=False,single_parent=True)
 
-    programas = db.relationship("VehiculoProgramado",back_populates="programa",cascade="all,delete-orphan")
-    programas_viajes=db.relationship("Viaje",back_populates="programa",cascade="all,delete-orphan")
+    programas_vehiculos = db.relationship("VehiculoProgramado",back_populates="programa",cascade="all,delete-orphan")
 
     def __init__(self, id_fecha, id_ruta):
         self.id_fecha=id_fecha
@@ -54,8 +53,8 @@ class Programacion(db.Model):
         return Programacion.query.filter_by(id_fecha=fecha,id_ruta=ruta).first()
     
     @staticmethod
-    def obtener_por_fecha(fecha):
-        return Programacion.query.filter_by(id_fecha=fecha).first()
+    def obtener_por_fecha(fecha_id):
+        return Programacion.query.filter_by(id_fecha=fecha_id).first()
     
     @staticmethod
     def obtener_programa_join_ruta():
@@ -76,6 +75,13 @@ class Programacion(db.Model):
             Ruta.id_ruta,
             Ruta.codigo
         ).order_by(
+            desc(Programacion.id_fecha)
+        ).limit(22).all()
+        return resultado
+    
+    @staticmethod
+    def obtener_programas():
+        resultado=Programacion.query.order_by(
             desc(Programacion.id_fecha)
         ).limit(22).all()
         return resultado

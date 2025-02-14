@@ -8,6 +8,7 @@
     <meta http-equiv="refresh">
     <meta name="description" content="Realiza el control de flotas vehiculare con este aplicativo web">
     <title>{% block title %}{% endblock %}</title>
+    <link rel="manifest" href="{{ url_for('static', filename='source/js/service/manifest.json') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/icon_seq.ico') }}" type="image/x-icon">
     <!-- <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/style_qhawariy.css') }}" type="text/css"> -->
     <link rel="stylesheet" href="{{ url_for('static', filename='source/styles/style.css') }}" type="text/css">
@@ -38,7 +39,9 @@
                             </div>
                         </div>
                         <div class="navigation-footer">
-                            <a href="#" class="item-menu block">¿Quiénes Somos?</a>
+                            <a href="#" class="">
+                                <p class="text-black-100">¿Quiénes Somos?</p>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -60,9 +63,9 @@
                         {% if current_user.is_authenticated %}
                         <div class="relative pl-5 sm:pl-3">
                             <div class="menu-desktop lg:block">
-                                <a class="btn-user rounded flex items-center cursor-pointer px-2 sm:px-1.5">
+                                <a href="#" class="btn-user rounded flex items-center cursor-pointer px-2 sm:px-1.5">
                                     <div class="">
-                                        <img src="{{ url_for('static', filename='img/icon-avatar.svg') }}" height="42px" width="42px" class=" px-2" alt>
+                                        <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-avatar.svg') }}" class="px-2" width="42px" height="42px"></object>
                                     </div>
                                     <p class="sm:hidden">{{ current_user.nombres }}, {{ current_user.apellidos}}</p>
                                 </a>
@@ -72,46 +75,22 @@
                                 </div>
                             </div>
                         </div>
-                        {% endif %}
-                        <div class="flex h-full relative">
-                            <!-- Seccion de busqueda -->
-                            {#% if current_user.is_authenticated %#}
-                            <!-- <div class="searching buscador-header flex items-center fixed z-1100 hidden">
-                                <span class="inline-flex cursor-pointer px-3 absolute items-center">
-                                    <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt>
-                                </span>
-                                <input type="text" autocomplete="off" placeholder="Buscar" id="buscar" class="block h-full w-full border-gris-100 pr-12 text-gris-900 border-l border-r pl-12">
-                                <span class="inline-flex absolute px-2 items-center cursor-pointer  right-0">
-                                    <img src="{{ url_for('static', filename='img/icon-close.svg') }}" class="icon-close p-2 bg-gris-50 rounded rounded-full" alt>
-                                </span>
-                            </div> -->
-                            {#% endif %#}
-                            <div class="flex items-center">
-                                {% if current_user.is_anonymous %}
-                                <!-- <a href="{{ url_for('auth.register')}}" class="btn btn--base btn btn--base bg-green-600 text-white font-semibold sm:text-xxs lg:text-xs sm:px-1 px-3 py-2 lg:px-4 lg:py-3 ml-4 mr-2 sm:mr-0 sm:ml-0.5">Registrar</a> -->
-                                <a href="{{ url_for('auth.login')}}" class="btn btn--base btn-gray-111 sm:text-xxs lg:text-xs px-3 sm:px-1 py-2 lg:px-4 lg:py-3 ml-4 mr-2 sm:mr-0 sm:ml-0.5 ">
-                                    <p class="sm:text-stretch">Iniciar</p>
+                        <div class="relative pl-5 sm:pl-3">
+                            <div class="menu-desktop lg:block">
+                                <a href="#" class="btn-menu px-2 sm:px-1.5 cursor-pointer flex items-center">
+                                    <img type="image/svg+xml" src="{{ url_for('static', filename='img/icon-menu.svg') }}" class="px-2" width="36px" height="36px" alt="menu"/>
                                 </a>
-                                {% else %}
-                                
-                                <!-- <div class="flex">
-                                    <img src="{{ url_for('static', filename='img/icon-len.svg') }}" class="btn-len px-2 sm:px-1.5 cursor-pointer" alt>
-                                </div> -->
-                                <div class="relative">
-                                    <div class="menu-desktop lg:block">
-                                        <img src="{{ url_for('static', filename='img/icon-menu.svg') }}" height="36px" width="36px" class="btn-menu px-2 sm:px-1.5 cursor-pointer" alt>
-                                        <div class="menu-element absolute bg-white right-0 z-1100 menu-dropdown rounded border shadow-custom border-gray-100 text-xs hidden">
-                                            <a href="/" class="block px-4 py-3">¿Quienes somos?</a>
-                                            <a href="/" class="block px-4 py-3">Opina sobre
-                                                <span class="text-green-600 font-bold">System Expert</span>
-                                                <span class="text-blue-600 font-bold">Qhawariy</span>
-                                            </a>
-                                        </div>
-                                    </div>
+                                <!-- <iframe src="{{ url_for('static', filename='img/icon-menu.svg') }}" class="btn-menu px-2 sm:px-1.5 cursor-pointer" width="36px" height="36px" frameborder="0" allowfullscreen sandbox></iframe> -->
+                                <div class="menu-element absolute bg-white right-0 z-1100 menu-dropdown rounded border shadow-custom border-gray-100 text-xs hidden">
+                                    <a href="/" class="block px-4 py-3">¿Quienes somos?</a>
+                                    <a href="/" class="block px-4 py-3">Opina sobre
+                                        <span class="text-green-600 font-bold">System Expert</span>
+                                        <span class="text-blue-600 font-bold">Qhawariy</span>
+                                    </a>
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- NAVBAR -->
@@ -125,20 +104,20 @@
                         <div class="">
                             <div class="flex items-center">
                                 {% if category=='info' %}
-                                <img src="{{ url_for('static', filename='img/icon-error-info.svg') }}" width="20px" height="20px" alt="{{category}}">
+                                <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-error-info.svg') }}" width="20px" height="20px"></object>
                                 <p class="uppercase ml-2">información</p>
                                 {% endif %}
                                 {% if category=='message' %}
-                                <img src="{{ url_for('static', filename='img/icon-error-message.svg') }}" width="20px" height="20px" alt="{{category}}">
+                                <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-error-message.svg') }}" width="20px" height="20px"></object>
                                 <p class="uppercase ml-2">Mensaje</p>
                                 {% endif %}
                                 {% if category=='error' %}
-                                <img src="{{ url_for('static', filename='img/icon-error-critical.svg') }}" width="20px" height="20px" alt="{{category}}">
+                                <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-error-critical.svg') }}" width="20px" height="20px"></object>
                                 <p class="uppercase ml-2">Error</p>
                                 {% endif %}
-                                <img src="{{ url_for('static', filename='img/icon-close.svg') }}" class="icon-close-m p-1 m-2 rounded-full absolute right-0 bg-white cursor-pointer" alt>
+                                <img src="{{ url_for('static', filename='img/icon-close.svg') }}" class="icon-close-m p-1 m-2 rounded-full absolute right-0 bg-white cursor-pointer" width="20px" height="20px" alt="cerrar"/>
                             </div>
-                            <p class="text-sm text-justify pt-2">{{message}}</p>
+                            <p class="text-sm text-align-left text-justify pt-2">{{message}}</p>
                         </div>
                     </div>
                 </div>
@@ -162,6 +141,9 @@
                                             </div>
                                             {% endif %}
                                             {% block content %}{% endblock %}
+                                            <div class="flex hidden">
+                                                <button class="btn btn--base btn-green-600 hidden" id="installButton" hidden>Instalar</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -310,21 +292,21 @@
                     <div class="container">
                         <div class="content-footer">
                             <div class="block-logo">
-                                <a href="/" class="seq-link-active">
-                                    <img src="{{ url_for('static', filename='img/logo_footer.svg') }}" height="400px" width="247px" alt="SEQhawariy" class="logo-seqhawariy">
+                                <a href="/" class="" aria-label="Inicio">
+                                    <object type="image/svg+xml" data="{{ url_for('static', filename='img/logo_footer.svg') }}" class="logo-seqhawariy" width="400px" height="247px"></object>
                                 </a>
                             </div>
                             <div class="block-menu sm:mt-4">
                                 <p class="p-title mb-2 text-white-100">Contactanos</p>
-                                <a href="mailto:seqhawariy@expert.com" class="px-0 py-2">
-                                    <img src="{{ url_for('static', filename='img/icon-mail.svg') }}" alt>
-                                    seqhawariy@expert.com
+                                <a href="mailto:peterqm@hotmail.com" class="px-0 py-2">
+                                    <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-mail.svg') }}" width="20px" height="12px"></object>
+                                    <p class="pl-2">peterqm@hotmail.com</p>
                                 </a>
                                 <p class="p-title mt-3 mb-2">Legal</p>
                                 
                                 <a href="" class="py-2">Terminos y condiciones</a>
                                 <a href="" class="py-2">Politicas de privacidad</a>
-                                <p class="p-copy mt-3">© Copyright 2024 - Todos los derechos reservados</p>
+                                <p class="p-copy mt-3">© Copyright 2025 - Todos los derechos reservados</p>
                             </div>
                         </div>
                     </div>
@@ -335,6 +317,47 @@
         </div>
     </div>
     {% block javascript %}
+    <script type="text/javascript">
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{{ url_for('home.service_worker') }}")
+                .then(function(registration) {
+                    console.log('Service Worker registrado con éxito:', registration);
+                }, function(error) {
+                    console.log('Fallo en el registro del Service Worker:', error);
+                });
+            });
+        }
+
+        let deferredPrompt=null;
+        const installButton = document.querySelector("#installButton");
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.hidden = false;
+
+            installButton.addEventListener('click', async () => {
+
+                if(!deferredPrompt){
+                    return;
+                }
+
+                installButton.hidden = true;
+                deferredPrompt.prompt();
+
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('El usuario aceptó instalar la PWA');
+                    } else {
+                        console.log('El usuario rechazó instalar la PWA');
+                    }
+
+                    deferredPrompt = null;
+                });
+            });
+        });
+    </script>
     {% endblock %}
 </body>
 </html>

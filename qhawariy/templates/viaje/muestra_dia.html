@@ -34,17 +34,30 @@
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
-    <p class="text-h7">Inicio</p>
+    <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="#" class="btn--base linker-active">
-    <p class="text-h7">Fechas</p>
+<a href="{{url_for('viaje.listar_calendario')}}" class="btn--base">
+    <p class="text-h3">Fechas</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
+<a href="#" class="btn--base">
+    <p class="text-h3">Vista diaria</p>
 </a>
 {% endblock %}
 {% block content %}
-<div class="flex items-center justify-center">
+{{test}}
+<div class="flex items-center justify-center mt-3 table-wrapper">
+    {{dataida|safe}}
+</div>
+<div class="flex items-center justify-center mt-3 table-wrapper">
+    {{datavuelta|safe}}
+</div>
+<div class="flex items-center justify-center mt-3 table-wrapper">
     <table class="text-h6">
         <thead>
             <tr>

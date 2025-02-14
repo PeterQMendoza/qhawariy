@@ -53,7 +53,7 @@ def listar_propietarios():
 def buscar_propietario(busca):
     busqueda=Propietario.buscar_propietarios_dni(busca)
     form=BuscarPropietarioForm()
-    title="Resultado de la busqueda: {b} ".format(b=busca)
+    title="Resultado de buscar propietario con DNI: {b} ".format(b=busca)
     if form.validate_on_submit():
         busca=form.dni.data
         siguiente_pagina=request.args.get("next",None)

@@ -9,6 +9,8 @@ from qhawariy.controllers.decorators.auth import controlador_required
 from qhawariy.controllers.forms.control_form import ControlTiempoForm
 from qhawariy.models.control import Control
 from qhawariy.models.control_tiempo import ControlTiempo
+from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
+from qhawariy.models.viaje import Viaje
 
 
 logger=logging.getLogger(__name__)
@@ -19,10 +21,12 @@ bp=Blueprint("control_tiempo",__name__,url_prefix="/control_tiempo")
 @login_required
 @controlador_required
 def listar_controles_tiempos(viaje_id):
+    # Para mostrar los controles de acuerdo a la secuencia
     cts=ControlTiempo.obtener_por_viaje(viaje_id)
-    controles=Control.obtener_todos()
+    viaje=Viaje.obtener_viaje_por_id(viaje_id)
+    controles_secuencia=SecuenciaControlRuta.obtener_todos_secuencia_por_ruta(viaje.id_ruta)
     form=ControlTiempoForm()
-    form.control.choices=[(c.id_control,str(c.codigo)) for c in controles]
+    form.control.choices=[(cs.id_control,str(cs.control.codigo)) for cs in controles_secuencia]
     if form.validate_on_submit():
         tiempo=form.tiempo.data
         control=form.control.data

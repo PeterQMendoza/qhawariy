@@ -19,7 +19,7 @@ class DisponibleVehiculo(db.Model):
     id_dv=db.Column(db.Integer,primary_key=True)
     fecha_inicio=db.Column(db.DateTime,default=datetime.datetime(year=ahora.year,month=ahora.month,day=ahora.day,hour=0,minute=0,second=0),nullable=False)
     fecha_final=db.Column(db.DateTime,default=datetime.datetime(year=ahora.year,month=ahora.month,day=ahora.day,hour=0,minute=0,second=0),nullable=False)# por defecto un dia
-    id_vehiculo=db.Column(db.Integer,db.ForeignKey('vehiculos.id_vehiculo'),nullable=False)
+    id_vehiculo=db.Column(db.Integer,db.ForeignKey('vehiculos.id_vehiculo',ondelete='CASCADE'),nullable=False)
 
     # Relaciones
     vehiculo=db.relationship("Vehiculo",back_populates="vehiculos_disponibles",uselist=False,single_parent=True)
@@ -65,6 +65,14 @@ class DisponibleVehiculo(db.Model):
             Vehiculo,DisponibleVehiculo.id_vehiculo==Vehiculo.id_vehiculo
         ).where(
             Vehiculo.flota==flota
-        )
+        ).all()
+        return resultado
+    
+    @staticmethod
+    def obtener_vehiculos_disponibles(fecha:datetime.datetime):
+        resultado=DisponibleVehiculo.query.filter(
+            fecha>=DisponibleVehiculo.fecha_inicio,
+            fecha<=DisponibleVehiculo.fecha_final
+        ).all()
         return resultado
 

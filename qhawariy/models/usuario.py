@@ -12,7 +12,7 @@ from flask_login import UserMixin
 from qhawariy import db
 from qhawariy.models import (asociado,plan_salida,programacion,propietario,propietario_vehiculo,
                              rol,ruta,vehiculo_programado,vehiculo,viaje,departamento,distrito,provincia,
-                             fecha,ruta_terminal,terminal,control,control_tiempo,configuracion)
+                             fecha,ruta_terminal,terminal,control,control_tiempo,configuracion,secuencia_control_ruta)
 
 class Usuario(db.Model, UserMixin):
     """Modelo Usuario define a todos los usuarios que pertencen e ingresan al sistema
@@ -28,8 +28,7 @@ class Usuario(db.Model, UserMixin):
     fecha_registro = db.Column(db.DateTime,default=datetime.datetime.now(tz=lima_tz))
     clave = db.Column(db.String(128), nullable=False)
     # genera un cadena 6 letras para el id altenativo
-    cadena = ''.join((secrets.choice(string.ascii_letters) for i in range(6)))
-    id_alternativo = db.Column(db.String(6),default=cadena, nullable=False) #Utilizado para cambio de password
+    id_alternativo = db.Column(db.String(6), nullable=False) #Utilizado para cambio de password
 
     # Relaciones
     uroles = db.relationship("UsuarioRol",back_populates="usuario",cascade="all,delete-orphan")
@@ -40,12 +39,13 @@ class Usuario(db.Model, UserMixin):
         self.dni=dni
         self.telefono=telefono
         self.correo_electronico=correo_electronico
+        self.id_alternativo = ''.join((secrets.choice(string.ascii_letters) for i in range(6)))
 
     def __repr__(self):
         return f'<Usuario {self.correo_electronico}>'
 
     def establecer_clave(self, clave):
-        self.clave=generate_password_hash(clave)
+        self.clave=generate_password_hash(password=clave,method='pbkdf2',salt_length=16)
 
     def revisar_clave(self, clave):
         return check_password_hash(self.clave,clave)
