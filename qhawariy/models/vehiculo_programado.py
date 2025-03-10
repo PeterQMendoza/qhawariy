@@ -205,8 +205,6 @@ class VehiculoProgramado(db.Model):
     @staticmethod
     def vista_diaria(fecha:datetime.datetime,ruta_id:int):
         resultado=VehiculoProgramado.query.join(
-            Vehiculo,Vehiculo.id_vehiculo==VehiculoProgramado.id_vehiculo
-        ).join(
             Programacion,Programacion.id_programacion==VehiculoProgramado.id_programacion
         ).join(
             Ruta,Ruta.id_ruta==Programacion.id_ruta

@@ -18,7 +18,7 @@ class Ruta(db.Model):
     rutas_viajes = db.relationship("Viaje",back_populates="ruta",cascade="all,delete-orphan")
     rutas_terminal = db.relationship("RutaTerminal",back_populates="ruta",cascade="all,delete-orphan")
     rutas_controles=db.relationship("SecuenciaControlRuta",back_populates="ruta",cascade="all,delete-orphan")
-
+    
     def __init__(self,codigo,inicio_vigencia,fin_vigencia,documento):
         self.codigo=codigo
         self.inicio_vigencia = inicio_vigencia

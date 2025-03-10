@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms.fields import StringField,IntegerField,SelectField, SubmitField, PasswordField, BooleanField, DateTimeField,DateField,EmailField
 from wtforms.widgets import DateTimeInput,DateInput
 from wtforms_html5 import AutoAttrMeta
-from wtforms.validators import DataRequired, Email, Length,AnyOf,URL
+from wtforms.validators import DataRequired, Email, Length,AnyOf,URL,Optional
 
 class RutaTerminalForm(FlaskForm):
     class Meta(AutoAttrMeta):
@@ -43,6 +43,9 @@ class AgregarRutaForm(FlaskForm):
 
     terminal1 = SelectField("Terminal 1",validators=[DataRequired("Seleccione un terminal")], id='select_terminal_1',coerce=int)
     terminal2 = SelectField("Terminal 2",validators=[DataRequired("Seleccione un terminal")], id='select_terminale_2',coerce=int)
+
+    proxima_ruta=SelectField("Proxima ruta",validators=[Optional("Seleccione proxima ruta")],id="select_proxima_1",coerce=int)
+
     submit=SubmitField("Guardar")
 
 class EditarRutaForm(FlaskForm):
@@ -55,4 +58,7 @@ class EditarRutaForm(FlaskForm):
 
     terminal1 = SelectField("Terminal 1",validators=[DataRequired("Seleccione un terminal")], id='select_terminal_1',coerce=int)
     terminal2 = SelectField("Terminal 2",validators=[DataRequired("Seleccione un terminal")], id='select_terminale_2',coerce=int)
+
+    proxima_ruta=SelectField("Proxima ruta",validators=[Optional("Seleccione proxima ruta")],id="select_proxima_1",coerce=int)
+
     submit=SubmitField("Guardar cambio")

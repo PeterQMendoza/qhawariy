@@ -130,7 +130,7 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app,db)
 
-    # Confiuracion para envio de email
+    # Configuracion para envio de email
     mail.init_app(app)
     mail_settings={
         "MAIL_USERNAME":os.environ['EMAIL_USER'],

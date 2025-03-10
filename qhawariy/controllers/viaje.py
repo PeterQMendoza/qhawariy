@@ -1,4 +1,5 @@
 import datetime
+import json
 import pandas as pd
 import logging
 from flask import (Blueprint, flash, redirect,render_template, url_for,request)
@@ -14,6 +15,7 @@ from qhawariy.models.control_tiempo import ControlTiempo
 from qhawariy.models.disponible_vehiculo import DisponibleVehiculo
 from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
+from qhawariy.models.services.control_programa import CompositePrograma, FlyweightFactory, LeafPrograma
 from qhawariy.models.viaje import Viaje
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.vehiculo_programado import VehiculoProgramado
@@ -21,7 +23,7 @@ from qhawariy.models.programacion import Programacion
 from qhawariy.models.timer.qh_timer import Flota,Reloj
 # from qhawariy.models.timer.tareas import tarea1
 from qhawariy.controllers.forms.viaje_form import ViajeForm
-from qhawariy.utilities.helpers import Calendario
+from qhawariy.utilities.helpers import Calendario, convertir_DataFrame
 from qhawariy.utilities.builtins import LIMA_TZ
 
 logger=logging.getLogger(__name__)
@@ -130,124 +132,58 @@ def eliminar_viaje(viaje_id,fecha_id):
 @login_required
 @controlador_required
 def mostrar_dia():
+    # para mostrar en la pantalla
+    test=None
+
     # obtener la programacion de vehiculos por fecha
     ahora=datetime.datetime.now(LIMA_TZ)
     ahora=ahora.replace(hour=0,minute=0,second=0,microsecond=0)
+
     rutas=Ruta.obtener_todos_rutas()
 
-    # programaciones
-    programacion_ida=[]
-    programacion_vuelta=[]
-    programacion_vehiculos_ida=[]
-    programacion_vehiculos_vuelta=[]
+    # Creamos un objeto factory del servicio control_programa
+    factory=FlyweightFactory()
+    main=CompositePrograma(ahora.strftime("%d/%m/%Y"))
+
+    # Creamos un diccionario para asignarle un nombre a cada
+    # instancia de las clases de CompositePrograma, que representa
+    # la programacion de cada una de las rutas
+    programa_ruta_info=[{"ruta":ruta.codigo,"id":ruta.id_ruta} for ruta in rutas]
+
+    programas={}
+
+    for programa in programa_ruta_info:
+        nombre=programa["ruta"]
+        programas[nombre]=CompositePrograma(str(nombre))
     
-    # Viajes
-    viaje_ida=[]
-    viaje_vuelta=[]
-    viaje_vehiculos_ida=[]
-    viaje_vehiculos_vuelta=[]
+    # agregar un programa a la ruta actual (preferencia)
+    # Secuencia de recorrido ruta:
+    #   TC-34  -> TC-34A -> TC-34
+    #   TC-34B -> TC-34A -> TC-34
 
-    # Controles
-    control_viaje_ida=[]
-    control_viaje_vuelta=[]
-    control_ida=[]
-    control_vuelta=[]
-
+    ruta_id=rutas[0].id_ruta
+    ruta_actual=rutas[0].codigo
+    ruta_destino=rutas[1].codigo
     for r in rutas:
-        vp=VehiculoProgramado.vista_diaria(ahora,r.id_ruta)
-        viajes=Viaje.vista_diaria(ahora,r.id_ruta)
-        controles=ControlTiempo.vista_diaria(ahora,r.id_ruta)
+        if r.codigo in programas:
+        # Agregar todos los vehiculos programado para esta ruta
+            vp=VehiculoProgramado.vista_diaria(ahora,r.id_ruta)
+            for v in vp:
+                programa_1=LeafPrograma(factory,str(v.vehiculo.flota),v.tiempo.strftime("%H:%M:%S"),ruta_destino)
 
-        if (vp==[] or viajes==[] or controles==[]):
-            # Establecer una mejor informacion para el usuario
-            flash(f"No existe programacion o registro de viajes para hoy {ahora}.\nTe sugiero comunicarte con el responsable de las programaciones","info")
-            return render_template("viaje/muestra_dia.html",dataida='',datavuelta='')
+                programas[r.codigo].add_item(programa_1)#
 
+    # agregar al nodo principal
+    for key,programa in programas.items():
+        main.add_item(programa)
 
-        if r.id_ruta==1 or r.id_ruta==3:
-            programacion_ida.extend(vp)
-            programacion_vehiculos_ida.extend([ v.vehiculo for v in vp])
-
-            viaje_ida.extend(viajes)
-            viaje_vehiculos_ida.extend([ v.vehiculo for v in viajes])
-
-            control_viaje_ida.extend(controles)
-            control_ida.extend([c.control for c in controles])
-
-        if r.id_ruta==2:
-            programacion_vuelta.extend(vp)
-            programacion_vehiculos_vuelta.extend([ v.vehiculo for v in vp])
-
-            viaje_vuelta.extend(viajes)
-            viaje_vehiculos_vuelta.extend([ v.vehiculo for v in viajes])
-
-            control_viaje_vuelta.extend(controles)
-            control_vuelta.extend([c.control for c in controles])
-
-    # Programaciones f
-    dataset=DatasetFactory()
-    dts_ida=dataset.create_dataset(programacion_ida,programacion_vehiculos_ida)
-    dts_ida.process_dataframe()
-
-    dts_vuelta=dataset.create_dataset(programacion_vuelta,programacion_vehiculos_vuelta)
-    dts_vuelta.process_dataframe()
-
-    # Viajes
-    dts_viaje=DatasetViajeFactory()
-    dtsv_ida=dts_viaje.create_dataset(viaje_ida,viaje_vehiculos_ida)
-    dtsv_ida.proccess_dataframe()
-
-    dtsv_vuelta=dts_viaje.create_dataset(viaje_vuelta,viaje_vehiculos_vuelta)
-    dtsv_vuelta.proccess_dataframe()
-
-    # Controles
-    dts_control=DatasetControlFactory()
-    dtc_ida=dts_control.create_dataset(control_viaje_ida,viaje_ida,control_ida)
-    dtc_ida.proccess_dataframe()
-
-    dtc_vuelta=dts_control.create_dataset(control_viaje_vuelta,viaje_vuelta,control_vuelta)
-    dtc_vuelta.proccess_dataframe()
-
-    # fusionar odas las dataframe
-    df_ida=pd.merge(dtsv_ida._dataframe,dts_ida._dataframe, on="vehiculo",how='inner')#viaje->programacion
-    df_ida=pd.merge(df_ida,dtc_ida._dataframe, on="id_viaje",how='inner')#anterior->controles
-    df_ida=df_ida.drop(columns=["id_viaje"])
-
-    df_vuelta=pd.merge(dtsv_vuelta._dataframe,dts_vuelta._dataframe, on="vehiculo",how='inner')#viaje->programacion
-    df_vuelta=pd.merge(df_vuelta,dtc_vuelta._dataframe, on="id_viaje",how='inner')#anterior->controles
-    df_vuelta=df_vuelta.drop(columns=["id_viaje"])
-
-    # camiar el orden de las columnas de la df de ida y de vuelta
-    columnas_ida=df_ida.columns.tolist()#columnas
-    icon_i=columnas_ida.index("icon")
-    salida_i=columnas_ida.index("salida")
-    inicio_hasta_salida_i=columnas_ida[:salida_i+1]
-    salida_hasta_icon_i=columnas_ida[salida_i+1:icon_i+1]
-    despues_icon_i=columnas_ida[icon_i+1:]
-    df_ida=df_ida[inicio_hasta_salida_i+despues_icon_i+salida_hasta_icon_i]
-
-    columnas_vuelta=df_vuelta.columns.tolist()#columnas
-    icon_v=columnas_vuelta.index("icon")
-    salida_v=columnas_vuelta.index("salida")
-    inicio_hasta_salida_v=columnas_vuelta[:salida_v+1]
-    salida_hasta_icon_v=columnas_vuelta[salida_v+1:icon_v]
-    despues_icon_v=columnas_vuelta[icon_v+1:]
-    despues_icon_v.reverse()# cambiar sentido de direccion
-    df_vuelta=df_vuelta[inicio_hasta_salida_v+despues_icon_v+salida_hasta_icon_v]
-
-    # Verificar el cumplimiento de horarios en los controles
-    # conteo=0
-    columnas_ida=df_ida.columns.tolist()#columnas nuevamente
-    col_fr=columnas_ida.index('frecuencia')
-    df_ida["diferencia"]=df_ida[columnas_ida[col_fr-1]]-df_ida[columnas_ida[col_fr-2]]
-    test=columnas_ida[col_fr-2]
+    # data=pd.DataFrame(programas[ruta_actual])
+    # Acceder a un metodo de la instancia del programa en particular
+    # test=pd.DataFrame(programas[ruta_actual].display()["data"])
+    # test=test.to_html()
+    col_nombre=["flota","tiempo","proxima ruta"]
+    test=pd.DataFrame(programas[ruta_actual].display()[ruta_actual],columns=col_nombre)
     
-    # cambiar color del texto de diferencia
-    # aux.style.apply(DatasetRoute.color_negative_red,subset=['segundos'])
-    # df_ida=df_ida.style.apply(DatasetRoute.color_negative_red,color='red',subset=['diferencia'])
+    test=test.to_html()
 
-
-    df_ida_html=df_ida.to_html(classes='table text-h6',index=True,escape=False)
-    df_vuelta_html=df_vuelta.to_html(classes='table text-h6',index=True,escape=False)
-
-    return render_template("viaje/muestra_dia.html",dataida=df_ida_html,datavuelta=df_vuelta_html,test=test)
+    return render_template("viaje/muestra_dia.html",test=test)

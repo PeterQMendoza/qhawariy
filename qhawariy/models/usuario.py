@@ -10,9 +10,6 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin
 
 from qhawariy import db
-from qhawariy.models import (asociado,plan_salida,programacion,propietario,propietario_vehiculo,
-                             rol,ruta,vehiculo_programado,vehiculo,viaje,departamento,distrito,provincia,
-                             fecha,ruta_terminal,terminal,control,control_tiempo,configuracion,secuencia_control_ruta)
 
 class Usuario(db.Model, UserMixin):
     """Modelo Usuario define a todos los usuarios que pertencen e ingresan al sistema
