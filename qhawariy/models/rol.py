@@ -1,15 +1,21 @@
 from qhawariy import db
 
+
 class Rol(db.Model):
     """Modelo Rol describe el rol que se asignara al usuario
     """
     __tablename__ = "roles"
-    id_rol = db.Column(db.Integer,primary_key=True)
-    rol = db.Column(db.String(20),unique=True,nullable=False)
+    id_rol = db.Column(db.Integer, primary_key=True)
+    rol = db.Column(db.String(20), unique=True, nullable=False)
     # Relaciones
-    rusuarios = db.relationship("UsuarioRol",back_populates="rol",cascade="all,delete-orphan")
+    rusuarios = db.relationship(
+        "UsuarioRol",
+        back_populates="rol",
+        cascade="all,delete-orphan"
+    )
+
     def __init__(self, rol):
-        self.rol=rol
+        self.rol = rol
 
     def __repr__(self):
         return f'<Rol {self.id_rol}>'

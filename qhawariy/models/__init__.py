@@ -1,21 +1,45 @@
-from qhawariy.models import asociado
-from qhawariy.models import plan_salida
-from qhawariy.models import programacion
-from qhawariy.models import propietario
-from qhawariy.models import propietario_vehiculo
-from qhawariy.models import rol
-from qhawariy.models import ruta
-from qhawariy.models import vehiculo_programado
-from qhawariy.models import vehiculo
-from qhawariy.models import viaje
-from qhawariy.models import departamento
-from qhawariy.models import distrito
-from qhawariy.models import provincia
-from qhawariy.models import fecha
-from qhawariy.models import ruta_terminal
-from qhawariy.models import terminal
-from qhawariy.models import control
-from qhawariy.models import control_tiempo
-from qhawariy.models import configuracion
-from qhawariy.models import secuencia_control_ruta
-from qhawariy.models import proxima_ruta
+from qhawariy.models.asociado import Asociado
+from qhawariy.models.plan_salida import PlanSalida
+from qhawariy.models.programacion import Programacion
+from qhawariy.models.propietario import Propietario
+from qhawariy.models.propietario_vehiculo import PropietarioVehiculo
+from qhawariy.models.rol import Rol
+from qhawariy.models.ruta import Ruta
+from qhawariy.models.vehiculo_programado import VehiculoProgramado
+from qhawariy.models.vehiculo import Vehiculo
+from qhawariy.models.viaje import Viaje
+from qhawariy.models.departamento import Departamento
+from qhawariy.models.distrito import Distrito
+from qhawariy.models.provincia import Provincia
+from qhawariy.models.fecha import Fecha
+from qhawariy.models.ruta_terminal import RutaTerminal
+from qhawariy.models.terminal import Terminal
+from qhawariy.models.control import Control
+from qhawariy.models.control_tiempo import ControlTiempo
+from qhawariy.models.configuracion import Configuracion
+from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
+from qhawariy.models.proxima_ruta import ProximaRuta
+
+__all__ = [
+    'Asociado',
+    'PlanSalida',
+    'Programacion',
+    'Propietario',
+    'PropietarioVehiculo',
+    'Rol',
+    'Ruta',
+    'VehiculoProgramado',
+    'Vehiculo',
+    'Viaje',
+    'Departamento',
+    'Distrito',
+    'Provincia',
+    'Fecha',
+    'RutaTerminal',
+    'Terminal',
+    'Control',
+    'ControlTiempo',
+    'Configuracion',
+    'SecuenciaControlRuta',
+    'ProximaRuta'
+]

@@ -1,108 +1,215 @@
 # Formularios
 from flask_wtf import FlaskForm
-from wtforms.fields import StringField, SubmitField, PasswordField, BooleanField, DateTimeField,DateField,EmailField
-from wtforms.widgets import DateTimeInput,DateInput
+from wtforms.fields import (
+    StringField,
+    SubmitField,
+    PasswordField,
+    BooleanField,
+    EmailField
+)
+# from wtforms.widgets import DateTimeInput,DateInput
 from wtforms_html5 import AutoAttrMeta
-from wtforms.validators import DataRequired, Email, Length,AnyOf,Regexp,EqualTo
+from wtforms.validators import (
+    DataRequired,
+    Email,
+    Length,
+    AnyOf,
+    Regexp,
+    EqualTo
+)
+
 
 # Formulario para registrar un nuevo usuario al sistema
 class RegisterForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
+        csrf = True
 
-    nombres=StringField("Nombres",validators=[
+    nombres = StringField("Nombres", validators=[
         DataRequired("Necesitamos tus nombres"),
         Length(max=50),
-        Regexp("^[A-Za-z ]*$",0,"Los nombres deben contener solo letras")
+        Regexp("^[A-Za-z ]*$", 0, "Los nombres deben contener solo letras")
     ])
-    apellidos=StringField("Apellidos",validators=[
+
+    apellidos = StringField("Apellidos", validators=[
         DataRequired("Necesitamos tus apellidos."),
         Length(max=50),
-        Regexp("^[A-Za-z ]*$",0,"Los apellidos deben contener solo letras.")
+        Regexp("^[A-Za-z ]*$", 0, "Los apellidos deben contener solo letras.")
     ])
-    dni=StringField("DNI",validators=[
+
+    dni = StringField("DNI", validators=[
         DataRequired("Esta información es necesaria."),
         Length(max=10),
-        Regexp("^[0-9]*$",0,"El Numero de documento deben contener solo numeros.")
+        Regexp("^[0-9]*$", 0, "El Numero de documento deben contener solo numeros.")
     ])
-    email=EmailField("Correo Electronico",validators=[
+
+    email = EmailField("Correo Electronico", validators=[
         DataRequired("Necesitamos conocer tu correo electronico."),
         Email()
     ])
-    telefono=StringField("Telefono",validators=[
+
+    telefono = StringField("Telefono", validators=[
         DataRequired("Necesitamos conocer tu telefono."),
         Length(max=15),
-        Regexp("^[0-9]*$",0,"El telefono deben contener solo numeros.")
+        Regexp("^[0-9]*$", 0, "El telefono deben contener solo numeros.")
     ])
-    # date=DateField("Fecha de Nacimiento",validators=[DataRequired("Necesitamos saber tu fecha de nacimiento")],widget=DateInput())
-    clave=PasswordField("Contraseña",validators=[
+
+    clave = PasswordField("Contraseña", validators=[
         DataRequired("Es necesario poner seguridad a tu cuenta"),
-        Length(min=8, max=12,message="La contraseña debe tener al menos de 8 a 12 caracteres."),
-        Regexp(r'(?=.*\d)',message="La contraseña debe tener al menos un digito."),
-        Regexp(r'(?=.*[\W_])',message="La contraseña debe contener al menos un carácter especial: @,#,_."),
+        Length(
+            min=8,
+            max=12,
+            message="La contraseña debe tener al menos de 8 a 12 caracteres."
+            ),
+        Regexp(
+            r'(?=.*\d)',
+            message="La contraseña debe tener al menos un digito."
+            ),
+        Regexp(
+            r'(?=.*[\W_])',
+            message="La contraseña debe contener al menos un carácter especial: @,#,_."
+            ),
     ])
-    submit=SubmitField("Agregar usuario")
+    submit = SubmitField("Agregar usuario")
+
 
 # Formulario para el acceso al sistema
 class LoginForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
-    email=StringField("Email",validators=[DataRequired("Necesitamos tu email.")])
-    password=PasswordField("Contraseña",validators=[DataRequired("Falta tu contraseña.")])
-    remember_me=BooleanField("Recordar datos",default=False,render_kw ={'checked':''},validators=[AnyOf([False,True])])
-    submit=SubmitField("Iniciar Sesión")
+        csrf = True
+
+    email = StringField("Email", validators=[DataRequired("Necesitamos tu email.")])
+    password = PasswordField(
+        "Contraseña",
+        validators=[DataRequired("Falta tu contraseña.")]
+    )
+
+    remember_me = BooleanField(
+        "Recordar datos",
+        default=False,
+        render_kw={'checked': ''},
+        validators=[AnyOf([False, True])]
+    )
+
+    submit = SubmitField("Iniciar Sesión")
+
 
 # Formulario para cambiar datos de usuario
 class CambiarDatosForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
+        csrf = True
 
-    nombres=StringField("Nombres",validators=[DataRequired("Necesitamos tus nombres."),Length(max=50)])
-    apellidos=StringField("Apellidos",validators=[DataRequired("Necesitamos tus apellidos."),Length(max=50)])
-    dni=StringField("DNI",validators=[DataRequired("Esta información es necesaria."),Length(max=10)])
-    telefono=StringField("Telefono",validators=[DataRequired("Necesitamos conocer tu telefono."),Length(max=15)])
-    submit_datos=SubmitField("Cambiar Datos")
+    nombres = StringField(
+        "Nombres",
+        validators=[DataRequired("Necesitamos tus nombres."), Length(max=50)]
+    )
+
+    apellidos = StringField(
+        "Apellidos",
+        validators=[DataRequired("Necesitamos tus apellidos."), Length(max=50)]
+    )
+
+    dni = StringField(
+        "DNI",
+        validators=[DataRequired("Esta información es necesaria."), Length(max=10)]
+    )
+
+    telefono = StringField(
+        "Telefono",
+        validators=[DataRequired("Necesitamos conocer tu telefono."), Length(max=15)]
+    )
+
+    submit_datos = SubmitField("Cambiar Datos")
+
 
 class CambiaClaveForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
-    password=PasswordField("Nueva Contraseña",validators=[
+        csrf = True
+
+    password = PasswordField("Nueva Contraseña", validators=[
         DataRequired("Falta tu contraseña."),
-        Length(min=8, max=12,message="La contraseña debe tener al menos de 8 a 12 caracteres."),
-        Regexp(r'(?=.*\d)',message="La contraseña debe tener al menos un digito."),
-        Regexp(r'(?=.*[\W_])',message="La contraseña debe contener al menos un carácter especial: @,#,_."),
-    ])
-    password_confirmado=PasswordField("Repetir Nueva Contraseña",validators=[
-        DataRequired("Debes escribir nuevamente la contraseña para confirmar."),
-        EqualTo("password",message="La contraseña de confirmacion debe ser la misma que la contraseña que escribiste.")
-    ])
-    submit_clave=SubmitField("Cambiar Contraseña")
+        Length(
+            min=8,
+            max=12,
+            message="La contraseña debe tener al menos de 8 a 12 caracteres."
+            ),
+        Regexp(
+            r'(?=.*\d)',
+            message="La contraseña debe tener al menos un digito."
+            ),
+        Regexp(
+            r'(?=.*[\W_])',
+            message="La contraseña debe contener al menos un carácter especial: @,#,_."
+            ),
+        ]
+    )
+
+    password_confirmado = PasswordField(
+        "Repetir Nueva Contraseña",
+        validators=[
+            DataRequired("Debes escribir nuevamente la contraseña para confirmar."),
+            EqualTo(
+                "password",
+                message="""La contraseña de confirmacion debe ser la misma que la
+                 contraseña que escribiste."""
+            )
+        ]
+    )
+
+    submit_clave = SubmitField("Cambiar Contraseña")
+
 
 class CambiaEmailForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
-    email=StringField("Email",validators=[
+        csrf = True
+    email = StringField("Email", validators=[
         DataRequired("Necesitamos tu email.")
     ])
-    submit_email=SubmitField("Cambiar Email")
+
+    submit_email = SubmitField("Cambiar Email")
+
 
 class RestablecerPasswordForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
-    email=StringField("Email",validators=([DataRequired("Es necesario tu email para restablecer su contraseña."),Email()]))
-    submit=SubmitField("Restablecer")
+        csrf = True
+
+    email = StringField(
+        "Email",
+        validators=[
+            DataRequired("Es necesario tu email para restablecer su contraseña."),
+            Email()
+        ]
+    )
+
+    submit = SubmitField("Restablecer")
+
 
 class CrearNuevoPasswordForm(FlaskForm):
     class Meta(AutoAttrMeta):
-        csrf=True
-    password=PasswordField("Nuevo contraseña",validators=[
+        csrf = True
+
+    password = PasswordField("Nuevo contraseña", validators=[
         DataRequired("Debes ingresar una contraseña para restablecer tu password"),
-        Length(min=8, max=12,message="La contraseña debe tener al menos de 8 a 12 caracteres."),
-        Regexp(r'(?=.*\d)',message="La contraseña debe tener al menos un digito."),
-        Regexp(r'(?=.*[\W_])',message="La contraseña debe contener al menos un carácter especial: @,#,_."),
+        Length(
+            min=8,
+            max=12,
+            message="La contraseña debe tener al menos de 8 a 12 caracteres."
+        ),
+        Regexp(
+            r'(?=.*\d)',
+            message="La contraseña debe tener al menos un digito."
+        ),
+        Regexp(
+            r'(?=.*[\W_])',
+            message="La contraseña debe contener al menos un carácter especial: @,#,_."
+        ),
     ])
-    password2=PasswordField("Repite la contraseña",validators=[
+
+    password2 = PasswordField("Repite la contraseña", validators=[
         DataRequired("Debes ingresar un valor a este campo."),
-        EqualTo("password",message="Las dos contraseña ingresados deben de ser los mismos.")
+        EqualTo(
+            "password",
+            message="Las dos contraseña ingresados deben de ser los mismos."
+        )
     ])
-    submit=SubmitField("Confirmar restablece password")
+
+    submit = SubmitField("Confirmar restablece password")

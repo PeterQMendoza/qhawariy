@@ -1,17 +1,22 @@
 from qhawariy import db
 
+
 class Distrito(db.Model):
     """Modelo Distrito:
     """
     __tablename__ = "distritos"
-    id_distrito=db.Column(db.Integer,primary_key=True)
-    nombre=db.Column(db.String(50),nullable=False)
+    id_distrito = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50), nullable=False)
 
     # Relaciones
-    distritos=db.relationship("Terminal",back_populates="distrito",cascade="all,delete-orphan")
+    distritos = db.relationship(
+        "Terminal",
+        back_populates="distrito",
+        cascade="all,delete-orphan"
+    )
 
-    def __init__(self,nombre):
-        self.nombre=nombre
+    def __init__(self, nombre):
+        self.nombre = nombre
 
     def __repr__(self):
         return f'<Distrito {self.id_distrito}>'

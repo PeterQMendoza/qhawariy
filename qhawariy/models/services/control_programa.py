@@ -6,13 +6,10 @@ rutas, mantiene actualizado una lista programaciones por ruta
 """
 from __future__ import annotations
 
-import json
-
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from typing import List, Dict, Any
 
-from datetime import datetime
 
 class Flyweight:
     """
@@ -24,13 +21,13 @@ class Flyweight:
         del flyweight.
     """
 
-    def __init__(self,shared_state:List)->None:
-        self._shared_state=shared_state
+    def __init__(self, shared_state: List) -> None:
+        self._shared_state = shared_state
 
     def __repr__(self):
         return f"<Flyweight {self._shared_state}>"
 
-    def operacion(self)->List:
+    def operacion(self) -> List:
         """
         Retorna un cadena de letras serializada en formato JSON.
 
@@ -40,10 +37,10 @@ class Flyweight:
         Retorna:
             str: cadena que muestra los estado del Flyweight.
         """
-        resultado=self._shared_state
+        resultado = self._shared_state
 
         return resultado
-        
+
 
 class FlyweightFactory:
     """
@@ -59,14 +56,14 @@ class FlyweightFactory:
         get_key(): Retorna un hash de cadena de un Flyweight.
     """
 
-    _flyweights:Dict[str,Flyweight]={}
+    _flyweights: Dict[str, Flyweight] = {}
 
-    def __init__(self,inicial_flyweights:Dict=None)->None:
-        if inicial_flyweights != None:
+    def __init__(self, inicial_flyweights: Dict = None) -> None:
+        if inicial_flyweights is not None:
             for state in inicial_flyweights:
-                self._flyweights[self.get_key(state)]=Flyweight(state)
-        
-    def get_key(self,state:Dict)->str:
+                self._flyweights[self.get_key(state)] = Flyweight(state)
+
+    def get_key(self, state: Dict) -> str:
         """
         Retorna un hash de cadena de un Flyweight para un
         estado dado.
@@ -79,7 +76,7 @@ class FlyweightFactory:
         """
         return "_".join(sorted(state))
 
-    def get_flyweight(self,shared_state:Dict)->Flyweight:
+    def get_flyweight(self, shared_state: Dict) -> Flyweight:
         """
         Retorna una instancia de Flyweight existente con un
         estado dado o crea uno nuevo.
@@ -91,22 +88,23 @@ class FlyweightFactory:
             Flyweight: instancia del objeto Flyweight.
         """
 
-        key=self.get_key(shared_state)
+        key = self.get_key(shared_state)
 
         if not self._flyweights.get(key):
             # Si no encuentra un flyweight, crea uno nuevo.
-            self._flyweights[key]=Flyweight(shared_state)
+            self._flyweights[key] = Flyweight(shared_state)
         else:
             # Reutilizando el flyweight existente
             pass
-        
+
         return self._flyweights[key]
-    
-    def list_flyweight(self)->str:
-        count=len(self._flyweights)
-        resultado="\n".join(map(str,self._flyweights.keys()))
+
+    def list_flyweight(self) -> str:
+        # count = len(self._flyweights)
+        resultado = "\n".join(map(str, self._flyweights.keys()))
         return resultado
-    
+
+
 class ProgramaIterator(Iterator):
     """
     Permite recorrer los elementos de una
@@ -115,7 +113,7 @@ class ProgramaIterator(Iterator):
     Atributos:
         _position (int): Indica la posicion.
         _reverse (bool): Indica la direccion transversal.
-    
+
     Metodos:
         __next__(): Retorna el proximo item en la secuencia.
 
@@ -127,15 +125,15 @@ class ProgramaIterator(Iterator):
     >>>     programa.display()
     """
 
-    _position:int=None
-    _reverse:bool=False
+    _position: int = None
+    _reverse: bool = False
 
-    def __init__(self,collection:List,reverse:bool=False):
-        self._collection=collection
-        self._reverse=reverse
-        self._position=-1 if reverse else 0
+    def __init__(self, collection: List, reverse: bool = False):
+        self._collection = collection
+        self._reverse = reverse
+        self._position = -1 if reverse else 0
 
-    def __next__(self)->Any:
+    def __next__(self) -> Any:
         """
         Retorna el siguiente item en la secuencia. Busca el
         el final y en subsecuencia llamadas.
@@ -144,109 +142,112 @@ class ProgramaIterator(Iterator):
             Any: Algun item de la coleccion.
         """
         try:
-            value=self._collection[self._position]
+            value = self._collection[self._position]
             self._position += -1 if self._reverse else 1
         except IndexError:
             raise StopIteration()
-    
+
         return value
 
-class ProgramaCollection(ABC,Iterable):
+
+class ProgramaCollection(ABC, Iterable):
     """
     Define la interfaz utilizada para implementar el
     patron iterator
     """
     @abstractmethod
-    def __getitem__(self,index:int)->Any:
+    def __getitem__(self, index: int) -> Any:
         pass
 
     @abstractmethod
-    def __iter__(self)->ProgramaIterator:
+    def __iter__(self) -> ProgramaIterator:
         pass
 
     @abstractmethod
-    def get_reverse_iterator(self)->ProgramaIterator:
+    def get_reverse_iterator(self) -> ProgramaIterator:
         pass
 
     @abstractmethod
     def add_item(self, item: Any) -> None:
         pass
-    
+
+
 class ProgramaComponent(ABC):
     """
     Define la interfaz comun para
     los componentes de los iterarios
     """
     @property
-    def parent(self)->ProgramaComponent:
+    def parent(self) -> ProgramaComponent:
         return self._parent
-    
+
     @parent.setter
-    def parent(self,parent:ProgramaComponent)->None:
-        self._parent=parent
+    def parent(self, parent: ProgramaComponent) -> None:
+        self._parent = parent
 
     # def add(self,item:ProgramaComponent):
     #     pass
 
-    def remove(self,componente:ProgramaComponent):
+    def remove(self, componente: ProgramaComponent):
         pass
 
-    def is_composite(self)->bool:
+    def is_composite(self) -> bool:
         return False
 
     @abstractmethod
-    def display(self)->Any:
+    def display(self) -> Any:
         pass
 
-class CompositePrograma(ProgramaComponent,ProgramaCollection):
+
+class CompositePrograma(ProgramaComponent, ProgramaCollection):
     """
     Implementa la estructura compuesta para manejar una
     coleccion de programas (puede contener programa
     y/o programas)
     """
-    _children:List[ProgramaComponent]
+    _children: List[ProgramaComponent]
 
-    def __init__(self,ruta:str):
-        self.ruta=ruta
-        self._children=[]
+    def __init__(self, ruta: str):
+        self.ruta = ruta
+        self._children = []
 
-    def __repr__(self)->str:
+    def __repr__(self) -> str:
         return f"<CompositePrograma {self.ruta}>"
 
     # Implementacion de ProgramaCollection
-    def __getitem__(self, index:int)->Any:
+    def __getitem__(self, index: int) -> Any:
         return self._children[index]
-    
-    def __iter__(self)->ProgramaIterator:
-        return ProgramaIterator(self._children)
-    
-    def get_reverse_iterator(self)->ProgramaIterator:
-        return ProgramaIterator(self._children,True)
 
-    def add_item(self, item:ProgramaComponent):
+    def __iter__(self) -> ProgramaIterator:
+        return ProgramaIterator(self._children)
+
+    def get_reverse_iterator(self) -> ProgramaIterator:
+        return ProgramaIterator(self._children, True)
+
+    def add_item(self, item: ProgramaComponent):
         self._children.append(item)
-        item.parent=self
-    
+        item.parent = self
 
     # Implementacion de ProgramaComponent
-    def remove(self, componente:ProgramaComponent):
+    def remove(self, componente: ProgramaComponent):
         if componente in self._children:
-          self._children.remove(componente)
-          componente.parent=None
+            self._children.remove(componente)
+            componente.parent = None
 
     def is_composite(self):
         return True
 
-    def display(self)->Any:
-        resultado=[]
+    def display(self) -> Any:
+        resultado = []
         for child in self._children:
             resultado.append(child.display())
-        
-        data={
-            f"{self.ruta}":resultado
+
+        data = {
+            f"{self.ruta}": resultado
         }
 
         return data
+
 
 class LeafPrograma(ProgramaComponent):
     """
@@ -254,15 +255,21 @@ class LeafPrograma(ProgramaComponent):
     utilizando Flyweight para compartir informacion
     comun.
     """
-    flyweight:Flyweight
+    flyweight: Flyweight
 
-    def __init__(self,factory:FlyweightFactory,flota:str,tiempo:str,siguiente_ruta:str):
-        self.flyweight=factory.get_flyweight([flota,tiempo,siguiente_ruta])
+    def __init__(
+        self,
+        factory: FlyweightFactory,
+        flota: str,
+        tiempo: str,
+        siguiente_ruta: str
+    ):
+        self.flyweight = factory.get_flyweight([flota, tiempo, siguiente_ruta])
 
     def __repr__(self):
         return f"<LeafPrograma {self.flyweight._shared_state}>"
 
-    def display(self)->Any:
+    def display(self) -> Any:
         return self.flyweight.operacion()
 
 
