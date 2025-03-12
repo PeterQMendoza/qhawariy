@@ -272,9 +272,6 @@ def mostrar_resumen_semana(fecha):
         vehiculos = [VehiculoProgramado.obtener_vp_ultimo()]
         flash("Todavia no has realizados programaciones para esta fecha", "info")
 
-    if vehiculos_en_espera == []:
-        vehiculos_en_espera = [VehiculoProgramado.obtener_vp_ultimo_espera()]
-
     # obtener informacion por cada rutas
     rutas_terminal = RutaTerminal.obtener_todas_rt()
     recorridos = [
@@ -293,7 +290,11 @@ def mostrar_resumen_semana(fecha):
 
     resumen = procesar_data(vehiculos, rutas_vehiculos)
     # de espera
-    data_espera = procesar_data_espera(vehiculos_en_espera, ahora)
+    if vehiculos_en_espera == []:
+        data_espera = pd.DataFrame()
+    else:
+        vehiculos_en_espera = [VehiculoProgramado.obtener_vp_ultimo_espera()]
+        data_espera = procesar_data_espera(vehiculos_en_espera, ahora)
 
     # obtener df por cada ruta
     list_df = []
@@ -305,7 +306,7 @@ def mostrar_resumen_semana(fecha):
 
     # Crear archivo excel para el resumen
     filename = 'Resumen_programacion'+"_"+inicio_semana.strftime("%d-%m-%Y")
-    filename = filename.join("_"+fin_semana.strftime("%d-%m-%Y"))
+    filename = ''.join(filename+"_"+fin_semana.strftime("%d-%m-%Y"))
 
     # Agregar la tabla de vehiculos en espera al final
     rutas.append("Vehiculos en espera")
@@ -331,7 +332,7 @@ def mostrar_resumen_semana(fecha):
         data3=list_df[2],
         data4=list_df[3],
         df=dict_df,
-        test=resumen,
+        test=vehiculos,
         rt=rutas_terminal,
         form=form,
         fecha_inicio=inicio_semana,

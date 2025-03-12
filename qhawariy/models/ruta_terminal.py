@@ -6,7 +6,7 @@ class RutaTerminal(db.Model):
     Modelo: Ruta Terminal
     """
     __tablename__ = "rutas_terminales"
-    id_r = db.Column(db.Integer, primary_key=True)
+    id_rt = db.Column(db.Integer, primary_key=True)
 
     id_ruta = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=False)
     id_terminal = db.Column(

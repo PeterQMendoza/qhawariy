@@ -1,5 +1,5 @@
 
-import datetime
+from datetime import datetime
 # from typing import List
 # import pytz
 
@@ -54,7 +54,7 @@ class VehiculoProgramado(db.Model):
 
     def __init__(
         self,
-        tiempo: datetime.datetime,
+        tiempo: datetime,
         vehiculo_en_espera: bool,
         id_vehiculo: int,
         id_programacion: int
@@ -113,16 +113,20 @@ class VehiculoProgramado(db.Model):
         return resultado
 
     @staticmethod
-    def obtener_todos_vp_fecha(desde, hasta):
+    def obtener_todos_vp_fecha(desde: datetime, hasta: datetime):
         resultado = VehiculoProgramado.query.join(
             Programacion,
             Programacion.id_programacion == VehiculoProgramado.id_programacion
         ).join(
             Fecha, Fecha.id_fecha == Programacion.id_fecha
         ).where(
-            VehiculoProgramado.vehiculo_en_espera is False
+            # Uso de .is_(False) que es interpretado como consulta SQL que
+            # compara epresiones booleanas
+            VehiculoProgramado.vehiculo_en_espera.is_(False)
         ).filter(
-            desde <= Fecha.fecha, hasta >= Fecha.fecha
+            # desde.date() <= Fecha.fecha, hasta.date() >= Fecha.fecha
+            # Cambio aqui, son las mismas consultas SQL
+            Fecha.fecha.between(desde.date(), hasta.date())
         ).order_by(
             desc(Fecha.fecha)
         ).all()
@@ -136,7 +140,7 @@ class VehiculoProgramado(db.Model):
         ).join(
             Fecha, Fecha.id_fecha == Programacion.id_fecha
         ).where(
-            VehiculoProgramado.vehiculo_en_espera is True
+            VehiculoProgramado.vehiculo_en_espera.is_(True)
         ).filter(
             desde <= Fecha.fecha, hasta >= Fecha.fecha
         ).order_by(
@@ -152,7 +156,9 @@ class VehiculoProgramado(db.Model):
         ).join(
             Fecha, Fecha.id_fecha == Programacion.id_fecha
         ).order_by(
-            desc(Fecha.fecha)
+            desc(Fecha.fecha),
+            # Cambio aqui
+            desc(VehiculoProgramado.id_vp)
         ).first()
         return resultado
 
@@ -165,7 +171,7 @@ class VehiculoProgramado(db.Model):
             Fecha,
             Fecha.id_fecha == Programacion.id_fecha
         ).where(
-            VehiculoProgramado.vehiculo_en_espera is True
+            VehiculoProgramado.vehiculo_en_espera.is_(True)
         ).order_by(
             desc(Fecha.fecha)
         ).first()
@@ -242,7 +248,7 @@ class VehiculoProgramado(db.Model):
         return resultado
 
     @staticmethod
-    def vista_diaria(fecha: datetime.datetime, ruta_id: int):
+    def vista_diaria(fecha: datetime, ruta_id: int):
         resultado = VehiculoProgramado.query.join(
             Programacion,
             Programacion.id_programacion == VehiculoProgramado.id_programacion

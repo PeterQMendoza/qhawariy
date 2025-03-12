@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# import os
+# from os.path import join
 # import datetime
 import pandas as pd
 import geopandas as gpd
@@ -365,8 +365,8 @@ class ArchivoExcel(Archivo):
         self.recorridos = recorridos
         self.nombres_hojas = nombres_hojas
         self.tipo = tipo
-        fname = current_app.config['DOWNLOAD_FOLDER']+"\\"+nombre_archivo
-        self.ruta_archivo = fname.join(".xlsx")
+        fname = current_app.config['DOWNLOAD_FOLDER']+"\\"+nombre_archivo+".xlsx"
+        self.ruta_archivo = fname
 
     def guardar(self):
         contexto = None
@@ -425,7 +425,15 @@ class Factory(ABC):
 
 
 class FactoryExcel(Factory):
-    def crearArchivo(self, filename, dataframe, tipo, sheetnames, recorrido, date):
+    def crearArchivo(
+        self,
+        filename: str,
+        dataframe: pd.DataFrame,
+        tipo: str,
+        sheetnames: List,
+        recorrido: List,
+        date: str
+    ):
         archivo_excel = ArchivoExcel(
             nombre_archivo=filename,
             tipo=tipo,
