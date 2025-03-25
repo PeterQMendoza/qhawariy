@@ -103,7 +103,7 @@
         </div>
         <div class="grid gap-0 grid-cols-8 text-body-3 flex justify-center border border-gray-209 bg-gray-250">
             <div class="flex items-center justify-center py-2 bg-white border-b border-gray-209">
-                <p class="text-body-3 uppercase sm:text-body-4">Horario</p>
+                <p class="text-body-3 uppercase sm:text-body-4">{{ 'ID' if 'espera' in key else 'Horario' }}</p>
             </div>
             {% for row in value %}
             <div class="flex items-center justify-center py-2 bg-white border-b border-gray-209">

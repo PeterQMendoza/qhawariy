@@ -121,7 +121,7 @@ class VehiculoProgramado(db.Model):
             Fecha, Fecha.id_fecha == Programacion.id_fecha
         ).where(
             # Uso de .is_(False) que es interpretado como consulta SQL que
-            # compara epresiones booleanas
+            # compara expresiones booleanas
             VehiculoProgramado.vehiculo_en_espera.is_(False)
         ).filter(
             # desde.date() <= Fecha.fecha, hasta.date() >= Fecha.fecha
@@ -142,7 +142,7 @@ class VehiculoProgramado(db.Model):
         ).where(
             VehiculoProgramado.vehiculo_en_espera.is_(True)
         ).filter(
-            desde <= Fecha.fecha, hasta >= Fecha.fecha
+            Fecha.fecha.between(desde.date(), hasta.date())
         ).order_by(
             desc(Fecha.fecha)
         ).all()
@@ -155,6 +155,9 @@ class VehiculoProgramado(db.Model):
             Programacion.id_programacion == VehiculoProgramado.id_programacion
         ).join(
             Fecha, Fecha.id_fecha == Programacion.id_fecha
+        ).where(
+            # Condicion para que discrimine a vehiculos en espera
+            VehiculoProgramado.vehiculo_en_espera.is_(False)
         ).order_by(
             desc(Fecha.fecha),
             # Cambio aqui

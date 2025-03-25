@@ -1,7 +1,10 @@
-import datetime
-
 import logging
 import pandas as pd
+
+from datetime import (
+    datetime,
+    timedelta
+)
 
 from flask import (
     Blueprint,
@@ -251,9 +254,9 @@ def mostrar_resumen_semana(fecha):
     # CORREGIR ERROR CUANDO NO SE TIENE PROGRAMACIONES
     # Formulario de busqueda
     try:
-        ahora = datetime.datetime.strptime(fecha, "%Y-%m-%d")
+        ahora = datetime.strptime(fecha, "%Y-%m-%d")
     except Exception:
-        ahora = datetime.datetime.now(tz=LIMA_TZ)
+        ahora = datetime.now(tz=LIMA_TZ)
 
     form = BuscarProgramacionForm()
     if form.validate_on_submit():
@@ -266,10 +269,10 @@ def mostrar_resumen_semana(fecha):
             )
         return redirect(siguiente_pagina)
 
-    aux = datetime.datetime.weekday(ahora)
+    aux = datetime.weekday(ahora)
     # fecha de hace 7 dias (de acuerdo al requerimiento)
-    inicio_semana = ahora-datetime.timedelta(days=aux)
-    fin_semana = ahora+datetime.timedelta(days=6-aux)
+    inicio_semana = ahora-timedelta(days=aux)
+    fin_semana = ahora+timedelta(days=6-aux)
 
     # obtener los vehiculos programados de la semana (no todos)
     vehiculos = VehiculoProgramado.obtener_todos_vp_fecha(
@@ -283,10 +286,15 @@ def mostrar_resumen_semana(fecha):
         hasta=fin_semana
     )
 
-    if vehiculos == []:
+    if len(vehiculos) == 0:
         # Es necesario tener una programacion de vehiculo
-        vehiculos = [VehiculoProgramado.obtener_vp_ultimo()]
+        # Muestra ultima programacion de vehiculo
         flash("Todavia no has realizados programaciones para esta fecha", "info")
+        ultimo = VehiculoProgramado.obtener_vp_ultimo()
+        if ultimo:
+            vehiculos = [ultimo]
+        else:
+            vehiculos = []
 
     # obtener informacion por cada rutas
     rutas_terminal = RutaTerminal.obtener_todas_rt()
@@ -301,12 +309,15 @@ def mostrar_resumen_semana(fecha):
     rutas_vehiculos = [
         RutaTerminal.obtener_rt_por_ruta(
             a.programa.id_ruta
-        ).ruta.codigo for a in vehiculos
+        ).ruta.codigo for a in vehiculos if a is not None
     ]
+
+    if rutas_vehiculos is None:
+        rutas_vehiculos = rutas
 
     resumen = procesar_data(vehiculos, rutas_vehiculos)
     # de espera
-    if vehiculos_en_espera == []:
+    if len(vehiculos_en_espera) == 0:
         data_espera = pd.DataFrame()
     else:
         vehiculos_en_espera = [VehiculoProgramado.obtener_vp_ultimo_espera()]
@@ -361,7 +372,7 @@ def mostrar_resumen_semana(fecha):
 @operacion_required
 def ver_diario_programacion():
     # obtener la programacion de vehiculos por fecha
-    ahora = datetime.datetime.now(LIMA_TZ)
+    ahora = datetime.now(LIMA_TZ)
     ahora = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
     rutas = Ruta.obtener_todos_rutas()
 
@@ -408,24 +419,28 @@ def ver_diario_programacion():
 
 
 def procesar_data(data, rutas):
-    resumen = convertir_DataFrame(data)
-    # eliminar la primera columna id_vp
-    resumen = resumen.drop(columns=["id_vp"])
+    col = ['fecha_programa', 'Tiempo', 'flota', 'ruta']
+    if len(data) == 0:
+        resumen = pd.DataFrame(data=[], columns=col)
+    else:
+        resumen = convertir_DataFrame(data)
+        # eliminar la primera columna id_vp
+        resumen = resumen.drop(columns=["id_vp"])
 
-    # El filtrado debe ser por ruta y mostrar en estadistica por ruta y salida
-    resumen['ruta'] = rutas
-    resumen.id_programacion = [a.programa.fecha.fecha.date() for a in data]
-    resumen.id_vehiculo = [str(a.vehiculo.flota) for a in data]
-    # cambiar el nombre de la columnas
-    resumen = resumen.rename(columns={"id_programacion": "fecha_programa"})
-    resumen = resumen.rename(columns={"id_vehiculo": "flota"})
-    resumen = resumen.rename(columns={"tiempo": "Tiempo"})
-    # cambiar el orden de las columnas
-    resumen = resumen.reindex(columns=['fecha_programa', 'Tiempo', 'flota', 'ruta'])
+        # El filtrado debe ser por ruta y mostrar en estadistica por ruta y salida
+        resumen['ruta'] = rutas
+        resumen.id_programacion = [a.programa.fecha.fecha.date() for a in data]
+        resumen.id_vehiculo = [str(a.vehiculo.flota) for a in data]
+        # cambiar el nombre de la columnas
+        resumen = resumen.rename(columns={"id_programacion": "fecha_programa"})
+        resumen = resumen.rename(columns={"id_vehiculo": "flota"})
+        resumen = resumen.rename(columns={"tiempo": "Tiempo"})
+        # cambiar el orden de las columnas
+        resumen = resumen.reindex(columns=col)
     return resumen
 
 
-def procesar_data_espera(data: list, date: datetime.datetime):
+def procesar_data_espera(data: list, date: datetime):
     resumen = convertir_DataFrame(data)
     resumen = resumen.drop(columns=["tiempo", "vehiculo_en_espera"])
     resumen = resumen.rename(columns={"id_vp": "vp"})
@@ -438,10 +453,10 @@ def procesar_data_espera(data: list, date: datetime.datetime):
     lista_fecha = []
     aux = tiempo.weekday()
     for a in range(aux):
-        t = tiempo-datetime.timedelta(days=(aux-a))
+        t = tiempo-timedelta(days=(aux-a))
         lista_fecha.append(t)
     for c in range(7-aux):
-        t = tiempo+datetime.timedelta(days=c)
+        t = tiempo+timedelta(days=c)
         lista_fecha.append(t)
     # crear dataframe por cada dia de la semana
     df_espera = pd.DataFrame(data=resumen.vp)
@@ -449,7 +464,9 @@ def procesar_data_espera(data: list, date: datetime.datetime):
     df_espera = df_espera.set_index("vp")
     # a=ruta
     for b in range(len(lista_fecha)):
-        d_aux = resumen.loc[resumen.id_programacion == lista_fecha[b].date()]
+        d_aux: pd.DataFrame = resumen.loc[
+            resumen.id_programacion == lista_fecha[b].date()
+        ]
         # Salida_1
         # eliminamos todas las columnas no necesarias
         d_aux = d_aux.drop(columns=['id_programacion'])
@@ -469,10 +486,10 @@ def tabla(ruta, data, rutas, date):
     lista_fecha = []
     aux = tiempo.weekday()
     for a in range(aux):
-        t = tiempo-datetime.timedelta(days=(aux-a))
+        t = tiempo-timedelta(days=(aux-a))
         lista_fecha.append(t)
     for c in range(7-aux):
-        t = tiempo+datetime.timedelta(days=c)
+        t = tiempo+timedelta(days=c)
         lista_fecha.append(t)
     # crear dataframe por cada dia de la semana
     data_t = pd.DataFrame(data=data.Tiempo)
@@ -480,7 +497,7 @@ def tabla(ruta, data, rutas, date):
     data_resultado = data_t.set_index('Tiempo')
     a = ruta
     for b in range(len(lista_fecha)):
-        d_aux = data.loc[data.fecha_programa == lista_fecha[b].date()]
+        d_aux: pd.DataFrame = data.loc[data.fecha_programa == lista_fecha[b].date()]
         # Salida_1
         d_salida = d_aux.loc[d_aux.ruta == rutas[a]]
         # eliminamos todas las columnas no necesarias
