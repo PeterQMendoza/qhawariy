@@ -29,6 +29,37 @@ Sistema para la administración y control de flotas de vehículos de transporte 
     ```bash
     pip install -r requirements.txt
 
+## Convención de nombres de ramas para corrección de errores
+Para la corrección de errores, sigue este esquema de nomenclatura:
+- **Prefijo**: Usa `fix/` para indicar que la rama corrige un error.
+- **Formato**: `[fix/]-[TIPO]-[MODULO]-[SEVERIDAD]-[ID]`
+
+### Desglose:
+- **TIPO**:
+    -`BUG`: Error en el funcionamiento del sistema.
+    -`UI`: Problemas relacionados con la interfaz de usuario.
+    -`API`: Problema con la comunicación o respuesta de la API.
+    -`DB`: Problema en la Base de Datos.
+    -`SEC`: Problema de seguridad.
+- **MODULO**: Nombre abreviado, en 4 letras, del módulo afectado (por ejemplo: AUTH para la autenticacion, etc)
+- **SEVERIDAD**:
+    -`CRIT`: Critico, necesita solución inmediate.
+    -`HIGH`: Alta prioridad, solución prioritaria.
+    -`MED`: Media prioridad, puede esterar un poco más.
+    -`LOW`: Baja prioridad, mejoras menores.
+- **ID**: Identificador incremental único (001, 002, ...).
+
+### Ejemplos:
+- `fix/BUG-AUTH-HIGH-003`: Error de inicio de sesión con prioridad alta.
+- `fix/UI-VIAJ-MED-001`: Problema con prioridad media en la interfaz de viaje
+
+### Gestión
+1. El equipo de testing debe registrar los errores utilizando esta convención.
+2. Los desarrolladores deben referirse a este código en los commits relacionados.
+3. El equipo debe usar el código en sus herramientas de seguimiento como Jira, Trello, o GitHub Issues.
+
+### Convención de COMMITS en código de error:
+`git commit -m "Corrige BUG-AUTH-HIGH-003: Error de autenticación con credenciales válidas"`
 
 ## License
 Qhawariy software con licencia open-sourced software bajo la [BSD 3-Clause License].(https://opensource.org/licenses/BSD-3-Clause)
