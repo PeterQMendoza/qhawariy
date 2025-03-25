@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Notificaciones
+{% endblock %}
+
+{% block content %}
+<div class="pt-2 w-full">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center">
+            <div class="ml-3">
+                <p class="text-h4">
+                    Notificaciones
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center justify-center perfil-btn-back">
+            <a href="{{ url_for('home.index') }}" class="flex items-center justify-center p-2 rounded">
+                <div class="mr-2">
+                    <img src="{{ url_for('static', filename='img/back.svg') }}" height="24px" width="24px" alt="">
+                </div>
+                <p class="text-body-2">Volver a inicio</p>
+            </a>
+        </div>
+    </div>
+    <div class="w-full pt-4 p-4">
+        <ul class="space-y-2">
+            {% for notificacion in notificaciones %}
+            <li class="flex justify-between items-center p-3 hover:bg-gray-200 bg-gray-200 rounded">
+                <div class="">
+                    <small class="text-black-60 text-body-3 font-medium uppercase">{{ notificacion.creado_en|date_time('full_peru') }}</small>
+                    <p class="{{ 'text-blue-100' if not notificacion.esta_leida else 'text-black-60' }} text-h6 py-2">
+                        {{ notificacion.mensaje }}
+                    </p>
+                </div>
+                {% if not notificacion.esta_leida %}
+                <form method="POST" action="{{ url_for('notificacion.marcar_como_leida', notificacion_id=notificacion.id_notificacion) }}">
+                    <input type="hidden" name="csrf_token" value="{{token}}">
+                    <button class="btn btn--base btn-green-600" type="submit">Marcar como leída</button>
+                </form>
+                {% endif %}
+            </li>
+            {% else %}
+            <p>No tienes notificaciones.</p>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

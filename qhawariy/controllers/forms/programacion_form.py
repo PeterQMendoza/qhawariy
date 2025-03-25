@@ -11,7 +11,11 @@ from wtforms.fields import (
     DateField
 )
 from wtforms_html5 import AutoAttrMeta
-from wtforms.validators import DataRequired, InputRequired
+from wtforms.validators import (
+    DataRequired,
+    InputRequired
+    # Optional
+)
 
 from qhawariy.utilities.builtins import LIMA_TZ
 
@@ -50,6 +54,7 @@ class AgregaVehiculoProgramadoForm(FlaskForm):
         validators=[
             DataRequired("Necesitamos esta informacion"),
             InputRequired()
+            # Optional()
         ],
         render_kw={"step": "1"}
     )

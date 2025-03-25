@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 8eb5b815e691
-Revises: 
-Create Date: 2025-03-08 15:45:49.893676
+Revision ID: 817b2058651a
+Revises:
+Create Date: 2025-03-24 16:29:40.928968
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8eb5b815e691'
+revision = '817b2058651a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -112,6 +112,16 @@ def upgrade():
     sa.Column('id_vehiculo', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id_vehiculo'], ['vehiculos.id_vehiculo'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id_dv')
+    )
+    op.create_table('notificaciones',
+    sa.Column('id_notificacion', sa.Integer(), nullable=False),
+    sa.Column('id_usuario', sa.Integer(), nullable=False),
+    sa.Column('mensaje', sa.String(length=255), nullable=False),
+    sa.Column('esta_leida', sa.Boolean(), nullable=False),
+    sa.Column('prioridad', sa.String(length=50), nullable=True),
+    sa.Column('creado_en', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['id_usuario'], ['usuarios.id_usuario'], ),
+    sa.PrimaryKeyConstraint('id_notificacion')
     )
     op.create_table('programaciones',
     sa.Column('id_programacion', sa.Integer(), nullable=False),
@@ -241,6 +251,7 @@ def downgrade():
     op.drop_table('proximas_rutas')
     op.drop_table('propietarios_vehiculos')
     op.drop_table('programaciones')
+    op.drop_table('notificaciones')
     op.drop_table('disponibles_vehiculos')
     op.drop_table('vehiculos')
     op.drop_table('usuarios')

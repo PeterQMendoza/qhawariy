@@ -5,6 +5,9 @@
     --qh-background-color:rgba(102, 102, 102, var(--qh-bg-opacity));
     --qh-text-opacity:1;
     --qh-text-color: rgba(102, 102, 102, var(--qh-text-opacity));
+    --spacing: 0.25rem;
+    --color-gray: oklch(0.967 0.003 264.542);
+    --container-md: 28rem;
 }
 
 [data-theme="dark"]{
@@ -208,6 +211,14 @@ thead{
     font-weight: 600;
     text-align: center;
 }
+
+.hover\:bg-gray-200 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray);
+      }
+    }
+  }
 
 tbody tr:hover{
     --qh-bg-opacity:0.1;
@@ -582,6 +593,22 @@ legend {
 .center{
     top: calc(50% + 0px);
     left: calc(50% + 0px);
+}
+
+.space-y-2 {
+    :where(& > :not(:last-child)) {
+      --qh-space-y-reverse: 0;
+      margin-block-start: calc(calc(var(--spacing) * 2) * var(--qh-space-y-reverse));
+      margin-block-end: calc(calc(var(--spacing) * 2) * calc(1 - var(--qh-space-y-reverse)));
+    }
+}
+
+.space-y-4 {
+    :where(& > :not(:last-child)) {
+      --qh-space-y-reverse: 0;
+      margin-block-start: calc(calc(var(--spacing) * 4) * var(--qh-space-y-reverse));
+      margin-block-end: calc(calc(var(--spacing) * 4) * calc(1 - var(--qh-space-y-reverse)));
+    }
 }
 
 /* Clases */
@@ -1661,6 +1688,10 @@ legend {
     padding: 0.5rem;
 }
 
+.p-3 {
+    padding: 0.75rem;
+}
+
 .p-4 {
     padding: 1rem;
 }
@@ -2193,6 +2224,10 @@ legend {
 
 .max-w-\[750px\] {
     max-width: 750px;
+}
+
+.max-w-md {
+    max-width: var(--container-md);
 }
 
 .m-0 {

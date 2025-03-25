@@ -64,14 +64,16 @@
                         <div class="relative pl-5 sm:pl-3">
                             <div class="menu-desktop lg:block">
                                 <a href="#" class="btn-user rounded flex items-center cursor-pointer px-2 sm:px-1.5">
-                                    <div class="">
+                                    <!-- <div class="cursor-pointer">
                                         <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-avatar.svg') }}" class="px-2" width="42px" height="42px"></object>
-                                    </div>
+                                    </div> -->
+                                    <img src="{{ url_for('static', filename='img/icon-avatar.svg') }}" class="px-2" width="42px" height="42px" alt="Usuario">
                                     <p class="sm:hidden">{{ current_user.nombres }}, {{ current_user.apellidos}}</p>
                                 </a>
                                 <div class="menu-user absolute bg-white right-0 z-1100 menu-dropdown shadow-custom rounded border border-gray-100 text-xs hidden">
                                     <a href="{{ url_for('auth.edit')}}" class="block px-4 py-3">Configuracion de perfil</a>
                                     <a href="{{ url_for('auth.logout')}}" class="block px-4 py-3 h-full">Cerrar Sesion</a>
+                                    <a href="{{ url_for('notificacion.mostrar_notificaciones')}}" class="block px-4 py-3 h-full">Notificaciones</a>
                                 </div>
                             </div>
                         </div>

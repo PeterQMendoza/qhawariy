@@ -189,7 +189,8 @@ def create_app(test_config=None):
         control,
         control_tiempo,
         permiso_vehiculo,
-        coordenadas
+        coordenadas,
+        notificacion
     )
     # from qhawariy.models.timer import eventos
     app.register_blueprint(home.bp)
@@ -205,6 +206,7 @@ def create_app(test_config=None):
     app.register_blueprint(control_tiempo.bp)
     app.register_blueprint(permiso_vehiculo.bp)
     app.register_blueprint(coordenadas.bp)
+    app.register_blueprint(notificacion.bp)
 
     # Manejador de errores #analisis
     register_error_handler(app)

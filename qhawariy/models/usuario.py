@@ -36,6 +36,13 @@ class Usuario(db.Model, UserMixin):
         cascade="all,delete-orphan"
     )
 
+    # Relacion inversa con la tabla
+    usuario_notificaciones = db.relationship(
+        "Notificacion",
+        back_populates="usuario",
+        cascade="all,delete-orphan"
+    )
+
     def __init__(self, nombres, apellidos, dni, telefono, correo_electronico):
         self.nombres = nombres
         self.apellidos = apellidos

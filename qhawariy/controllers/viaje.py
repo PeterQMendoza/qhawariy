@@ -43,6 +43,7 @@ bp = Blueprint("viaje", __name__, url_prefix="/viaje")
 @bp.route("/lista", methods=["GET"])
 @login_required
 @controlador_required
+#
 def listar_calendario():
     ahora = datetime.datetime.now(LIMA_TZ)
     ahora.weekday()

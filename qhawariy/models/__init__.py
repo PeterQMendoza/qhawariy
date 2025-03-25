@@ -19,6 +19,7 @@ from qhawariy.models.control_tiempo import ControlTiempo
 from qhawariy.models.configuracion import Configuracion
 from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
 from qhawariy.models.proxima_ruta import ProximaRuta
+from qhawariy.models.notificacion import Notificacion
 
 __all__ = [
     'Asociado',
@@ -41,5 +42,6 @@ __all__ = [
     'ControlTiempo',
     'Configuracion',
     'SecuenciaControlRuta',
-    'ProximaRuta'
+    'ProximaRuta',
+    'Notificacion'
 ]

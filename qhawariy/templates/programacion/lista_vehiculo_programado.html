@@ -180,7 +180,7 @@
                         <div class="relative">
                             <div class="w-full block">
                                 {{ form.tiempo.label }}
-                                {{ form.tiempo(class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Hora", autocomplete="off", maxlength="20") }}<br>
+                                {{ form.tiempo(id="campo_tiempo", class="rounded-xxs border text-black-100 text-sm w-full px-4 py-3 border-gray-209", placeholder="Hora", autocomplete="off", maxlength="20") }}<br>
                             </div>
                         </div>
                         {% for error in form.tiempo.errors %}
@@ -192,13 +192,16 @@
                             <div class="w-full block">
                                 {{ form.vehiculo_en_espera.label(class="checkbox-label items-center pr-3")}}
                                 <label class="switch">
-                                    {{ form.vehiculo_en_espera(class="bg-green-600") }}
+                                    {{ form.vehiculo_en_espera(id="tiempo_habilitado", class="bg-green-600") }}
                                     <span class="slider round"></span>
                                 </label>
                                 <p class="text-body-4 font-semibold">
                                     (*) Si esta marcado, el vehiculo está listo para iniciar sus viajes
                                     <span class="text-blue-100">cuando se necesite</span>
                                 </p>
+                                <!-- {#% if error_espera %#}
+                                <p class="text-red-600 text-xs">{#{error_espera}#}</p>
+                                {#% endif %#} -->
                             </div>
                         </div>
                         {% for error in form.vehiculo_en_espera.errors %}
@@ -216,3 +219,25 @@
     </div>
 </div>
 {% endblock %}
+<!-- {#% block javascript %#}
+<script>
+    document.addEventListener("DOMContentLoaded",()=>{
+        const checkbox = document.getElementById("tiempo_habilitado");
+        const campoTiempo = document.getElementById("campo_tiempo");
+        // Funcion para ailitar y deshabilitar el campo de tiempo
+        checkbox.addEventListener("change",()=>{
+            if (checkbox.checked) {
+                campoTiempo.disabled = true;
+            } else {
+                campoTiempo.disabled = false;
+                campoTiempo.value = "";
+            }
+        });
+
+        // Asegurarse de que este desactivado al cargar la pagina
+        if (!checkbox.checked) {
+            campoTiempo.disabled = false;
+        }
+    })
+</script>
+{#% endblock %#} -->

@@ -213,3 +213,10 @@ class CrearNuevoPasswordForm(FlaskForm):
     ])
 
     submit = SubmitField("Confirmar restablece password")
+
+
+class NotificacionForm(FlaskForm):
+    class Meta(AutoAttrMeta):
+        csrf = True
+
+    submit = SubmitField("Marcar como leida")

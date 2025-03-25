@@ -1,7 +1,7 @@
-import datetime
+from datetime import datetime
 
 
-def format_datetime(value, format="short"):
+def format_datetime(value: datetime, format="short"):
     """Filtro que transforma un datetime en str con formato.
 
     El filtro es para ser usado en plantillas JINJA2.
@@ -21,6 +21,8 @@ def format_datetime(value, format="short"):
         value_str = value.strftime("%d/%m/%Y")
     elif format == "full":
         value_str = value.strftime("%d %b, %Y - %I:%M %p")
+    elif format == "full_peru":
+        value_str = value.strftime("%I:%M %p, %B %d, %Y")
     elif format == "date":
         value_str = value.strftime("%A %d de %B de %Y")
     elif format == "year":
@@ -33,6 +35,28 @@ def format_datetime(value, format="short"):
         value_str = value.strftime("%a")
     else:
         value_str = ""
+
+    # Traducir el mes al español
+    # meses_espanol = {
+    #     "January": "Enero",
+    #     "February": "Febrero",
+    #     "March": "Marzo",
+    #     "April": "Abril",
+    #     "May": "Mayo",
+    #     "June": "Junio",
+    #     "July": "Julio",
+    #     "August": "Agosto",
+    #     "September": "Septiembre",
+    #     "October": "Octubre",
+    #     "November": "Noviembre",
+    #     "December": "Diciembre"
+    # }
+
+    # value_str = value_str.replace(
+    #     value.strftime("%B"),
+    #     meses_espanol[value.strftime("%B")]
+    # )
+
     return value_str
 
 
@@ -48,4 +72,4 @@ def format_time(value, format='short'):
 
 
 def is_datetime(value):
-    return isinstance(value, datetime.datetime)
+    return isinstance(value, datetime)

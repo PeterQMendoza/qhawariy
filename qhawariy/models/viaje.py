@@ -169,7 +169,7 @@ class Viaje(db.Model):
 
         return resultado
 
-    # Estadisticas
+    # Para mostrar estadisticas
     @staticmethod
     def estadistica_viajes_por_vehiculo():
         resultado = Viaje.query.join(

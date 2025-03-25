@@ -40,6 +40,7 @@ from qhawariy.controllers.forms.auth_form import (
     CambiarDatosForm,
     RestablecerPasswordForm
 )
+from qhawariy.notifications.factory import NotificacionFactory
 
 # Blueprint
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -145,6 +146,10 @@ def login():
                     remember=form.remember_me.data,
                     duration=TIME_EXPIRE_LOGIN
                 )
+                NotificacionFactory.crear_notificacion(
+                    user.id_usuario,
+                    "Iniciaste sesion"
+                ).guardar()
                 next_page = request.args.get("next", None)
                 if not next_page or urlparse(next_page).netloc != '':
                     next_page = url_for("home.index")
@@ -202,6 +207,11 @@ def restablecer_nuevo_password(token, usuario_id):
     if form.validate_on_submit():
         usuario_validado.establecer_clave(form.password.data)
         usuario_validado.guardar()
+        NotificacionFactory.crear_notificacion(
+            usuario_validado.id_usuario,
+            "Restableciste tu password correctamente.",
+            "alto"
+        ).guardar()
         next_page = request.args.get("next", None)
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for("auth.login")
@@ -229,6 +239,12 @@ def edit():
             user.establecer_clave(form_clave.password.data)
             user.guardar()
             logout_user()
+            # Notificacion
+            NotificacionFactory.crear_notificacion(
+                id_user,
+                "Cambiaste tu contraseña correctamente",
+                "alto"
+            ).guardar()
             next_page = request.args.get("next", None)
             if not next_page or urlparse(next_page).netloc != '':
                 next_page = url_for("auth.login")
@@ -240,6 +256,12 @@ def edit():
         user.correo_electronico = form_email.email.data
         user.guardar()
         logout_user()
+        # Notificacion
+        NotificacionFactory.crear_notificacion(
+            id_user,
+            "Cambiaste tu correo electronico correctamente.",
+            "alto"
+        ).guardar()
         next_page = request.args.get("next", None)
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for("auth.login")
@@ -250,6 +272,11 @@ def edit():
         user.dni = form_datos.dni.data
         user.telefono = form_datos.telefono.data
         user.guardar()
+        # Notificacion
+        NotificacionFactory.crear_notificacion(
+            id_user,
+            "Cambiaste tus datos personales correctamente."
+        ).guardar()
         next_page = request.args.get("next", None)
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for("auth.login")

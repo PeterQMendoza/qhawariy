@@ -135,6 +135,21 @@ def agregar_vehiculo_programado(programacion_id):
         vp = form.vehiculo.data
         tiempo = form.tiempo.data
         vehiculo_en_espera = form.vehiculo_en_espera.data
+
+        # Solucion de error al desactivar vehiculo en espera
+        # if form.tiempo.data and not form.vehiculo_en_espera.data:
+        #     error = """Por favor, selecciona una hora si desactivaste vehiculo en
+        #           espera."""
+
+        #     return render_template(
+        #         "programacion/lista_vehiculo_programado.html",
+        #         form=form,
+        #         error_espera=error,
+        #         programa=pro,
+        #         vps=lista_vp,
+        #         ruta=ruta
+        #     )
+
         # Realizar programacion una vez por vehiculo y con tiempo unico
         vehiculo_unico = VehiculoProgramado.obtener_vp_por_programacion_y_id_vehiculo(
             programacion_id=programacion_id,
@@ -162,8 +177,8 @@ def agregar_vehiculo_programado(programacion_id):
                 return redirect(siguiente_pagina)
             else:
                 flash(
-                    message="""El tiempo de salida debe ser único, ya hay un vehicul
-                    o con salida:{t}""".format(t=tiempo),
+                    message='El tiempo de salida debe ser único, ya hay un vehicul\
+                    o con salida:{t}'.format(t=tiempo),
                     category='error'
                 )
         else:
@@ -175,6 +190,7 @@ def agregar_vehiculo_programado(programacion_id):
     return render_template(
         "programacion/lista_vehiculo_programado.html",
         form=form,
+        error_espera=None,
         programa=pro,
         vps=lista_vp,
         ruta=ruta
