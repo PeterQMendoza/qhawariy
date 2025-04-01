@@ -30,8 +30,8 @@ from qhawariy import login_manager, mail
 from qhawariy.models.usuario import Usuario
 from qhawariy.models.usuario_rol import UsuarioRol
 from qhawariy.models.rol import Rol
-from qhawariy.controllers.decorators.auth import admin_required, send_email
-from qhawariy.controllers.forms.auth_form import (
+from qhawariy.services.auth_service.decorators import admin_required, send_email
+from qhawariy.forms.auth_form import (
     CrearNuevoPasswordForm,
     RegisterForm,
     LoginForm,
@@ -40,7 +40,7 @@ from qhawariy.controllers.forms.auth_form import (
     CambiarDatosForm,
     RestablecerPasswordForm
 )
-from qhawariy.notifications.factory import NotificacionFactory
+from qhawariy.services.notifications_service.factory import NotificacionFactory
 
 # Blueprint
 bp = Blueprint("auth", __name__, url_prefix="/auth")

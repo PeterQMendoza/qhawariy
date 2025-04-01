@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Reportar viaje
+    Calendario
 {% endblock %}
 {% block head %}
     {{ super() }}
@@ -15,7 +15,7 @@
             </div>
             Inicio
         </a>
-        <a href="{{url_for('viaje.listar_calendario')}}" class="q-link-active q-link-exact-active">
+        <a href="{{url_for('viaje.mostrar_dia')}}" class="q-link-active q-link-exact-active">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/strip_blue.svg') }}" alt="qhawariy" srcset="" class="block q-icon-active">
                 <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal hidden"> -->
@@ -40,20 +40,18 @@
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
+<a href="{{ url_for('viaje.mostrar_dia') }}" class="btn--base">
+    <p class="text-h3">Vista día</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
 <a href="#" class="btn--base">
-    <p class="text-h3">Fechas</p>
+    <p class="text-h3">Calendario</p>
 </a>
 {% endblock %}
 {% block content %}
 <div class="py-2">
-    <div class="flex items-center justify-between py-2">
-        <p class="text-h5 text-black-100">Calendario de programaciones realizadas</p>
-        <div class="">
-            <a href="{{url_for('viaje.mostrar_dia')}}" class="btn btn--base btn-gray-111">
-                Vista diaria
-            </a>
-        </div>
-    </div>
     <div class="border border-gray-209 p-4 rounded-sm bg-gray-250">
         <div class="flex items-center justify-center py-2">
             <p class="text-h3 text-blue-100">{{data|date_time('month_year')}}</p>

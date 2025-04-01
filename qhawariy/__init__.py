@@ -4,6 +4,7 @@ para las empresas de transporte publico de pasajeros
 
 autor: Peter Pilen Quispe Mendoza
 """
+import locale
 import os
 import logging
 
@@ -71,6 +72,16 @@ def create_app(test_config=None):
             config.py
     """
     app = Flask(__name__, instance_relative_config=True)
+
+    # Configurarel locale
+    @app.before_request
+    def configurar_local():
+        # Configurar locale para es_PE.UTF-8 (Per'u)
+        locale_str = 'es_PE.UTF-8'
+        try:
+            locale.setlocale(locale.LC_ALL, locale_str)
+        except locale.Error:
+            app.logger.error("Locale 'es_PE.UTF-8' no esta disponible en este sistema")
 
     # Cargar la configuracion del folder  de la instancia
     if test_config is None:

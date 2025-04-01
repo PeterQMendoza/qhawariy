@@ -85,7 +85,25 @@ class Viaje(db.Model):
 
     @staticmethod
     def obtener_viaje_por_id_vehiculo(id):
+        """
+        Obtiene todos los vehiculos por el id_vehiculo
+        """
         return Viaje.query.filter_by(id_vehiculo=id).first()
+
+    @staticmethod
+    def obtener_viaje_por_fecha_id_vehiculo(fecha_id: int, vehiculo_id: int):
+        # Sin importaciones cruzadas
+        from qhawariy.models.control_tiempo import ControlTiempo
+        resultado = Viaje.query.join(
+            ControlTiempo, ControlTiempo.id_viaje == Viaje.id_viaje
+        ).where(
+            Viaje.id_fecha == fecha_id,
+            Viaje.id_vehiculo == vehiculo_id
+        ).order_by(
+            asc(ControlTiempo.tiempo)
+        ).all()
+
+        return resultado
 
     @staticmethod
     def obtener_todos_viajes():
@@ -118,6 +136,15 @@ class Viaje(db.Model):
         ).order_by(
             Fecha.fecha
         ).paginate()
+        return resultado
+
+    @staticmethod
+    def obtener_viaje_por_fecha(fecha_id: int):
+        resultado = Viaje.query.join(
+            Fecha, Fecha.id_fecha == Viaje.id_fecha
+        ).filter(
+            Fecha.id_fecha == fecha_id
+        ).all()
         return resultado
 
     @staticmethod

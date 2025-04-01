@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Reportar viaje
+    Vista hoy
 {% endblock %}
 {% block head %}
     {{ super() }}
@@ -39,19 +39,24 @@
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
-<a href="{{url_for('viaje.listar_calendario')}}" class="btn--base">
-    <p class="text-h3">Fechas</p>
-</a>
-<div class="flex">
-    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
-</div>
 <a href="#" class="btn--base">
-    <p class="text-h3">Vista diaria</p>
+    <p class="text-h3">Vista día</p>
 </a>
 {% endblock %}
 {% block content %}
+<div class="flex items-center justify-between py-2">
+    <p class="text-h5 text-black-100">Vista diaria</p>
+    <div class="">
+        <a href="{{url_for('viaje.listar_calendario')}}" class="btn btn--base btn-gray-111">
+            Calendario
+        </a>
+    </div>
+</div>
 <div class="flex items-center justify-center mt-3 table-wrapper">
     {{test|safe}}
+</div>
+<div class="flex items-center justify-center mt-3 table-wrapper">
+    {{test1|safe}}
 </div>
 <div class="flex items-center justify-center mt-3 table-wrapper">
     <table class="text-h6">

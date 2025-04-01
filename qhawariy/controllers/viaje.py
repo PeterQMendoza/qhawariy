@@ -1,6 +1,8 @@
-import datetime
+from datetime import (
+    datetime,
+    timedelta,
+)
 # import json
-import pandas as pd
 import logging
 from flask import (
     Blueprint,
@@ -15,24 +17,30 @@ from flask_login import login_required
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
 
+import pandas as pd
+
 # from qhawariy import scheduler
-from qhawariy.controllers.decorators.auth import controlador_required
 from qhawariy.models.disponible_vehiculo import DisponibleVehiculo
 from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
-from qhawariy.models.services.control_programa import (
-    CompositePrograma,
-    FlyweightFactory,
-    LeafPrograma
-)
+# from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
+from qhawariy.services.auth_service.decorators import controlador_required
+# from qhawariy.services.programa_service.control_programa import (
+#     CompositePrograma,
+#     FlyweightFactory,
+#     LeafPrograma
+# )
 from qhawariy.models.viaje import Viaje
+from qhawariy.models.control_tiempo import ControlTiempo
 from qhawariy.models.vehiculo import Vehiculo
-from qhawariy.models.vehiculo_programado import VehiculoProgramado
+# from qhawariy.models.vehiculo_programado import VehiculoProgramado
 from qhawariy.models.programacion import Programacion
 # from qhawariy.models.timer.tareas import tarea1
-from qhawariy.controllers.forms.viaje_form import ViajeForm
+from qhawariy.forms.viaje_form import ViajeForm
+from qhawariy.services.data_service.dataframe_operacion import DataFrameBuilder
 from qhawariy.utilities.helpers import Calendario
 from qhawariy.utilities.builtins import LIMA_TZ
+from qhawariy.utilities.helpers import convertir_DataFrame
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +53,9 @@ bp = Blueprint("viaje", __name__, url_prefix="/viaje")
 @controlador_required
 #
 def listar_calendario():
-    ahora = datetime.datetime.now(LIMA_TZ)
+    ahora = datetime.now(LIMA_TZ)
     ahora.weekday()
-    desde = datetime.datetime(
+    desde = datetime(
         year=ahora.year,
         month=ahora.month,
         day=1,
@@ -63,21 +71,21 @@ def listar_calendario():
         next_month = ahora.month+1
         next_year = ahora.year
     # Corregir para el mes de diciembre
-    hasta = datetime.datetime(
+    hasta = datetime(
         year=next_year,
         month=next_month,
         day=1,
         hour=0,
         minute=0,
         second=0
-    )-datetime.timedelta(days=1)
+    )-timedelta(days=1)
     # Las fechas no estan relacionadas con el modelo viaje
-    f = Fecha.obtener_rango_fecha(ini=desde, fin=hasta)
+    fecha = Fecha.obtener_rango_fecha(ini=desde, fin=hasta)
     primer_dia = 1
-    if len(f) != 0:
-        primer_dia = f[0].fecha.day
+    if len(fecha) != 0:
+        primer_dia = fecha[0].fecha.day
     pds = desde.weekday()+1
-    calendario = Calendario(ahora.year, ahora.month, f, primer_dia, pds)
+    calendario = Calendario(ahora.year, ahora.month, fecha, primer_dia, pds)
     fechas = calendario.fechas
 
     return render_template(
@@ -99,11 +107,13 @@ def agregar_viaje(fecha_id):
     """
     programa = Programacion.obtener_por_fecha(fecha_id)
 
-    fecha = programa.fecha
-    dv = DisponibleVehiculo.obtener_vehiculos_disponibles(fecha.fecha)
+    fecha_programa = programa.fecha
+    vehiculos_disponibles = DisponibleVehiculo.obtener_vehiculos_disponibles(
+        fecha_programa.fecha
+    )
     vehiculos = []
-    if dv is not None:
-        for v in dv:
+    if vehiculos_disponibles is not None:
+        for v in vehiculos_disponibles:
             vehiculos.append(v.vehiculo)
     else:
         vehiculos = Vehiculo.obtener_todos_vehiculos_activos()
@@ -191,64 +201,192 @@ def eliminar_viaje(viaje_id, fecha_id):
 @controlador_required
 def mostrar_dia():
     # para mostrar en la pantalla
-    test = None
+    # test = None
+
+    # Establecer el tiempo de recorrido para el calculo de llegada programada
+    # delta_llegada = timedelta(minutes=75)
 
     # obtener la programacion de vehiculos por fecha
-    ahora = datetime.datetime.now(LIMA_TZ)
+    ahora = datetime.now(LIMA_TZ)
     ahora = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+    fecha = Fecha.obtener_fecha_por_fecha(ahora)
 
-    rutas = Ruta.obtener_todos_rutas()
+    # rutas = Ruta.obtener_todos_rutas()
 
     # Creamos un objeto factory del servicio control_programa
-    factory = FlyweightFactory()
-    main = CompositePrograma(ahora.strftime("%d/%m/%Y"))
+    # factory = FlyweightFactory()
+    # main = CompositePrograma(ahora.strftime("%d/%m/%Y"))
 
-    # Creamos un diccionario para asignarle un nombre a cada
-    # instancia de las clases de CompositePrograma, que representa
-    # la programacion de cada una de las rutas
-    programa_ruta_info = [{"ruta": ruta.codigo, "id": ruta.id_ruta} for ruta in rutas]
+    # # Creamos un diccionario para asignarle un nombre a cada
+    # # instancia de las clases de CompositePrograma, que representa
+    # # la programacion de cada una de las rutas
+    # programa_ruta_info = [{"ruta": ruta.codigo, "id": ruta.id_ruta} for ruta in rutas]
 
-    programas = {}
+    # programas = {}
 
-    for programa in programa_ruta_info:
-        nombre = programa["ruta"]
-        programas[nombre] = CompositePrograma(str(nombre))
+    # for programa in programa_ruta_info:
+    #     nombre = programa["ruta"]
+    #     programas[nombre] = CompositePrograma(str(nombre))
 
-    # agregar un programa a la ruta actual (preferencia)
-    # Secuencia de recorrido ruta:
-    #   TC-34  -> TC-34A -> TC-34
-    #   TC-34B -> TC-34A -> TC-34
-    # ruta_id = rutas[0].id_ruta
-    ruta_actual = rutas[0].codigo
-    ruta_destino = rutas[1].codigo
-    for r in rutas:
-        if r.codigo in programas:
-            # Agregar todos los vehiculos programado para esta ruta
-            vp = VehiculoProgramado.vista_diaria(ahora, r.id_ruta)
-            for v in vp:
-                programa_1 = LeafPrograma(
-                    factory,
-                    str(v.vehiculo.flota),
-                    v.tiempo.strftime("%H:%M:%S"),
-                    ruta_destino
-                )
+    # # agregar un programa a la ruta actual (preferencia)
+    # # Secuencia de recorrido ruta:
+    # #   TC-34  -> TC-34A -> TC-34
+    # #   TC-34B -> TC-34A -> TC-34
+    # # ruta_id = rutas[0].id_ruta
+    # ruta_actual = rutas[0].codigo
+    # ruta_destino = rutas[1].codigo
+    # for ruta in rutas:
+    #     if ruta.codigo in programas:
+    #         # Agregar todos los vehiculos programado para esta ruta
+    #         vp = VehiculoProgramado.vista_diaria(ahora, ruta.id_ruta)
+    #         if vp and len(vp) > 0:
+    #             for vehiculo_programado in vp:
+    #                 # Obtener controles de acuerdo a la ruta
+    #                 controles = SecuenciaControlRuta.obtener_todos_secuencia_por_ruta(
+    #                     ruta.id_ruta
+    #                 )
+    #                 # Obtener los viajes de esta programacion
+    #                 viajes = Viaje.obtener_viaje_por_fecha_id_vehiculo(
+    #                     fecha.id_fecha,
+    #                     vehiculo_programado.vehiculo.id_vehiculo
+    #                 )
+    #                 if viajes and len(viajes) > 0:
+    #                     # operacion con datetime.time usando combine()
+    #                     fecha_combinada = datetime.combine(
+    #                         date.today(),
+    #                         vehiculo_programado.tiempo
+    #                     )
+    #                     llegada_programada = fecha_combinada + delta_llegada
+    #                     for viaje in viajes:
+    #                         tiempos = [t.tiempo for t in viaje.viajes]
+    #                         programa_1 = LeafPrograma(
+    #                             factory,
+    #                             str(vehiculo_programado.vehiculo.flota),
+    #                             vehiculo_programado.tiempo,
+    #                             controles,
+    #                             llegada_programada,
+    #                             datetime.combine(date.today(), tiempos[0]),
+    #                             ruta_destino
+    #                         )
+    #                         llegada_programada = llegada_programada + delta_llegada
 
-                programas[r.codigo].add_item(programa_1)
+    #                         programas[ruta.codigo].add_item(programa_1)
 
-    # agregar al nodo principal
-    for key, programa in programas.items():
-        main.add_item(programa)
+    # # agregar al nodo principal
+    # for key, programa in programas.items():
+    #     main.add_item(programa)
 
-    # data=pd.DataFrame(programas[ruta_actual])
-    # Acceder a un metodo de la instancia del programa en particular
-    # test=pd.DataFrame(programas[ruta_actual].display()["data"])
-    # test=test.to_html()
-    col_nombre = ["flota", "tiempo", "proxima ruta"]
-    test = pd.DataFrame(
-        programas[ruta_actual].display()[ruta_actual],
-        columns=col_nombre
+    # # data=pd.DataFrame(programas[ruta_actual])
+    # # Acceder a un metodo de la instancia del programa en particular
+    # # test=pd.DataFrame(programas[ruta_actual].display()["data"])
+    # # test=test.to_html()
+    # col_nombre = [
+    #     "flota",
+    #     "salida",
+    #     "control",
+    #     "programada",
+    #     "llegada",
+    #     "proxima ruta"
+    # ]
+    # test = pd.DataFrame(
+    #     programas[ruta_actual].display()[ruta_actual],
+    #     columns=col_nombre
+    # )
+
+    # test = test.to_html()
+
+    # --------------------------------------------------------------------------------
+    # definiendo las DataFrame
+    viajes = Viaje.obtener_viaje_por_fecha(fecha.id_fecha)
+    vehiculos = Vehiculo.obtener_todos_vehiculos_activos()
+    rutas = Ruta.obtener_todos_rutas()
+
+    df_vehiculos = convertir_DataFrame(vehiculos)
+
+    # Agregar los tiempos de los controles del viaje
+    lista_ct: list[pd.DataFrame] = []
+    for ruta in rutas:
+        ct = ControlTiempo.vista_diaria(ahora, ruta.id_ruta)
+        if ct and len(ct) > 0:
+            df_ct = convertir_DataFrame(ct)
+            lista_ct.append(df_ct)
+
+    # Uso de servicio de data
+    builder = DataFrameBuilder(df_vehiculos)
+    resultado = (
+        builder
+        .eliminar_columna(
+            [
+                'marca',
+                'placa',
+                'modelo',
+                'fecha_fabricacion',
+                'numero_asientos',
+                'activo',
+                'estado'
+            ]
+        )
     )
 
-    test = test.to_html()
+    # Unir con viajes
+    if viajes and len(viajes) > 0:
+        # Pasar datos a DataFrame
+        df_viajes = convertir_DataFrame(viajes)
+        resultado = (
+            builder
+            .unir(df_viajes, como='inner', en='id_vehiculo')
+            .eliminar_columna(
+                [
+                    'id_vehiculo',
+                    'orden'
+                ]
+            )
+        )
+    # Unir con fecha
+    if fecha:
+        df_fecha = convertir_DataFrame([fecha])
+        resultado = (
+            builder
+            .unir(df_fecha, como='inner', en='id_fecha')
+            .formatear_fecha(['fecha'])
+            .eliminar_columna(
+                [
+                    'id_fecha',
+                ]
+            )
+        )
+    # Unir con rutas
+    if rutas and len(rutas) > 0:
+        df_rutas = convertir_DataFrame(rutas)
+        resultado = (
+            builder
+            .unir(df_rutas, como='inner', en='id_ruta')
+            .eliminar_columna(
+                [
+                    'id_ruta',
+                    'inicio_vigencia',
+                    'fin_vigencia',
+                    'documento'
+                ]
+            )
+        )
 
-    return render_template("viaje/muestra_dia.html", test=test)
+    # Unir con los controles tiempo
+    if lista_ct and len(lista_ct) > 0:
+        resultado = (
+            builder
+            .unir(lista_ct, como='inner', en='id_viaje')
+        )
+
+    # Resultado final convierte la DF en html para ser mostrada
+    resultado = (
+        builder
+        .formatear_html(classes="table")
+        .construir()
+    )
+
+    return render_template(
+        "viaje/muestra_dia.html",
+        test=resultado,
+        test1=df_viajes
+    )

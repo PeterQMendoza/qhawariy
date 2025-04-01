@@ -17,14 +17,14 @@ from flask import (
 )
 from flask_login import (login_required)
 
-from qhawariy.controllers.forms.admin_form import ConfiguracionForm, UserAdminForm
+from qhawariy.forms.admin_form import ConfiguracionForm, UserAdminForm
 
 from qhawariy.models.configuracion import Configuracion
 from qhawariy.models.usuario import Usuario
 from qhawariy.models.usuario_rol import UsuarioRol
 from qhawariy.models.rol import Rol
 
-from qhawariy.controllers.decorators.auth import admin_required
+from qhawariy.services.auth_service.decorators import admin_required
 
 logger = logging.getLogger(__name__)
 

@@ -12,8 +12,8 @@ from flask import (
 )
 from flask_login import login_required
 
-from qhawariy.controllers.decorators.auth import operacion_required
-from qhawariy.controllers.forms.permiso_form import (
+from qhawariy.services.auth_service.decorators import operacion_required
+from qhawariy.forms.permiso_form import (
     AgregaPermisoForm,
     BuscaPermisoForm
 )

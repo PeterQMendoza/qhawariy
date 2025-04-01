@@ -261,7 +261,9 @@ class VehiculoProgramado(db.Model):
             Fecha, Fecha.id_fecha == Programacion.id_fecha
         ).where(
             Fecha.fecha == fecha,
-            Ruta.id_ruta == ruta_id
+            Ruta.id_ruta == ruta_id,
+            # Inconsistencia de tiempo de vehiculos en espera
+            VehiculoProgramado.vehiculo_en_espera.is_(False)
         ).all()
 
         return resultado

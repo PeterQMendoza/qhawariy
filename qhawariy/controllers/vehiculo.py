@@ -20,17 +20,17 @@ from urllib.parse import urlparse
 # from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 
-from qhawariy.controllers.decorators.auth import admin_required
+from qhawariy.services.auth_service.decorators import admin_required
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.vehiculo_programado import VehiculoProgramado
 from qhawariy.models.propietario_vehiculo import PropietarioVehiculo
 from qhawariy.models.viaje import Viaje
-from qhawariy.controllers.forms.vehiculo_form import (
+from qhawariy.forms.vehiculo_form import (
     VehiculoForm,
     EditarVehiculoForm,
     BuscarVehiculoForm
 )
-from qhawariy.controllers.forms.upload_file_form import UploadFileForm
+from qhawariy.forms.upload_file_form import UploadFileForm
 from qhawariy.utilities.allowed_file import allowed_file
 from qhawariy.utilities.files import FactoryExcel
 from qhawariy.utilities.helpers import hacer_arbol

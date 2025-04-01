@@ -10,6 +10,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from typing import List, Dict, Any
 
+from datetime import (
+    datetime
+)
+
 
 class Flyweight:
     """
@@ -261,10 +265,29 @@ class LeafPrograma(ProgramaComponent):
         self,
         factory: FlyweightFactory,
         flota: str,
-        tiempo: str,
+        tiempo: datetime,
+        controles: List,
+        llegada_programada: datetime,
+        llegada: datetime,
         siguiente_ruta: str
     ):
-        self.flyweight = factory.get_flyweight([flota, tiempo, siguiente_ruta])
+        dif_prog = llegada_programada-tiempo
+        diferencia_programada = dif_prog.total_seconds()/60
+        dif = llegada-tiempo
+        diferencia = dif.total_seconds()/60
+        frecuencia = 60*10
+
+        self.flyweight = factory.get_flyweight([
+            flota,
+            tiempo,
+            controles,
+            llegada_programada,
+            llegada,
+            diferencia_programada,
+            diferencia,
+            frecuencia,
+            siguiente_ruta
+        ])
 
     def __repr__(self):
         return f"<LeafPrograma {self.flyweight._shared_state}>"

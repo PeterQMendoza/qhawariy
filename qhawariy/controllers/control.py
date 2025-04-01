@@ -6,8 +6,8 @@ from flask_login import login_required
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
 
-from qhawariy.controllers.decorators.auth import admin_required
-from qhawariy.controllers.forms.control_form import ControlForm, ControlRutaForm
+from qhawariy.services.auth_service.decorators import admin_required
+from qhawariy.forms.control_form import ControlForm, ControlRutaForm
 from qhawariy.models.control import Control
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
@@ -77,7 +77,7 @@ def listar_control_ruta():
         ruta = form.ruta.data
         control = form.control.data
         ultimo = SecuenciaControlRuta.obtener_secuencia_por_ruta(ruta)
-        if ultimo is None:
+        if ultimo:
             try:
                 secuencia = SecuenciaControlRuta(ultimo.secuencia+1, ruta, control)
                 secuencia.guardar()

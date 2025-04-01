@@ -37,8 +37,14 @@
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
 </div>
+<a href="{{ url_for('viaje.mostrar_dia') }}" class="btn--base">
+    <p class="text-h3">Vista día</p>
+</a>
+<div class="flex">
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">
+</div>
 <a href="{{url_for('viaje.listar_calendario')}}" class="btn--base">
-    <p class="text-h3">Fechas</p>
+    <p class="text-h3">Calendario</p>
 </a>
 <div class="flex">
     <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" alt="Descargar" class="">

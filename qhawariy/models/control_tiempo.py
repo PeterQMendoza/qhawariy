@@ -33,6 +33,7 @@ class ControlTiempo(db.Model):
         uselist=False,
         single_parent=True
     )
+
     viaje = db.relationship(
         "Viaje",
         back_populates="viajes",

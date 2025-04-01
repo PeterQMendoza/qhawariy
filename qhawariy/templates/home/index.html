@@ -53,7 +53,7 @@
         </a>
         {% endif %}
         {% if rol.rol=="Controlador"%}
-        <a href="{{url_for('viaje.listar_calendario')}}" class="q-icon-costumer">
+        <a href="{{url_for('viaje.mostrar_dia')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
                 <img src="{{ url_for('static', filename='img/strip.svg') }}" height="24px" width="24px" alt="panel viajes" srcset="" class="block q-icon-normal">
                 <!-- <img src="{{ url_for('static', filename='img/icon-len.svg') }}" alt="qhawariy" srcset="" class="block q-icon-normal hidden"> -->
@@ -160,7 +160,7 @@
                 {% endif %}
                 {% if rol.rol=="Controlador"%}
                 <!-- Controlador -->
-                <a class="flex items-center justify-center p-4" href="{{url_for('viaje.listar_calendario')}}">
+                <a class="flex items-center justify-center p-4" href="{{url_for('viaje.mostrar_dia')}}">
                     <div class="flex items-center flex-col justify-center">
                         <img src="{{url_for('static', filename='img/strip.svg')}}" height="48px" width="48px" alt="inicio viajes" class=" sm:hidden">
                         <span class="h-auto mt-4">

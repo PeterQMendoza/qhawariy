@@ -21,8 +21,8 @@ from qhawariy.models.distrito import Distrito
 from qhawariy.models.provincia import Provincia
 from qhawariy.models.proxima_ruta import ProximaRuta
 from qhawariy.models.ruta import Ruta
-from qhawariy.controllers.decorators.auth import admin_required
-from qhawariy.controllers.forms.ruta_form import (
+from qhawariy.services.auth_service.decorators import admin_required
+from qhawariy.forms.ruta_form import (
     AgregarRutaForm,
     AgregarTerminalForm,
     EditarRutaForm

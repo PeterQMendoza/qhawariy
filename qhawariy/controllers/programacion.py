@@ -22,7 +22,7 @@ from flask_login import login_required
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
 
-from qhawariy.controllers.decorators.auth import operacion_required
+from qhawariy.services.auth_service.decorators import operacion_required
 from qhawariy.models.disponible_vehiculo import DisponibleVehiculo
 from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
@@ -30,12 +30,12 @@ from qhawariy.models.programacion import Programacion
 from qhawariy.models.ruta_terminal import RutaTerminal
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.vehiculo_programado import VehiculoProgramado
-from qhawariy.controllers.forms.programacion_form import (
+from qhawariy.forms.programacion_form import (
     ProgramacionForm,
     AgregaVehiculoProgramadoForm,
     BuscarProgramacionForm
 )
-from qhawariy.controllers.datasets.dataset_factory import DatasetFactory
+from qhawariy.services.data_service.dataset_factory import DatasetFactory
 from qhawariy.utilities.files import FactoryExcel
 from qhawariy.utilities.helpers import convertir_DataFrame
 from qhawariy.utilities.builtins import LIMA_TZ

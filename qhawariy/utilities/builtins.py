@@ -1,10 +1,7 @@
 # Para el tiempo
-import locale
-
 import pytz
 
-LOC = locale.getlocale()
-locale.setlocale(locale.LC_ALL, LOC)
+
 LIMA_TZ = pytz.timezone('America/Lima')
 
 COLORES = [
