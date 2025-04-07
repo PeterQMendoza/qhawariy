@@ -2,7 +2,9 @@ import locale
 import logging
 from typing import List
 import pandas as pd
+import numpy as np
 from abc import ABC, abstractmethod
+from datetime import datetime, date, time
 
 # from qhawariy.utilities.builtins import LOC, LIMA_TZ
 
@@ -34,26 +36,81 @@ class FiltraOperacion(Operacion):
         return df[self.condicion(df)]
 
 
-class AgregarColumnOperacion(Operacion):
-    """
-    AgregarColumnOperacion: clase que permite la operacion de agregar column
-    """
-    def __init__(self, nombre_columna, funcion):
+class ExpandirListaColumnasOperacion(Operacion):
+    def __init__(self, columna: str, prefijo: str = None, drop_original: bool = True):
+        """
+            Parámetros:
+            columna :   str
+                        Nombre de la columna cuyo contenido es una lista.
+            prefijo :   str
+                        Prefijo para nombrar las nuevas columnas. Si no se especifica,
+                        se usa el nombre de la columna.
+            drop_original   :   bool
+                                Si es True, se elimina la columna original luego de
+                                crear las nuevas. Por defecto es True.
+        """
+        self.columna = columna
+        self.prefijo = prefijo if prefijo is not None else columna
+        self.drop_original = drop_original
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.columna not in df.columns:
+            return df
+        # Crear una DataFrame a partir de la lista de cada celda;
+        # pd.DataFrame(...).tolist() manejara diferentes longitudes
+        nuevo_df = pd.DataFrame(df[self.columna].to_list(), index=df.index)
+
+        # Renombre las columnas
+        nuevo_df = nuevo_df.rename(columns=lambda x: f"{self.prefijo}_{x}")
+
+        # Eliminar la columna original
+        if self.drop_original:
+            df = df.drop(columns=[self.columna])
+
+        # Combinar el DataFrame original (a sin la columna expandida, si drop_original)
+        # con el DataFrame generado a partir de la lista.
+        df = df.join(nuevo_df)
+        return df
+
+
+class CambiarNombreColumnasOperacion(Operacion):
+    def __init__(self, mapeado: dict):
         """
         Parametros:
         ----------
-        nombre_columna : Nombre de la columna a agregar.
-
-        funcion : Funcion que recibe el dataframe y retorna la Serie o valor
-            para dicha columna.
-
+        mapeado: Diccionario con el mapeo de nombres antiguos a nuevos.
+            Ejemplo: {'viejo_nombre': 'nuevo_nombre'}
         """
-        self.nombre_columna = nombre_columna
-        self.funcion = funcion
+        self.mapeado = mapeado
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df.copy()
-        df[self.nombre_columna] = self.funcion(df)
+        return df.rename(columns=self.mapeado)
+
+
+class AgregarColumnasOperacion(Operacion):
+    """
+    AgregarColumnOperacion: clase que permite la operacion de agregar column
+    """
+    def __init__(self, mapeado: dict):
+        """
+        Parametros:
+        ----------
+        mapping :   dict
+                    Diccionario que mapea el nombre de la nueva columna a una función.
+                    La función debe recibir el DataFrame como argumento y devolver una
+                    Serie.
+
+            Ejemplo:
+                {
+                    "columna_nueva1": lambda df: df["A"] + df["B"],
+                    "columna_nueva2": lambda df: df["A"] * 2,
+                }
+        """
+        self.mapeado = mapeado
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        for nuevo_nombre, funcion in self.mapeado.items():
+            df[nuevo_nombre] = funcion(df)
         return df
 
 
@@ -77,12 +134,42 @@ class SeleccionarColumnasOperacion(Operacion):
 
 
 class AgruparPorOperacion(Operacion):
-    def __init__(self, columnas, funcion_ag):
-        self.columnas = columnas
+    def __init__(self, columnas, funcion_ag: dict):
+        """
+        Parametros:
+          columnas  :       str | []
+                            Nombre de la columna o lista de columnas por las cuales se
+                            agrupará el DataFrame.
+          funciones_agg :   Diccionario que mapea nombres de columna a una función de
+                            agregación o a una lista de funciones.
+                            Ejemplo: {'Values1': 'sum', 'Values2': 'mean'}
+        """
+        if isinstance(columnas, str):
+            self.columnas = [columnas]
+        else:
+            self.columnas = columnas
         self. funcion_ag = funcion_ag
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df.groupby(self.columnas).agg(self.funcion_ag).reset_index()
+        grupo = df.groupby(self.columnas).agg(self.funcion_ag)
+        grupo = grupo.reset_index()
+        return grupo
+
+
+class ExplodeColumnaOperacion(Operacion):
+    def __init__(self, columna: str):
+        """
+        Parametros:
+        ----------
+        columna :   str
+                    Nombre de la columna que contiene listas
+        """
+        self.columna = columna
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.columna not in df.columns:
+            return df
+        return df.explode(self.columna)
 
 
 class OrdenarPorOperacion(Operacion):
@@ -180,17 +267,40 @@ class AgregarTiempoOperacion(Operacion):
         self.tiempo = pd.Timedelta(hours=horas, minutes=minutos, seconds=segundos)
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        # convertir la columna a datetime
-        df[self.nombre_columna] = pd.to_datetime(df[self.nombre_columna])+self.tiempo
+        # Funcion interna para agregar el timedelta a cada celda
+        def sumar_tiempo(x):
+            # si es nulo
+            if pd.isna(x):
+                return x
+            # Si a es Timestamp
+            if isinstance(x, pd.Timestamp):
+                return x + self.tiempo
+            # Si es un objeto datetime.time
+            if isinstance(x, time):
+                # Uso de fecha fija
+                dt_combinado = datetime.combine(date(1900, 1, 1), x)
+                nuevo_dt = dt_combinado + self.tiempo
+                return nuevo_dt.time()
+            # Si es una cadena de otro formato
+            try:
+                ts = pd.to_datetime(x)
+                return ts + self.tiempo
+            except Exception as e:
+                # Si falla la conversion, retorna sin agregar
+                logger.exception("VIAJE: Fallo la conversion de tiempo", e)
+                return x
+
+        df[self.nombre_columna] = df[self.nombre_columna].apply(sumar_tiempo)
         return df
 
 
 class DiferenciaTiempoOperacion(Operacion):
     def __init__(
         self,
-        columna_inicio,
-        columna_fin,
-        columna_resultado
+        columna_inicio: str,
+        columna_fin: str,
+        columna_resultado: str,
+        formato=None
     ):
         """
         Parametros:
@@ -202,13 +312,110 @@ class DiferenciaTiempoOperacion(Operacion):
         self.columna_inicio = columna_inicio
         self.columna_fin = columna_fin
         self.columna_resultado = columna_resultado
+        self.formato = formato
+
+    def convertir_valores(self, valor):
+        """ Intentara conertir el valor a un objeto timestamp o time"""
+        if pd.isna(valor):
+            return None
+        # Si Timestamp
+        if isinstance(valor, pd.Timedelta) or isinstance(valor, pd.Timestamp):
+            return valor
+        # Si es datetime
+        if isinstance(valor, datetime):
+            return pd.Timestamp(valor)
+        # Si es una cadena
+        if isinstance(valor, str):
+            try:
+                val = pd.to_datetime(valor, errors='raise')
+                return val
+            except Exception:
+                try:
+                    # Puede ser timedelta
+                    val = pd.to_timedelta(valor, errors='raise')
+                    return val
+                except Exception:
+                    return None
+        # Si es numerico o otro
+        return None
+
+    def formato_diferencia(self, dif: pd.Timedelta) -> str:
+        """Formatea un pd.Timedelta"""
+        def formato_hhmmss(td: pd.Timedelta):
+            total_sec = int(td.total_seconds())
+            horas, remanente = divmod(total_sec, 3600)
+            minutos, segundos = divmod(remanente, 60)
+            return f"{horas:02d}:{minutos:02d}:{segundos:02d}"
+
+        def formato_mmss(td: pd.Timedelta):
+            total_seg = int(td.total_seconds())
+            minutos, segundos = divmod(total_seg, 60)
+            return f"{minutos:02d}:{segundos:02d}"
+
+        def formato_dia_hhmmss(td: pd.Timedelta):
+            dias = td.days
+            remanente_seg = int(td.total_seconds()) - dias * 86400
+            horas, remanente = divmod(remanente_seg, 3600)
+            minutos, segundos = divmod(remanente, 60)
+            if dias > 0:
+                return (
+                    f"""{dias} {'dias' if dias != 1 else 'día'},
+                    {horas:02d}:{minutos:02d}:{segundos:02d}"""
+                )
+            else:
+                return (
+                    f"{horas:02d}h {minutos:02d}m {segundos:02d}s"
+                )
+        # Si self.formato es callable
+        if callable(self.formato):
+            return self.formato(dif)
+        # Si la cadena, se reconocen los formatos predeinidos
+        elif isinstance(self.formato, str):
+            formato_lower = self.formato.lower()
+            if formato_lower == "hh:mm:ss":
+                return formato_hhmmss(dif)
+            elif formato_lower == "mm:ss":
+                return formato_mmss(dif)
+            elif formato_lower == "d hh:mm:ss":
+                return formato_dia_hhmmss(dif)
+            else:
+                return str(dif)
+        else:
+            return str(dif)
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        # Verificar que ambas columnas sean datetime
-        df[self.columna_inicio] = pd.to_datetime(df[self.columna_inicio])
-        df[self.columna_fin] = pd.to_datetime(df[self.columna_fin])
-        # Calculo de la diferencia
-        df[self.columna_resultado] = df[self.columna_fin] - df[self.columna_inicio]
+        # Trabajamos de forma no destructiva
+        def calcular_diferencia(fila):
+            val_inicio = self.convertir_valores(fila[self.columna_inicio])
+            val_fin = self.convertir_valores(fila[self.columna_fin])
+            if (val_inicio is None) or (val_fin is None):
+                return np.nan
+            # Si ambos valores son Timestamp
+            if (
+                isinstance(val_inicio, pd.Timestamp)
+                and isinstance(val_fin, pd.Timestamp)
+            ):
+                return val_fin - val_inicio
+            # Si ambos son Timedelta
+            if (
+                isinstance(val_inicio, pd.Timedelta)
+                and isinstance(val_fin, pd.Timedelta)
+            ):
+                return val_fin - val_inicio
+            # Si uno es Timedelta y el otro Timestamp
+            return np.nan
+        diferencia = df.apply(calcular_diferencia, axis=1)
+
+        # Formateo de la diferencia
+        if self.formato is not None:
+            diferencia = diferencia.apply(
+                lambda td: (
+                    self.formato_diferencia(td)
+                    if pd.notna(td)
+                    else td
+                )
+            )
+        df[self.columna_resultado] = diferencia
         return df
 
 
@@ -274,6 +481,37 @@ class FormatoHTMLOperacion(Operacion):
         if self.color_texto:
             return f'<div style="color: {self.text_color};">{html_resultado}</div>'
         return html_resultado
+
+
+class TransponerFilasAColumnasOperacion(Operacion):
+    def __init__(self, sep="_", filas=None):
+        """
+        Parametros:
+        ----------
+        sep: Separador que se usará para combinar el nombre de la columna original con
+            el índice de fila. Por defecto, se usa "_".
+        """
+        self.sep = sep
+        self.filas = filas
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Recorre cada fila del DataFrame y genera un diccionario donde cada clave es:
+            "{nombre_columna}{sep}{índice_fila}"
+        y su correspondiente valor es el valor de esa celda.
+        Finalmente, crea un DataFrame de una sola fila a partir de ese diccionario.
+        """
+        nuevo_data = {}
+        for index, fila in df.iterrows():
+            # si Filas esta definida, solo se toman las filas cuyo indice esta en la
+            # lista
+            if self.filas is None or index in self.filas:
+                for columna in df.columns:
+                    # Forma el nuevo nombre de la columna combinando el nuevo
+                    nombre_nueva_columna = f"{columna}{self.sep}{index}"
+                    nuevo_data[nombre_nueva_columna] = fila[columna]
+        # Retorna un DataFrame de una sola fila con la informacion
+        return pd.DataFrame([nuevo_data])
 
 
 class FormatoFechaOperacion(Operacion):
@@ -406,12 +644,15 @@ class DataFrameBuilder:
         self._operaciones.append(op)
         return self
 
-    # Metodos elper para operaciones comunes
+    # Metodos helper para operaciones comunes
     def filtrar(self, condicion):
         return self.agregar_operacion(FiltraOperacion(condicion))
 
-    def agregar_columna(self, nombre_columna, funcion):
-        return self.agregar_operacion(AgregarColumnOperacion(nombre_columna, funcion))
+    def agregar_columnas(self, mapeado: dict):
+        return self.agregar_operacion(AgregarColumnasOperacion(mapeado))
+
+    def cambiar_nombre_columnas(self, mapeado: dict):
+        return self.agregar_operacion(CambiarNombreColumnasOperacion(mapeado))
 
     def eliminar_columna(self, columna: str):
         return self.agregar_operacion(EliminarColumnaOperacion(columna))
@@ -422,8 +663,57 @@ class DataFrameBuilder:
     def agrupar_por(self, columnas: list, funcion_ag: dict):
         return self.agregar_operacion(AgruparPorOperacion(columnas, funcion_ag))
 
+    def explode_columna(self, columna: str):
+        return self.agregar_operacion(ExplodeColumnaOperacion(columna))
+
+    def expandir_lista_a_columnas(
+        self,
+        columna: str,
+        prefijo: str = None,
+        drop_original: bool = True
+    ):
+        resultado = self.agregar_operacion(
+            ExpandirListaColumnasOperacion(columna, prefijo, drop_original)
+        )
+        return resultado
+
     def ordenar_por(self, columna: str, ascendente: bool = True):
         return self.agregar_operacion(OrdenarPorOperacion(columna, ascendente))
+
+    def transponer_filas_a_columnas(self, sep="_", filas=None):
+        """
+        Agrega una operación que transforma (transpone) las filas seleccionadas en
+        columnas.
+
+        Parametros:
+        ----------
+        sep :   str
+                Separador para unir el nombre de la columna original con el índice de la
+                fila.
+        filas : []
+                Lista de índices a transponer. Si se omite o es None, se transponen
+                todas las filas.
+
+        Ejemplo:
+            DataFrame original:
+
+            ```
+            | ID  |  A  | B   |
+            |-----|-----|-----|
+            | 0   | 1   | x   |
+            | 1   | 2   | Y   |
+            | 2   | 3   | Z   |
+            ```
+
+          Si filas = [0, 2] el resultado será:
+
+            ```
+            | A_0 | B_0 | A_2 | B_2 |
+            |-----|-----|-----|-----|
+            |  1  |  X  |  3  |  Z  |
+            ```
+        """
+        return self.agregar_operacion(TransponerFilasAColumnasOperacion(sep, filas))
 
     def unir(
         self,
@@ -434,10 +724,10 @@ class DataFrameBuilder:
         en=None,
         sufijos=('_x', '_y')
     ):
-        self.agregar_operacion(
+        resultado = self.agregar_operacion(
             InnerJoinOperacion(otros, como, en_izq, en_der, en, sufijos)
         )
-        return self
+        return resultado
 
     def agregar_tiempo(
         self,
@@ -455,10 +745,16 @@ class DataFrameBuilder:
         self,
         columna_inicio: str,
         columna_fin: str,
-        columna_resultado: str
+        columna_resultado: str,
+        formato
     ):
         self.agregar_operacion(
-            DiferenciaTiempoOperacion(columna_inicio, columna_fin, columna_resultado)
+            DiferenciaTiempoOperacion(
+                columna_inicio,
+                columna_fin,
+                columna_resultado,
+                formato
+            )
         )
         return self
 

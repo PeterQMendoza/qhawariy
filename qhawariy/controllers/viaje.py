@@ -329,6 +329,7 @@ def mostrar_dia():
     )
 
     # Unir con viajes
+    df_viajes = pd.DataFrame()
     if viajes and len(viajes) > 0:
         # Pasar datos a DataFrame
         df_viajes = convertir_DataFrame(viajes)
@@ -372,10 +373,40 @@ def mostrar_dia():
         )
 
     # Unir con los controles tiempo
-    if lista_ct and len(lista_ct) > 0:
+    resultado = None
+    agregar_controles = None
+    if lista_ct and len(lista_ct) > 0 and not df_viajes.empty:
+        builder_controles = DataFrameBuilder(df_viajes)
+        agregar_controles = (
+            builder_controles
+            .unir(lista_ct, como='inner', en='id_viaje')
+            .eliminar_columna(
+                [
+                    'orden',
+                    'id_vehiculo',
+                    'id_ct',
+                    'id_control',
+                    'id_fecha',
+                    'id_ruta'
+                ]
+            )
+            .agrupar_por(['id_viaje'], {'tiempo': lambda x: x})
+            .expandir_lista_a_columnas(columna='tiempo', prefijo='ctrl')
+            .construir()
+        )
+
+        # Agregar columna de llegada_programada, llegada entre otros
         resultado = (
             builder
-            .unir(lista_ct, como='inner', en='id_viaje')
+            .unir(agregar_controles, como='inner', en='id_viaje')
+            .agregar_columnas({'programado': lambda x: x['ctrl_0']})
+            .agregar_tiempo('programado', horas=1, minutos=15, segundos=0)
+            .diferencia_tiempo('programado', 'ctrl_5', 'diferencia', formato='hh:mm')
+            .eliminar_columna(
+                [
+                    'id_viaje'
+                ]
+            )
         )
 
     # Resultado final convierte la DF en html para ser mostrada
@@ -388,5 +419,5 @@ def mostrar_dia():
     return render_template(
         "viaje/muestra_dia.html",
         test=resultado,
-        test1=df_viajes
+        test1=agregar_controles
     )
