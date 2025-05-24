@@ -208,6 +208,7 @@ def mostrar_dia():
 
     # obtener la programacion de vehiculos por fecha
     ahora = datetime.now(LIMA_TZ)
+    # Obtiene la fecha actual
     ahora = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
     fecha = Fecha.obtener_fecha_por_fecha(ahora)
 
