@@ -24,7 +24,6 @@ from qhawariy.models.disponible_vehiculo import DisponibleVehiculo
 from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
 # from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
-from qhawariy.services.auth_service.decorators import controlador_required
 # from qhawariy.services.programa_service.control_programa import (
 #     CompositePrograma,
 #     FlyweightFactory,
@@ -38,6 +37,7 @@ from qhawariy.models.programacion import Programacion
 # from qhawariy.models.timer.tareas import tarea1
 from qhawariy.forms.viaje_form import ViajeForm
 from qhawariy.services.data_service.dataframe_operacion import DataFrameBuilder
+from qhawariy.utilities.decorators import controlador_required
 from qhawariy.utilities.helpers import Calendario
 from qhawariy.utilities.builtins import LIMA_TZ
 from qhawariy.utilities.helpers import convertir_DataFrame

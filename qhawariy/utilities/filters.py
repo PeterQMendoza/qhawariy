@@ -1,4 +1,7 @@
 from datetime import datetime
+import logging
+
+from flask import g, has_request_context
 
 
 def format_datetime(value: datetime, format="short"):
@@ -73,3 +76,12 @@ def format_time(value, format='short'):
 
 def is_datetime(value):
     return isinstance(value, datetime)
+
+
+class RequestCorrelationFilter(logging.Filter):
+    def filter(self, record):
+        if has_request_context():
+            record.correlation_id = getattr(g, 'correlation_id', 'unknown')
+        else:
+            record.correlation_id = 'unknown'
+        return True

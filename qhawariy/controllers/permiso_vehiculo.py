@@ -12,7 +12,6 @@ from flask import (
 )
 from flask_login import login_required
 
-from qhawariy.services.auth_service.decorators import operacion_required
 from qhawariy.forms.permiso_form import (
     AgregaPermisoForm,
     BuscaPermisoForm
@@ -20,6 +19,7 @@ from qhawariy.forms.permiso_form import (
 from qhawariy.models.disponible_vehiculo import DisponibleVehiculo
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.utilities.builtins import LIMA_TZ
+from qhawariy.utilities.decorators import operacion_required
 
 
 logger = logging.getLogger(__name__)

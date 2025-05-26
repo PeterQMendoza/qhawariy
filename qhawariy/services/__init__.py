@@ -4,22 +4,16 @@ from qhawariy.services.programa_service.control_programa import (
     LeafPrograma
 )
 
-from qhawariy.services.auth_service.decorators import (
-    controlador_required,
-    admin_required,
-    operacion_required
-)
-
 from qhawariy.services.notifications_service.factory import NotificacionFactory
+
+from qhawariy.services.log_service.logger import registrar_evento
 
 __all__ = [
     'CompositePrograma',
     'FlyweightFactory',
     'LeafPrograma',
-    # Seguridad
-    'controlador_required',
-    'admin_required',
-    'operacion_required',
     # Notificaciones
     'NotificacionFactory',
+    # Eventos
+    'registrar_evento',
 ]

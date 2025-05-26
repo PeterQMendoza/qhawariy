@@ -52,6 +52,11 @@ class Usuario(db.Model, UserMixin):
         self.id_alternativo = ''.join(
             (secrets.choice(string.ascii_letters) for i in range(6))
         )
+        # self.id_alternativo = generate_password_hash(
+        #     password=dni,
+        #     method='pbkdf2',
+        #     salt_length=6
+        # )
 
     def __repr__(self):
         return f'<Usuario {self.correo_electronico}>'
@@ -78,8 +83,9 @@ class Usuario(db.Model, UserMixin):
 
     def guardar(self):
         if not self.id_usuario:
-            if not self.id_alternativo:
-                db.session.add(self)
+            db.session.add(self)
+            # if not self.id_alternativo:
+            #     db.session.add(self)
         db.session.commit()
 
     def eliminar(self):
@@ -123,3 +129,13 @@ class Usuario(db.Model, UserMixin):
     @staticmethod
     def obtener_todos_usuarios():
         return Usuario.query.all()
+
+    # Saber si hay solo un registro
+    @staticmethod
+    def existe_usuario():
+        return Usuario.query.first() is not None
+
+    # validar la no duplicidad del DNI
+    @staticmethod
+    def obtener_por_dni(dni: string):
+        return Usuario.query.filter_by(dni=dni).first()

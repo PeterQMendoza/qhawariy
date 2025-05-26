@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from flask import (
     Blueprint,
@@ -30,7 +31,6 @@ from qhawariy import login_manager, mail
 from qhawariy.models.usuario import Usuario
 from qhawariy.models.usuario_rol import UsuarioRol
 from qhawariy.models.rol import Rol
-from qhawariy.services.auth_service.decorators import admin_required, send_email
 from qhawariy.forms.auth_form import (
     CrearNuevoPasswordForm,
     RegisterForm,
@@ -40,7 +40,11 @@ from qhawariy.forms.auth_form import (
     CambiarDatosForm,
     RestablecerPasswordForm
 )
+from qhawariy.services.auth_service.send_mail import send_email
 from qhawariy.services.notifications_service.factory import NotificacionFactory
+from qhawariy.utilities.decorators import admin_required
+
+logger = logging.getLogger(__name__)
 
 # Blueprint
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -66,13 +70,21 @@ def register():
         # Comprueba si el usuario este ya registrado con ese email
         user = Usuario.obtener_usuario_por_correo_electronico(email)
 
-        if user is not None:
+        if user:
             flash(f"El email: {email} ya fue registrado por otro usuario", "error")
         else:
             # Establece al primer usuario como administrador
-            us = Usuario.obtener_todos_usuarios()
+            us = Usuario.existe_usuario()
             rol = None
-            if len(us) == 0:
+            if us:
+                # asignar al usuario que se esta registrando como trabajador
+                # que no podra visualizar nada
+                rol_trabajador = Rol.obtener_por_rol("Trabajador")
+                if rol_trabajador is None:
+                    rol_trabajador = Rol("Trabajador")
+                    rol_trabajador.guardar()
+                rol = rol_trabajador
+            else:
                 # No se encuentra ningun usuario registrado
                 # crear todos los roles
                 rol_admin = Rol('Administrador')
@@ -85,25 +97,22 @@ def register():
                 rol_trabajador.guardar()
                 # Asignar el rol de administrador
                 rol = rol_admin
-            else:
-                # asignar al usuario que se esta registrando como trabajador
-                # que no podra visualizar nada
-                rol_trabajador = Rol.obtener_por_rol("Trabajador")
-                if rol_trabajador is None:
-                    rol_trabajador = Rol("Trabajador")
-                    rol_trabajador.guardar()
-                rol = rol_trabajador
-            user = Usuario(
-                nombres=nombres,
-                apellidos=apellidos,
-                dni=dni,
-                telefono=telefono,
-                correo_electronico=email
-            )
-            user.establecer_clave(clave)
-            user.guardar()
+
+            try:
+                user_registro = Usuario(
+                    nombres=nombres,
+                    apellidos=apellidos,
+                    dni=dni,
+                    telefono=telefono,
+                    correo_electronico=email
+                )
+                user_registro.establecer_clave(clave)
+                user_registro.guardar()
+            except Exception as e:
+                logger.error(f"Error: no ha sido posible registrar al usuario\n{e}")
+
             # Se establece como trabajador
-            usuario_rol = UsuarioRol(user.id_usuario, rol.id_rol)
+            usuario_rol = UsuarioRol(user_registro.id_usuario, rol.id_rol)
             usuario_rol.guardar()
 
             # Envia un email al nuevo usuario por registrase al sistema (deshabilitado)
@@ -296,8 +305,8 @@ def edit():
 # @bp.before_request#Conocer al usuario
 @scheduler.authenticate
 def load_user(user_id):
-    current_app.logger.debug('Vista para usuario %s', user_id)
     user = Usuario.query.filter_by(id_alternativo=user_id).first()
+    current_app.logger.warning('Vista para usuario %s', user.nombres)
     if not id:
         return None
     return user

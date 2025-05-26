@@ -1,5 +1,6 @@
 # Formularios
 from flask_wtf import FlaskForm
+from wtforms import ValidationError
 from wtforms.fields import (
     StringField,
     SubmitField,
@@ -17,6 +18,15 @@ from wtforms.validators import (
     Regexp,
     EqualTo
 )
+
+from qhawariy.models.usuario import Usuario
+
+
+def validar_dni_unico(form, field):
+    """ Valida que el DNI no este duplicado en la BD"""
+    usuario = Usuario.obtener_por_dni(field.data)
+    if usuario:
+        raise ValidationError("El DNI ya se encuentra registrado")
 
 
 # Formulario para registrar un nuevo usuario al sistema
@@ -39,7 +49,8 @@ class RegisterForm(FlaskForm):
     dni = StringField("DNI", validators=[
         DataRequired("Esta información es necesaria."),
         Length(max=10),
-        Regexp("^[0-9]*$", 0, "El Numero de documento deben contener solo numeros.")
+        Regexp("^[0-9]*$", 0, "El Numero de documento deben contener solo numeros."),
+        validar_dni_unico
     ])
 
     email = EmailField("Correo Electronico", validators=[
@@ -110,8 +121,10 @@ class CambiarDatosForm(FlaskForm):
 
     dni = StringField(
         "DNI",
-        validators=[DataRequired("Esta información es necesaria."), Length(max=10)]
-    )
+        validators=[
+            DataRequired("Esta información es necesaria."),
+            Length(max=10)
+        ])
 
     telefono = StringField(
         "Telefono",

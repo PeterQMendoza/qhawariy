@@ -19,7 +19,6 @@ from urllib.parse import urlparse
 # from werkzeug.urls import url_parse
 from werkzeug.utils import secure_filename
 
-from qhawariy.services.auth_service.decorators import admin_required
 from qhawariy.models.propietario import Propietario
 # from qhawariy.models.rol import Rol
 # from qhawariy.models.usuario_rol import UsuarioRol
@@ -33,6 +32,7 @@ from qhawariy.forms.propietario_form import (
 )
 from qhawariy.forms.upload_file_form import UploadFileForm
 from qhawariy.forms.propietario_vehiculo_form import PropietarioVehiculoForm
+from qhawariy.utilities.decorators import admin_required
 from qhawariy.utilities.files import FactoryExcel
 from qhawariy.utilities.helpers import hacer_arbol
 from qhawariy.utilities.allowed_file import allowed_file

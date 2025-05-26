@@ -21,7 +21,6 @@ from qhawariy.models.distrito import Distrito
 from qhawariy.models.provincia import Provincia
 from qhawariy.models.proxima_ruta import ProximaRuta
 from qhawariy.models.ruta import Ruta
-from qhawariy.services.auth_service.decorators import admin_required
 from qhawariy.forms.ruta_form import (
     AgregarRutaForm,
     AgregarTerminalForm,
@@ -29,6 +28,7 @@ from qhawariy.forms.ruta_form import (
 )
 from qhawariy.models.ruta_terminal import RutaTerminal
 from qhawariy.models.terminal import Terminal
+from qhawariy.utilities.decorators import admin_required
 
 logger = logging.getLogger(__name__)
 

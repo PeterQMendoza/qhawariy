@@ -1,6 +1,7 @@
 # import datetime
 # import locale
 # import os
+
 from flask import (
     Blueprint,
     render_template,
@@ -33,9 +34,70 @@ def index():
 # servir archivo de manifiesto web
 @bp.route('/manifest.json')
 def manifest():
-    return send_from_directory('static/source/js/service/', 'manifest.json')
+    # return send_from_directory('static/source/js/service/', 'manifest.json')
+    import os
+    from flask import (
+        abort,
+        current_app
+    )
+    static_dir = os.path.join(
+        current_app.root_path,
+        'static',
+        'source',
+        'js',
+        'service'
+    )
+    file_path = os.path.join(static_dir, 'manifest.json')
+    if not os.path.exists(file_path):
+        """
+        Si no se encuentra dentro del directorio del proyecto
+        el archivo service-worker.js se registra una advertencia
+        """
+        current_app.logger.warning("Advertencia archivo no encontrado: %s", file_path)
+        abort(404, description="Archivo manifest.json no encontrado.")
+
+    response = send_from_directory(
+        static_dir,
+        'manifest.json',
+        mimetype='application/javascript',
+        cache_timeout=0
+    )
+    response.headers['Cache-Control'] = (
+        'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+    )
+    return response
 
 
 @bp.route('/service-worker.js')
 def service_worker():
-    return send_from_directory('static/source/js/service/', 'service-worker.js')
+    import os
+    from flask import (
+        abort,
+        current_app
+    )
+    static_dir = os.path.join(
+        current_app.root_path,
+        'static',
+        'source',
+        'js',
+        'service'
+    )
+    file_path = os.path.join(static_dir, 'service-worker.js')
+
+    if not os.path.exists(file_path):
+        """
+        Si no se encuentra dentro del directorio del proyecto
+        el archivo service-worker.js se registra una advertencia
+        """
+        current_app.logger.warning("Archivo no encontrado: %s", file_path)
+        abort(404, description="Archivo service-worker.js no encontrado.")
+
+    response = send_from_directory(
+        static_dir,
+        'service-worker.js',
+        mimetype='application/javascript'
+    )
+    response.headers['Cache-Control'] = (
+        'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+    )
+    return response

@@ -4,13 +4,10 @@ para las empresas de transporte publico de pasajeros
 
 autor: Peter Pilen Quispe Mendoza
 """
-import locale
 import os
 import logging
 
 # from os.path import abspath,dirname,join
-from logging.handlers import SMTPHandler
-from logging.config import dictConfig
 
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -22,11 +19,13 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_mail import Mail
 from flask_caching import Cache
+from flask.logging import create_logger
 
 from flask_apscheduler import APScheduler
 
 # import redis
 
+from qhawariy.utilities.context_processors import inject_nonce
 from qhawariy.utilities.filters import (
     format_datetime,
     format_time,
@@ -35,6 +34,21 @@ from qhawariy.utilities.filters import (
 from qhawariy.utilities.assets import (
     compile_stylesheet_bundles,
     compile_js_assets
+)
+from qhawariy.utilities.logging_config import configure_logging
+from qhawariy.utilities.middlewares import (
+    add_correlation_id,
+    add_csp_header,
+    add_isolation_headers,
+    assign_correlation_id,
+    configurar_local,
+    handle_global_error,
+    log_request_start,
+    add_cors_headers,
+    add_security_headers,
+    add_vary_cookie,
+    log_request_end,
+    generate_nonce
 )
 
 Base = declarative_base()
@@ -48,21 +62,21 @@ cache = Cache()
 scheduler = APScheduler()
 
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
+# dictConfig({
+#     'version': 1,
+#     'formatters': {'default': {
+#         'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+#     }},
+#     'handlers': {'wsgi': {
+#         'class': 'logging.StreamHandler',
+#         'stream': 'ext://flask.logging.wsgi_errors_stream',
+#         'formatter': 'default'
+#     }},
+#     'root': {
+#         'level': 'INFO',
+#         'handlers': ['wsgi']
+#     }
+# })
 
 
 def create_app(test_config=None):
@@ -73,15 +87,9 @@ def create_app(test_config=None):
     """
     app = Flask(__name__, instance_relative_config=True)
 
-    # Configurarel locale
-    @app.before_request
-    def configurar_local():
-        # Configurar locale para es_PE.UTF-8 (Per'u)
-        locale_str = 'es_PE.UTF-8'
-        try:
-            locale.setlocale(locale.LC_ALL, locale_str)
-        except locale.Error:
-            app.logger.error("Locale 'es_PE.UTF-8' no esta disponible en este sistema")
+    # Crear un logger vinculado a la aplicacion
+    logger = create_logger(app)
+    logger.setLevel(logging.INFO)
 
     # Cargar la configuracion del folder  de la instancia
     if test_config is None:
@@ -97,15 +105,13 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # Configuracion de logs
-    configure_logging(app)
-
     # Configuracion de csrf
     csrf.init_app(app)
 
     # Inicializa scheduler
     scheduler.init_app(app)
     logging.getLogger("apscheduler").setLevel(logging.INFO)
+
     # Configuracion para los activos con flask_assets
     with app.app_context():
         assets = Environment()
@@ -170,9 +176,6 @@ def create_app(test_config=None):
     app.config.update(mail_settings)
     # chache=Cache(app)
 
-    # Registro de filtros
-    register_filters(app)
-
     # Seguridad y uso de cookies(Tambien declaradas en config)
     app.config.update(
         SESSION_COOKIE_SECURE=True,
@@ -184,43 +187,23 @@ def create_app(test_config=None):
     # Reglas
     # app.add_url_rule("/vehiculo/cargar", endpoint="/uploads", build_only=True)
 
-    # Ejecutar antes de cada solicitud
+    # Registro de filtros
+    register_filters(app)
 
     # Registro de Blueprints
-    from qhawariy.controllers import (
-        auth,
-        home,
-        admin,
-        vehiculo,
-        ruta,
-        propietario,
-        viaje,
-        programacion,
-        estadistica,
-        control,
-        control_tiempo,
-        permiso_vehiculo,
-        coordenadas,
-        notificacion
-    )
-    # from qhawariy.models.timer import eventos
-    app.register_blueprint(home.bp)
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(admin.bp)
-    app.register_blueprint(vehiculo.bp)
-    app.register_blueprint(ruta.bp)
-    app.register_blueprint(propietario.bp)
-    app.register_blueprint(viaje.bp)
-    app.register_blueprint(programacion.bp)
-    app.register_blueprint(estadistica.bp)
-    app.register_blueprint(control.bp)
-    app.register_blueprint(control_tiempo.bp)
-    app.register_blueprint(permiso_vehiculo.bp)
-    app.register_blueprint(coordenadas.bp)
-    app.register_blueprint(notificacion.bp)
+    register_blueprints(app)
 
     # Manejador de errores #analisis
     register_error_handler(app)
+
+    # Configuracion de logs
+    configure_logging(app)
+
+    # Registro de Middlewares
+    register_middlewares(app)
+
+    # Registro de preprocesadores
+    app.context_processor(inject_nonce)
 
     return app
 
@@ -280,74 +263,61 @@ def register_filters(app):
     app.jinja_env.filters["is_datetime"] = is_datetime
 
 
-def configure_logging(app):
+def register_middlewares(app):
     """
-        Configura el modulo de logs. Establece los manejadores para cada logger
-        :param app: Instancia de la aplicacion Flask
+    Registro de middleware en la aplicacion global
     """
-    # Elimina los manejadores por defecto
-    del app.logger.handlers[:]
+    app.register_error_handler(Exception, handle_global_error)
+    app.before_request(assign_correlation_id)
+    app.before_request(log_request_start)
+    app.before_request(configurar_local)
+    app.before_request(generate_nonce)
 
-    loggers = [app.logger,]
-    handlers = []
+    app.after_request(add_correlation_id)
+    app.after_request(add_cors_headers)
+    app.after_request(add_security_headers)
+    app.after_request(log_request_end)
+    app.after_request(add_isolation_headers)
+    app.after_request(add_csp_header)
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(verbose_formatter())
-
-    if (app.config['APP_ENV'] == app.config['APP_ENV_LOCAL']) or (
-            app.config['APP_ENV'] == app.config['APP_ENV_TESTING']) or (
-            app.config['APP_ENV'] == app.config['APP_ENV_DEVELOPMENT']):
-        console_handler.setLevel(logging.DEBUG)
-        handlers.append(console_handler)
-    elif app.config['APP_ENV'] == app.config['APP_ENV_PRODUCTION']:
-        console_handler.setLevel(logging.INFO)
-        handlers.append(console_handler)
-
-        mail_handler = SMTPHandler(
-            (
-                app.config['MAIL_SERVER'],
-                app.config['MAIL_PORT']
-            ),
-            app.config['DONT_REPLY_FROM_EMAIL'],
-            app.config['ADMINS'],
-            '[Error][{}] La aplicación falló'.format(app.config['APP_ENV']),
-            (
-                app.config['MAIL_USERNAME'],
-                app.config['MAIL_PASSWORD']
-            ),
-            ()
-        )
-        mail_handler.setLevel(logging.ERROR)
-        mail_handler.setFormatter(mail_handler_formatter())
-        handlers.append(mail_handler)
-
-    for log in loggers:
-        for handler in handlers:
-            log.addHandler(handler)
-        log.propagate = False
-        log.setLevel(logging.DEBUG)
+    app.after_request(add_vary_cookie)
+    # app.after_request(global_response_check)
 
 
-def mail_handler_formatter():
-    return logging.Formatter(
-        '''
-            Message type:       %(levelname)s
-            Location:           %(pathname)s:%(lineno)d
-            Module:             %(module)s
-            Function:           %(funcName)s
-            Time:               %(asctime)s.%(msecs)d
+# def register_context_processors(app):
+#     """Registrar procesadores de contexto"""
+#     app.context_processor(inject_nonce)
 
-            Message:
 
-            %(message)s
-        ''',
-        datefmt="%d/%m/%Y %H:%M:%S"
+def register_blueprints(app):
+    from qhawariy.controllers import (
+        auth,
+        home,
+        admin,
+        vehiculo,
+        ruta,
+        propietario,
+        viaje,
+        programacion,
+        estadistica,
+        control,
+        control_tiempo,
+        permiso_vehiculo,
+        coordenadas,
+        notificacion
     )
-
-
-def verbose_formatter():
-    return logging.Formatter(
-        """[%(asctime)s.%(msecs)d]\t %(levelname)s \t[%(name)s.%(funcName)s:%(lineno)d]
-        \t %(message)s""",
-        datefmt="%d/%m/%Y %H:%M:%S"
-    )
+    # from qhawariy.models.timer import eventos
+    app.register_blueprint(home.bp)
+    app.register_blueprint(auth.bp)
+    app.register_blueprint(admin.bp)
+    app.register_blueprint(vehiculo.bp)
+    app.register_blueprint(ruta.bp)
+    app.register_blueprint(propietario.bp)
+    app.register_blueprint(viaje.bp)
+    app.register_blueprint(programacion.bp)
+    app.register_blueprint(estadistica.bp)
+    app.register_blueprint(control.bp)
+    app.register_blueprint(control_tiempo.bp)
+    app.register_blueprint(permiso_vehiculo.bp)
+    app.register_blueprint(coordenadas.bp)
+    app.register_blueprint(notificacion.bp)

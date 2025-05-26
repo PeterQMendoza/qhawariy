@@ -1,5 +1,7 @@
 
 import logging
+import os
+import string
 from urllib.parse import urlparse
 import pandas as pd
 from datetime import datetime
@@ -8,6 +10,8 @@ from io import BytesIO
 
 from flask import (
     Blueprint,
+    current_app,
+    flash,
     render_template,
     redirect,
     request,
@@ -15,7 +19,7 @@ from flask import (
     abort,
     send_file
 )
-from flask_login import (login_required)
+from flask_login import (current_user, login_required)
 
 from qhawariy.forms.admin_form import ConfiguracionForm, UserAdminForm
 
@@ -24,7 +28,7 @@ from qhawariy.models.usuario import Usuario
 from qhawariy.models.usuario_rol import UsuarioRol
 from qhawariy.models.rol import Rol
 
-from qhawariy.services.auth_service.decorators import admin_required
+from qhawariy.utilities.decorators import admin_required
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +76,58 @@ def descargar_xls():
     return send_file(path_or_file=output, download_name=file_name, as_attachment=True)
 
 
+@bp.route("/descargar_log/<string:tipo>", methods=["GET"])
+@login_required
+@admin_required
+def descargar_log_filtrado(tipo: string):
+    """Descargar log filtrado por tipo de evento"""
+    # Ruta de los archivos
+    path_dir = current_app.config.get("LOGS_FOLDER", "logs")
+    log_file = os.path.join(path_dir, "transacciones.log")
+    log_filtrado_path = os.path.join(path_dir, f"filtrado_{tipo}.log")
+
+    if not os.path.exists(log_file):
+        flash("Error: Archivo de logs no encontrado", "error")
+        # return redirect(url_for("admin.descargar_logs"))
+
+    # Registros filtrados
+    registros_filtrados = []
+
+    try:
+        with open(log_file, "r", encoding="utf-8") as file:
+            registros_filtrados = [
+                line for line in file.readlines() if f"[{tipo.upper()}]" in line
+            ]
+    except Exception as e:
+        logger.error(f"Error al leer el archivo:{log_file} -> {str(e)}")
+
+    if not registros_filtrados:
+        return redirect(url_for("home.index"))
+
+    # Crear archivo filtrado
+    try:
+        with open(log_filtrado_path, "w", encoding="utf-8") as filtro_log:
+            filtro_log.writelines(registros_filtrados)
+    except Exception as e:
+        logger.error(f"Error al escribir el archivo filtrado: {str(e)}")
+
+    if not os.path.exists(log_filtrado_path):
+        flash(
+            f"❌ No se pudo generar el archivo filtrado '{log_filtrado_path}'.",
+            "error"
+        )
+        return redirect(url_for("home.index"))
+
+    return send_file(
+        log_filtrado_path,
+        download_name=(
+            f"Qhawariy {tipo} "
+            f"{datetime.now().strftime('%Y-%m-%d_%I-%M-%S_%p').replace(".", "")}.log"
+        ),
+        as_attachment=True
+    )
+
+
 @bp.route("/usuarios")
 @login_required
 @admin_required
@@ -82,7 +138,7 @@ def listar_usuarios():
     return render_template("admin/lista_usuario.html", users=users)
 
 
-@bp.route("/usuario/<int:user_id>/", methods=["GET", "POST"])
+@bp.route("/usuario/<int:user_id>/", methods=["GET", "PUT"])
 @login_required
 @admin_required
 def editar_usuario(user_id):
@@ -121,7 +177,7 @@ def eliminar_usuario(user_id):
         logger.info(f"El usuario {user_id} no existe")
         abort(404)
     user.eliminar()
-    logger.info(f"El usuario {user_id} ha sido eliminado")
+    logger.info(f"El usuario {current_user.nombres} ha eliminado {user_id}")
     return redirect(url_for("admin.listar_usuarios"))
 
 

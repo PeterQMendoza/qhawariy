@@ -6,11 +6,11 @@ from flask_login import login_required
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
 
-from qhawariy.services.auth_service.decorators import admin_required
 from qhawariy.forms.control_form import ControlForm, ControlRutaForm
 from qhawariy.models.control import Control
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
+from qhawariy.utilities.decorators import admin_required
 
 
 logger = logging.getLogger(__name__)

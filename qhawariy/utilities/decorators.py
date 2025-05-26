@@ -1,53 +1,15 @@
-# @file auth.py
-import logging
-
-from smtplib import SMTPException
-from threading import Thread
+# Decoradores usados para estblecer nivel de acceso por roles al sistema
 from functools import wraps
 
-from flask import (current_app, abort)
+from flask import abort, current_app
 from flask_login import current_user
-from flask_mail import Message
-
-from qhawariy import mail
-from qhawariy.models.usuario_rol import UsuarioRol
-
-# Configuracion para envio de email de confirmacion
-logger = logging.getLogger(__name__)
 
 
-def send_async_email(app, msg):
-    with app.app_context():
-        try:
-            mail.send(msg)
-        except SMTPException:
-            logger.exception("Ocurrio un problema al enviar el email")
-
-
-def send_email(
-        subject,
-        sender,
-        recipients,
-        text_body,
-        cc=None,
-        bcc=None,
-        html_body=None
-):
-    msg = Message(subject, sender=sender, recipients=recipients, cc=cc, bcc=bcc)
-    msg.body = text_body
-    if html_body:
-        msg.html = html_body
-
-    Thread(
-        target=send_async_email,
-        args=(current_app._get_current_object(), msg)
-    ).start()
-
-
-# Decoradores usados para estblecer nivel de acceso por roles al sistema
+# Estableciendo acceso de usuario de acuerdo a roles
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        from qhawariy.models.usuario_rol import UsuarioRol
         id_user = current_user.id_usuario
         ur = UsuarioRol.obtener_por_id_usuario(id_user)
         rol = ur.rol
@@ -61,6 +23,7 @@ def admin_required(f):
 def operacion_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        from qhawariy.models.usuario_rol import UsuarioRol
         id_user = current_user.id_usuario
         ur = UsuarioRol.obtener_por_id_usuario(id_user)
         rol = ur.rol
@@ -74,6 +37,7 @@ def operacion_required(f):
 def controlador_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        from qhawariy.models.usuario_rol import UsuarioRol
         id_user = current_user.id_usuario
         ur = UsuarioRol.obtener_por_id_usuario(id_user)
         rol = ur.rol
@@ -82,3 +46,31 @@ def controlador_required(f):
             abort(401)
         return f(*args, **kwargs)
     return decorated_function
+
+
+def middleware_debugger(func):
+    """
+    Decorador que registra la entrada y salida de un middleware.
+    Si el middleware retorna None, se registra un error
+    """
+    @wraps(func)
+    def wrapped(response, *args, **kwargs):
+        current_app.logger.info(
+            "Ejecutando middlewware '%s' con response: %s",
+            func.__name__,
+            response
+        )
+        result = func(response, *args, **kwargs)
+        if result is None:
+            current_app.logger.error(
+                "El middleware '%s' retorno None. Verifica su implementacion",
+                func.__name__
+            )
+        else:
+            current_app.logger.info(
+                "El middleware '%s' retorno response: %s",
+                func.__name__,
+                result
+            )
+        return result
+    return wrapped
