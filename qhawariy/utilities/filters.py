@@ -1,10 +1,12 @@
 from datetime import datetime
 import logging
 
+from typing import Any
+
 from flask import g, has_request_context
 
 
-def format_datetime(value: datetime, format="short"):
+def format_datetime(value: datetime, format: str = "short"):
     """Filtro que transforma un datetime en str con formato.
 
     El filtro es para ser usado en plantillas JINJA2.
@@ -63,7 +65,7 @@ def format_datetime(value: datetime, format="short"):
     return value_str
 
 
-def format_time(value, format='short'):
+def format_time(value: datetime, format: str = 'short'):
     value_str = None
     if not value:
         value_str = ""
@@ -74,12 +76,12 @@ def format_time(value, format='short'):
     return value_str
 
 
-def is_datetime(value):
+def is_datetime(value: Any):
     return isinstance(value, datetime)
 
 
 class RequestCorrelationFilter(logging.Filter):
-    def filter(self, record):
+    def filter(self, record: Any):
         if has_request_context():
             record.correlation_id = getattr(g, 'correlation_id', 'unknown')
         else:

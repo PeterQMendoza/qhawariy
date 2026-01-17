@@ -2,12 +2,13 @@ from __future__ import annotations
 
 # from os.path import join
 # import datetime
+from openpyxl import Workbook
 import pandas as pd
 import geopandas as gpd
 
 from abc import ABC, abstractmethod
 # from os import walk
-from typing import List
+from typing import Any, Dict, Iterator, List, Optional
 
 from flask import current_app
 
@@ -169,11 +170,11 @@ class Contexto():
 
     def realizar(
         self,
-        data: List,
+        data: List[Dict[str, Any]],
         filename: str,
-        routes: List | None,
-        sheetnames: List | None,
-        date: str | None
+        routes: Optional[List[str]],
+        sheetnames: Optional[List[str]],
+        date: Optional[str]
     ) -> None:
         # Construir archivo usando la estrategia
         self._estrategia.construirArchivo(data, filename, routes, sheetnames, date)
@@ -191,11 +192,11 @@ class Estrategia(ABC):
     @abstractmethod
     def construirArchivo(
         self,
-        data: List,
+        data: List[Dict[str, Any]],
         filename: str,
-        routes: List | None,
-        sheetnames: List | None,
-        date: str | None
+        routes: Optional[List[str]],
+        sheetnames: Optional[List[str]],
+        date: Optional[str]
     ):
         pass
 
@@ -203,19 +204,33 @@ class Estrategia(ABC):
 class EstrategiaExcelLista(Estrategia):
     def construirArchivo(
         self,
-        data: List,
+        data: List[Dict[str, Any]],
         filename: str,
-        routes: List | None,
-        sheetnames: List | None,
-        date: str | None
+        routes: Optional[List[str]],
+        sheetnames: Optional[List[str]],
+        date: Optional[str]
     ):
-        data = [a_dict(item) for item in data]
-        df = pd.DataFrame(data)
+        converted: Iterator[Optional[Dict[str, Any]]]
+        converted = (a_dict(item) for item in data)
+        data_clean: List[Dict[str, Any]] = [
+            d for d in converted if d is not None  # type: ignore
+        ]
+        df: pd.DataFrame = pd.DataFrame(data_clean)
 
-        writer = pd.ExcelWriter(filename, engine='openpyxl')
-        for i in range(len(sheetnames)):
-            df.to_excel(writer, startrow=0, merge_cells=False, sheet_name=sheetnames[i])
-        writer.close()
+        if not sheetnames:
+            sheetnames = ["Sheet1"]
+
+        writer: pd.ExcelWriter = pd.ExcelWriter(filename, engine='openpyxl')
+        try:
+            for name in sheetnames:
+                df.to_excel(  # type: ignore
+                    writer,
+                    startrow=0,
+                    merge_cells=False,
+                    sheet_name=name
+                )
+        finally:
+            writer.close()
 
 
 class EstrategiaExcelResumen(Estrategia):
@@ -246,90 +261,188 @@ class EstrategiaExcelResumen(Estrategia):
     # ):
     def construirArchivo(
         self,
-        data: List,
+        data: List[Dict[str, Any]],
         filename: str,
-        routes: List | None,
-        sheetnames: List | None,
-        date: str | None
+        routes: Optional[List[str]],
+        sheetnames: Optional[List[str]],
+        date: Optional[str]
     ):
-        # Para los nombres
-        for i in range(len(sheetnames)):
-            # eliminar los caracteres no permitidos por titulo de hojas de excel
-            sheetnames[i] = str(sheetnames[i]).replace("/", "")
+        if sheetnames is None:
+            # Crear nombres por defecto
+            sheetnames = [f"Sheet{i+1}" for i in range(len(data))]
+        else:
+            # Eliminar caracteres no permitidos
+            sheetnames = [str(s).replace("/", "") for s in sheetnames]
+            if len(sheetnames) < len(data):
+                # Rellenar los nombres por defecto
+                extra = [f"Sheet{i+1}" for i in range(len(sheetnames), len(data))]
+                sheetnames.extend(extra)
+        if routes is None:
+            routes = [""] * len(data)
+        else:
+            # asegurar que routes tenga al menos la longitud necesaria
+            if len(routes) < len(data):
+                routes = list(routes) + [""] * (len(data) - len(routes))
 
-        # Numero de columna en la que se escribira los datos
+        date_text = date or ""
+
         inicia_fila = 4
+        # Escribir los df en diferentes hojas de excel usando context manager
+        with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+            for idx, df in enumerate(data):
+                sheet_name = str(sheetnames[idx])
+                df.to_excel(  # type: ignore
+                    writer,
+                    startrow=inicia_fila,
+                    merge_cells=False,
+                    sheet_name=sheet_name
+                )
+            # Obtener workbook y recorrer hojas con enumerate para índice seguro
+            workbooks = writer.book  # type: ignore
+            for count, worksheet in enumerate(workbooks.worksheets):  # type: ignore
+                # Formato y contenido de cabecera
+                worksheet.merge_cells("A1:H1")
+                worksheet.merge_cells("B2:F2")
+                worksheet.merge_cells("A3:H3")
 
-        # Escribir los df en diferente hojas de excel
-        writer = pd.ExcelWriter(filename, engine='openpyxl')
-        for df in range(len(data)):
-            sheet_name = str(sheetnames[df])
-            data[df].to_excel(
-                writer,
-                startrow=inicia_fila,
-                merge_cells=False,
-                sheet_name=sheet_name
-            )
+                worksheet.sheet_format.baseColWidth = 9
 
-        # Obtener objetos del libro y hoja de trabajo
-        workbooks = writer.book
-        count = 0
-        for worksheet in workbooks:
-            # Combinar celdas para formato de titulo
-            worksheet.merge_cells('A1:H1')
-            worksheet.merge_cells('B2:F2')
-            worksheet.merge_cells('A3:H3')
+                worksheet["A1"] = "Nombre de la empresa"
+                worksheet["A2"] = "Recorrido:"
+                worksheet["B2"] = routes[count]
+                worksheet["G2"] = "Versión"
+                worksheet["H2"] = "v.1.0"
+                worksheet["A3"] = "Resumen semanal " + date_text
 
-            worksheet.sheet_format.baseColWidth = 9
+                worksheet.cell(1, 1).style = self.titulo
 
-            # Agregando contenido a la cabecera
-            worksheet['A1'] = "Nombre de la empresa"
-            worksheet['A2'] = "Recorrido:"
-            worksheet['B2'] = routes[count]
-            # worksheet['B2']=worksheet.title.title()
-            worksheet['G2'] = "Versión"
-            worksheet['H2'] = "v.1.0"
-            worksheet['A3'] = "Resumen semanal "+date
+                for row in worksheet["A2:H3"]:
+                    for cell in row:
+                        cell.font = FONT_GRAY
+                worksheet.cell(2, 1).font = FONT_BOLD
+                worksheet.cell(2, 7).font = FONT_BOLD
 
-            worksheet.cell(1, 1).style = self.titulo
-            for row in worksheet['A{i}:H{f}'.format(i=2, f=3)]:
-                for cell in row:
-                    cell.font = FONT_GRAY
-            worksheet.cell(2, 1).font = FONT_BOLD
-            worksheet.cell(2, 7).font = FONT_BOLD
+                # Formatos de tabla
+                for row in worksheet[f"A{inicia_fila+1}:H{inicia_fila+1}"]:
+                    for cell in row:
+                        cell.style = self.head
 
-            # Agregando un formato para la cabecera cuadro
-            for row in worksheet['A{i}:H{i}'.format(i=inicia_fila+1)]:
-                for cell in row:
-                    cell.style = self.head
-            # Agregando un formato para la  cuerpo del cuadro
-            celdas_A_H = 'A{co}:H{c}'.format(co=inicia_fila+2, c=worksheet.max_row)
-            for row in worksheet[celdas_A_H]:
-                for cell in row:
-                    cell.style = self.estilo
+                celdas_A_H = f"A{inicia_fila+2}:H{worksheet.max_row}"
+                for row in worksheet[celdas_A_H]:
+                    for cell in row:
+                        cell.style = self.estilo
 
-            celdas_A_A = 'A{co}:A{c}'.format(co=inicia_fila+2, c=worksheet.max_row)
-            for row in worksheet[celdas_A_A]:
-                for cell in row:
-                    cell.number_format = TIME
-                    cell.fill = FILL_GRAY_2
+                celdas_A_A = f"A{inicia_fila+2}:A{worksheet.max_row}"
+                for row in worksheet[celdas_A_A]:
+                    for cell in row:
+                        cell.number_format = TIME
+                        cell.fill = FILL_GRAY_2
 
-            celdas_B_H = 'B{co}:H{c}'.format(co=inicia_fila+2, c=worksheet.max_row)
-            for row in worksheet[celdas_B_H]:
-                for cell in row:
-                    cell.number_format = NUMBER
+                celdas_B_H = f"B{inicia_fila+2}:H{worksheet.max_row}"
+                for row in worksheet[celdas_B_H]:
+                    for cell in row:
+                        cell.number_format = NUMBER
 
-            # Para dar formato al aviso de derecho de autor
-            ultimo_cell = worksheet.max_row+2
-            worksheet.merge_cells("A{u}:H{uf}".format(u=ultimo_cell, uf=ultimo_cell+1))
-            footer_aviso = worksheet.cell(ultimo_cell, 1)
-            footer_aviso.value = '* Este modelo de formato de lista de programacion,'\
-                'fue elaborado por SEQhawariy.\n Queda prohibido su uso,'\
-                'comercialización y/o difusión, sin previa autorización o permiso de'\
-                'SEQhawariy'
-            footer_aviso.style = self.aviso
+                # Footer / aviso de copyright
+                ultimo_cell = worksheet.max_row + 2
+                footer_aviso = worksheet.cell(ultimo_cell, 1)
+                worksheet.merge_cells(f"A{ultimo_cell}:H{ultimo_cell+1}")
+                footer_aviso.value = (
+                    "* Este modelo de formato de lista de programacion,"
+                    " fue elaborado por SEQhawariy.\n Queda prohibido su uso,"
+                    " comercialización y/o difusión, sin previa autorización o permiso"
+                    " de SEQhawariy"
+                )  # type: ignore
+                footer_aviso.style = self.aviso
 
-            count = count+1
+        # # Para los nombres
+        # for i in range(len(sheetnames)):
+        #     # eliminar los caracteres no permitidos por titulo de hojas de excel
+        #     sheetnames[i] = str(sheetnames[i]).replace("/", "")
+
+        # # Numero de columna en la que se escribira los datos
+        # inicia_fila = 4
+
+        # # Escribir los df en diferente hojas de excel
+        # writer = pd.ExcelWriter(filename, engine='openpyxl')
+        # for df in range(len(data)):
+        #     sheet_name = str(sheetnames[df])
+        #     data[df].to_excel(  # type: ignore
+        #         writer,
+        #         startrow=inicia_fila,
+        #         merge_cells=False,
+        #         sheet_name=sheet_name
+        #     )
+
+        # # Obtener objetos del libro y hoja de trabajo
+        # workbooks = writer.book  # type: ignore
+        # count = 0
+        # for worksheet in workbooks:  # type: ignore
+        #     # Combinar celdas para formato de titulo
+        #     worksheet.merge_cells('A1:H1')  # type: ignore
+        #     worksheet.merge_cells('B2:F2')  # type: ignore
+        #     worksheet.merge_cells('A3:H3')  # type: ignore
+
+        #     worksheet.sheet_format.baseColWidth = 9  # type: ignore
+
+        #     # Agregando contenido a la cabecera
+        #     worksheet['A1'] = "Nombre de la empresa"
+        #     worksheet['A2'] = "Recorrido:"
+        #     worksheet['B2'] = routes[count]
+        #     # worksheet['B2']=worksheet.title.title()
+        #     worksheet['G2'] = "Versión"
+        #     worksheet['H2'] = "v.1.0"
+        #     worksheet['A3'] = "Resumen semanal " + date_text
+
+        #     worksheet.cell(1, 1).style = self.titulo  # type: ignore
+        #     for row in worksheet['A{i}:H{f}'.format(i=2, f=3)]:  # type: ignore
+        #         for cell in row:  # type: ignore
+        #             cell.font = FONT_GRAY
+        #     worksheet.cell(2, 1).font = FONT_BOLD  # type: ignore
+        #     worksheet.cell(2, 7).font = FONT_BOLD  # type: ignore
+
+        #     # Agregando un formato para la cabecera cuadro
+        #     for row in worksheet['A{i}:H{i}'.format(i=inicia_fila+1)]:  # type: ignore
+        #         for cell in row:  # type: ignore
+        #             cell.style = self.head
+        #     # Agregando un formato para la  cuerpo del cuadro
+        #     celdas_A_H = 'A{co}:H{c}'.format(
+        #         co=inicia_fila+2,
+        #         c=worksheet.max_row  # type: ignore
+        #     )
+        #     for row in worksheet[celdas_A_H]:  # type: ignore
+        #         for cell in row:  # type: ignore
+        #             cell.style = self.estilo
+
+        #     celdas_A_A = 'A{co}:A{c}'.format(
+        #         co=inicia_fila+2,
+        #         c=worksheet.max_row  # type: ignore
+        #     )
+        #     for row in worksheet[celdas_A_A]:  # type: ignore
+        #         for cell in row:  # type: ignore
+        #             cell.number_format = TIME
+        #             cell.fill = FILL_GRAY_2
+
+        #     celdas_B_H = 'B{co}:H{c}'.format(co=inicia_fila+2, c=worksheet.max_row)
+        #     for row in worksheet[celdas_B_H]:
+        #         for cell in row:
+        #             cell.number_format = NUMBER
+
+        #     # Para dar formato al aviso de derecho de autor
+        #     ultimo_cell = worksheet.max_row+2
+        #     worksheet.merge_cells("A{u}:H{uf}".format(
+        #         u=ultimo_cell,
+        #         uf=ultimo_cell+1
+        #     ))
+        #     footer_aviso = worksheet.cell(ultimo_cell, 1)
+        #     footer_aviso.value = '* Este modelo de formato de lista de programacion,'\
+        #         'fue elaborado por SEQhawariy.\n Queda prohibido su uso,'\
+        #         'comercialización y/o difusión, sin previa autorización o permiso de'\
+        #         'SEQhawariy'
+        #     footer_aviso.style = self.aviso
+
+            # count = count+1
+                count = count+1
 
         # Cerrar el escritor Excel de pandas
         writer.close()

@@ -2,6 +2,7 @@
 import datetime
 import os
 import random
+from typing import Any, Dict, Iterable, Optional, cast
 
 import pandas as pd
 # import geopandas as gpd
@@ -15,15 +16,12 @@ def convertir_DataFrame(list):
     return df
 
 
-def a_dict(row):
+def a_dict(row: Optional[Any]) -> Dict[str, Any]:
     if row is None:
-        return None
+        return {}
 
-    rtn_dict = dict()
-    keys = row.__table__.columns.keys()
-    for key in keys:
-        rtn_dict[key] = getattr(row, key)
-    return rtn_dict
+    keys = cast(Iterable[str], row.__table__.columns.keys())
+    return {key: getattr(row, key) for key in keys}
 
 
 def archivo_existe(ruta):

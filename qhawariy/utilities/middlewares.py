@@ -1,10 +1,22 @@
 import locale
 import time
+from typing import Any, Dict, Optional
 import uuid
 import os
 import base64
 
-from flask import abort, current_app, g, jsonify, make_response, request
+from flask import (
+    abort,
+    current_app,
+    g,
+    jsonify,
+    request,
+    session,
+    Response
+)
+from flask_wtf.csrf import validate_csrf, generate_csrf  # type: ignore
+from wtforms.validators import ValidationError
+from werkzeug.exceptions import HTTPException
 
 # from qhawariy.utilities.decorators import middleware_debugger
 
@@ -18,17 +30,20 @@ def assign_correlation_id():
 
 
 # @middleware_debugger
-def add_correlation_id(response):
-    if response is None:
-        return response
+def add_correlation_id(response: Response) -> Response:
+    # if response is None:
+    #     return response
     correlation_id = getattr(g, 'correlation_id', 'unknown')
+    # correlation_id = response.headers.get("X-Correlation-ID", 'unknow')
     response.headers['X-Correlation-ID'] = correlation_id
+
     return response
 
 
 # Loggin de solicitudes
 def log_request_start():
-    request.start_time = time.time()
+    # request.start_time = time.time()
+    request.environ["start_time"] = time.time()
     current_app.logger.info(
         "Solicituda entrante: %s %s",
         request.method,
@@ -37,7 +52,7 @@ def log_request_start():
 
 
 # @middleware_debugger
-def log_request_end(response):
+def log_request_end(response: Response) -> Response:
     duration = time.time() - getattr(request, "start_time", time.time())
     current_app.logger.info(
         "Solicitud %s %s completada en %.3f segundos",
@@ -50,7 +65,7 @@ def log_request_end(response):
 
 # Seguridad y CORS
 # @middleware_debugger
-def add_security_headers(response):
+def add_security_headers(response: Response) -> Response:
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -69,7 +84,7 @@ def add_security_headers(response):
 
 
 # @middleware_debugger
-def add_isolation_headers(response):
+def add_isolation_headers(response: Response) -> Response:
     response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
     response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     return response
@@ -83,7 +98,7 @@ def generate_nonce():
 
 
 # @middleware_debugger
-def add_csp_header(response):
+def add_csp_header(response: Response) -> Response:
     """Agrega el nonce en la directiva CSP para los scripts en línea"""
     nonce = getattr(g, 'nonce', '')
     csp = f"script-src 'self' 'nonce-{nonce}'; object-src 'self';"
@@ -92,16 +107,35 @@ def add_csp_header(response):
 
 
 # @middleware_debugger
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+def add_cors_headers(response: Response) -> Response:
+    # Genera un error al consumir datos de la frontend
+    # response.headers["Access-Control-Allow-Origin"] = "*"
+    # Extrae el 'Origin' de la solicitud
+    origin = request.headers.get("Origin")
+    allowed_origins = ['http://localhost:4200']
+
+    # Si el origin de la solicitud esta permitida, lo asignamos al headers
+    if origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+
+    response.headers["Access-Control-Allow-Headers"] = (
+        "Content-Type, Authorization, X-CSRFToken"
+    )
+
     response.headers["Access-Control-Allow-Methods"] = "GET, PUT, POST, DELETE, OPTIONS"
+
+    # Si la API requiere credenciales, indicar aqui
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+
     return response
 
 
 # Gestion global de errores
-def handle_global_error(error):
+def handle_global_error(error: HTTPException) -> Response:
     response = jsonify({
+        "nombre": __name__,
         "error": "Ha ocurrido un error inesperado.",
         "message": str(error)
     })
@@ -128,12 +162,12 @@ def configurar_local():
 
 # verificar
 # @middleware_debugger
-def add_vary_cookie(response):
-    if response is None:
-        current_app.logger.error(
-            "El middleware recibió una response None, creando una respuesta vacía."
-        )
-        response = make_response('')
+def add_vary_cookie(response: Response) -> Response:
+    # if response is None:
+    #     current_app.logger.error(
+    #         "El middleware recibió una response None, creando una respuesta vacía."
+    #     )
+    #     response = make_response('')
 
     if getattr(response, 'vary', None) is not None:
         response.vary.add("Cookie")
@@ -144,9 +178,56 @@ def add_vary_cookie(response):
 
 
 # @middleware_debugger
-def global_response_check(response):
+def global_response_check(response: Optional[Response]) -> Optional[Response]:
     if response is None:
         current_app.logger.error("El response final es none")
         from flask import make_response
         return make_response("Error interno> respuesta nula", 500)
+    return response
+
+
+def csrf_protect():
+    if request.method in ['GET', 'HEAD', 'OPTIONS']:
+        return
+
+    if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+        token = request.headers.get('X-CSRFToken')
+        if not token and request.is_json:
+            data: Any | Dict[str, str] = request.get_json(silent=True) or {}
+            token = data.get('csrf_token')
+        token_actual: Optional[str] = session.get('csrf_token')  # type: ignore
+        current_app.logger.info(f"Token recibido: {token}")
+        current_app.logger.info(f"Token actual: {token_actual}")
+
+        if not token:
+            token = request.cookies.get('csrf_token')
+        if not token:
+            return jsonify({"error": "CSRF token perdido"}), 400
+
+        # Extrae el token que se guardo en sesion para compararlo
+        try:
+            validate_csrf(token)
+        except ValidationError as e:
+            current_app.logger.error(f"error CSRF token invalido: {e}")
+            return jsonify({"error": "CSRF token invalido", "message": str(e)}), 400
+
+
+def set_csrf_cookie(response: Response) -> Response:
+    if request.method == 'OPTIONS':
+        return response
+
+    token: str = session.get('csrf_token')  # type: ignore
+    if not token:
+        token = generate_csrf()
+        session['csrf_token'] = token
+        current_app.logger.info(f"Token generado: {token}")
+    else:
+        current_app.logger.info(f"Token existente en session: {token}")
+    response.set_cookie(
+        'csrf_token',
+        token,
+        httponly=True,
+        secure=False,
+        samesite='Strict'
+    )
     return response
