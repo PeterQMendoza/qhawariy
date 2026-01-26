@@ -38,3 +38,5 @@ COLORES = [
         "#f7345b",
         "#b50d57",
 ]
+
+DEFAULT_NEXT = "/"

@@ -1,6 +1,6 @@
 import locale
 import logging
-from typing import List
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, cast
 import pandas as pd
 import numpy as np
 from abc import ABC, abstractmethod
@@ -18,13 +18,23 @@ class Operacion(ABC):
         pass
 
 
+class OperacionFormato(ABC):
+    @abstractmethod
+    def apply(self, df: pd.DataFrame) -> Optional[str]:
+        """
+        Retorna el str de la HTML de la DataFrame, esta operacion debe
+        realizar al final de todas las operaciones
+        """
+        pass
+
+
 # Operaciones concretas
 class FiltraOperacion(Operacion):
     """
     FilterOPeracion: clase que permite la oeracion de filtrar filas de acuerdo a una
     condicion
     """
-    def __init__(self, condicion):
+    def __init__(self, condicion: Callable[[pd.DataFrame], pd.Series]):
         """
         Parametros:
         ----------
@@ -37,7 +47,11 @@ class FiltraOperacion(Operacion):
 
 
 class ExpandirListaColumnasOperacion(Operacion):
-    def __init__(self, columna: str, prefijo: str = None, drop_original: bool = True):
+    def __init__(
+        self, columna: str,
+        prefijo: Optional[str] = None,
+        drop_original: bool = True
+    ):
         """
             Parámetros:
             columna :   str
@@ -61,7 +75,7 @@ class ExpandirListaColumnasOperacion(Operacion):
         nuevo_df = pd.DataFrame(df[self.columna].to_list(), index=df.index)
 
         # Renombre las columnas
-        nuevo_df = nuevo_df.rename(columns=lambda x: f"{self.prefijo}_{x}")
+        nuevo_df = nuevo_df.rename(columns=lambda x: f"{self.prefijo} {x+1}")
 
         # Eliminar la columna original
         if self.drop_original:
@@ -74,7 +88,7 @@ class ExpandirListaColumnasOperacion(Operacion):
 
 
 class CambiarNombreColumnasOperacion(Operacion):
-    def __init__(self, mapeado: dict):
+    def __init__(self, mapeado: dict[str, str]):
         """
         Parametros:
         ----------
@@ -89,9 +103,9 @@ class CambiarNombreColumnasOperacion(Operacion):
 
 class AgregarColumnasOperacion(Operacion):
     """
-    AgregarColumnOperacion: clase que permite la operacion de agregar column
+    AgregarColumnOperacion: clase que permite la operacion de agregar columna
     """
-    def __init__(self, mapeado: dict):
+    def __init__(self, mapeado: dict[str, Callable[[pd.DataFrame], pd.Series]]):
         """
         Parametros:
         ----------
@@ -115,15 +129,15 @@ class AgregarColumnasOperacion(Operacion):
 
 
 class EliminarColumnaOperacion(Operacion):
-    def __init__(self, columna):
-        self.columna = columna
+    def __init__(self, columnas: Union[str, List[str]]):
+        self.columnas = [columnas] if isinstance(columnas, str) else columnas
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df.drop(columns=self.columna, errors='ignore')
+        return df.drop(columns=self.columnas, errors='ignore')
 
 
 class SeleccionarColumnasOperacion(Operacion):
-    def __init__(self, columnas):
+    def __init__(self, columnas: Union[str, List[str]]):
         """
         columnas : Lista de columnas a seleccionar.
         """
@@ -134,7 +148,18 @@ class SeleccionarColumnasOperacion(Operacion):
 
 
 class AgruparPorOperacion(Operacion):
-    def __init__(self, columnas, funcion_ag: dict):
+    def __init__(
+        self,
+        columnas: Union[str, List[str]],
+        funcion_ag: Dict[
+            str,
+            Union[
+                str,
+                Callable[..., Any],
+                List[Union[str, Callable[..., Any]]]
+            ]
+        ]
+    ):
         """
         Parametros:
           columnas  :       str | []
@@ -148,10 +173,23 @@ class AgruparPorOperacion(Operacion):
             self.columnas = [columnas]
         else:
             self.columnas = columnas
-        self. funcion_ag = funcion_ag
+        self.funcion_ag = funcion_ag
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        grupo = df.groupby(self.columnas).agg(self.funcion_ag)
+        # Validacion de columnas faltantes
+        columnas_faltantes = [col for col in self.columnas if col not in df.columns]
+        if columnas_faltantes:
+            raise KeyError(
+                f"Las columnas {columnas_faltantes} no existen en el DataFrame"
+            )
+
+        for col in self.funcion_ag.keys():
+            if col not in df.columns:
+                raise KeyError(
+                    f"La columna {col} no existe en el DataFrame"
+                )
+
+        grupo = df.groupby(self.columnas).agg(self.funcion_ag)  # type: ignore
         grupo = grupo.reset_index()
         return grupo
 
@@ -178,24 +216,41 @@ class OrdenarPorOperacion(Operacion):
         self.ascendente = ascendente
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        df.sort_values(by=self.columna, ascending=self.ascendente, inplace=True)
+        df.sort_values(  # type: ignore
+            by=self.columna,
+            ascending=self.ascendente,
+            inplace=True
+        )
         return df
 
 
 class InnerJoinOperacion(Operacion):
     def __init__(
         self,
-        otros,
-        como='inner',
-        en_izq=None,
-        en_der=None,
-        en=None,
-        sufijos=('_x', '_y')
+        otros: Union[pd.DataFrame, List[pd.DataFrame]],
+        como: Literal[
+            "inner",
+            "left",
+            "right",
+            "outer",
+            "cross",
+            "left_anti",
+            "right_anti"
+        ] = "inner",
+        en_izq: Optional[Union[str, List[str]]] = None,
+        en_der: Optional[Union[str, List[str]]] = None,
+        en: Optional[Union[str, List[str]]] = None,
+        sufijos: Union[
+            List[Optional[str]],
+            Tuple[str, str],
+            Tuple[None, str],
+            Tuple[str, None]
+        ] = ("_x", "_y")
     ):
         """
         Parametros:
         ----------
-        otro : DataFrame (o dato convertible a DataFrame) que se unirá con el DataFrame
+        otros : DataFrame (o dato convertible a DataFrame) que se unirá con el DataFrame
             original.
         como : Tipo de join a realizar ('inner', 'left', 'right', 'outer'). Por defecto,
             'inner'.
@@ -219,33 +274,61 @@ class InnerJoinOperacion(Operacion):
         resultado = df.copy()
         for otro in self.otros:
             # Convertir en DataFrame si es necesario
-            if not isinstance(otro, pd.DataFrame):
+            if not isinstance(otro, pd.DataFrame):  # type: ignore
                 otro = pd.DataFrame(otro)
-            if self.en and self.en not in resultado.columns:
-                raise ValueError(
-                    f"La columna '{self.en}' no existe en el DataFrame base."
-                )
-            if self.en_izq and self.en_izq not in resultado.columns:
-                raise ValueError(
-                    f"La columna '{self.en_izq}' no existe en el DataFrame base."
-                )
-            if self.en_der and self.en_der not in otro.columns:
-                raise ValueError(
-                    f"La columna '{self.en_der}' no existe en el DataFrame a unir."
-                )
-            # Elimnar los duplicados
-            otro = otro.drop_duplicates(subset=self.en_der)
-            resultado = resultado.drop_duplicates(subset=self.en_izq)
 
+            # Validacion de columnas
+            if self.en:
+                cols = (
+                    [self.en] if isinstance(self.en, str) else self.en  # type: ignore
+                )
+                if not all(col in resultado.columns for col in cols):
+                    raise ValueError(
+                        f"Alguna columna de '{self.en}' no existe en el DataFrame base."
+                    )
+                if not all(col in otro.columns for col in cols):
+                    raise ValueError(
+                        f"Alguna columna de '{self.en}' no existe en el DataFrame "
+                        "a unir."
+                    )
+            if self.en_izq:
+                cols = (
+                    [self.en_izq]
+                    if isinstance(self.en_izq, str)  # type: ignore
+                    else self.en_izq
+                )
+                if not all(col in resultado.columns for col in cols):
+                    raise ValueError(
+                        f"Alguna columna de '{self.en_izq}' \
+                        no existe en el DataFrame base."
+                    )
+            if self.en_der:
+                cols = (
+                    [self.en_der]
+                    if isinstance(self.en_der, str)  # type: ignore
+                    else self.en_der
+                )
+                if not all(col in otro.columns for col in cols):
+                    raise ValueError(
+                        f"La columna '{self.en_der}' \
+                        no existe en el DataFrame a unir."
+                    )
+            # Eliminar los duplicados
+            if self.en_der:
+                otro = otro.drop_duplicates(subset=self.en_der)
+            if self.en_izq:
+                resultado = resultado.drop_duplicates(subset=self.en_izq)
+
+            # Alerta si no ha coincidencia
             if self.en:
                 interseccion = set(resultado[self.en]).intersection(set(otro[self.en]))
                 if not interseccion:
-                    print("Advertencia: No hay coincidencias en las claves.")
+                    logger.warning("Advertencia: No hay coincidencias en las claves.")
 
-            resultado = pd.merge(
+            resultado = pd.merge(  # type: ignore
                 left=resultado,
                 right=otro,
-                how=self.como,
+                how=self.como,  # type: ignore
                 left_on=self.en_izq,
                 right_on=self.en_der,
                 on=self.en,
@@ -255,7 +338,13 @@ class InnerJoinOperacion(Operacion):
 
 
 class AgregarTiempoOperacion(Operacion):
-    def __init__(self, nombre_columna, horas=0, minutos=0, segundos=0):
+    def __init__(
+        self,
+        nombre_columna: str,
+        horas: int = 0,
+        minutos: int = 0,
+        segundos: int = 0
+    ):
         """
         Parametros:
         ----------
@@ -268,9 +357,9 @@ class AgregarTiempoOperacion(Operacion):
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         # Funcion interna para agregar el timedelta a cada celda
-        def sumar_tiempo(x):
+        def sumar_tiempo(x: Any) -> Any:
             # si es nulo
-            if pd.isna(x):
+            if pd.isna(x):  # type: ignore
                 return x
             # Si a es Timestamp
             if isinstance(x, pd.Timestamp):
@@ -283,14 +372,16 @@ class AgregarTiempoOperacion(Operacion):
                 return nuevo_dt.time()
             # Si es una cadena de otro formato
             try:
-                ts = pd.to_datetime(x)
+                ts = cast(pd.Timedelta, pd.to_datetime(x))  # type: ignore
                 return ts + self.tiempo
             except Exception as e:
                 # Si falla la conversion, retorna sin agregar
-                logger.exception("VIAJE: Fallo la conversion de tiempo", e)
+                logger.exception("Fallo la conversion de tiempo", e)
                 return x
 
-        df[self.nombre_columna] = df[self.nombre_columna].apply(sumar_tiempo)
+        df[self.nombre_columna] = (
+            df[self.nombre_columna].apply(sumar_tiempo)  # type: ignore
+        )
         return df
 
 
@@ -300,7 +391,7 @@ class DiferenciaTiempoOperacion(Operacion):
         columna_inicio: str,
         columna_fin: str,
         columna_resultado: str,
-        formato=None
+        formato: Optional[Union[str, Callable[[pd.Timedelta], str]]] = None
     ):
         """
         Parametros:
@@ -314,45 +405,66 @@ class DiferenciaTiempoOperacion(Operacion):
         self.columna_resultado = columna_resultado
         self.formato = formato
 
-    def convertir_valores(self, valor):
-        """ Intentara conertir el valor a un objeto timestamp o time"""
-        if pd.isna(valor):
+    def convertir_valores(
+        self,
+        valor: Any
+    ) -> Optional[Union[pd.Timestamp, pd.Timedelta]]:
+        """ Intentara convertir el valor a un objeto timestamp o time"""
+        if pd.isna(valor):  # type: ignore
             return None
-        # Si Timestamp
+        # Si Timestamp o Timedelta
         if isinstance(valor, pd.Timedelta) or isinstance(valor, pd.Timestamp):
             return valor
         # Si es datetime
         if isinstance(valor, datetime):
             return pd.Timestamp(valor)
+
+        # Si es time
+        if isinstance(valor, time):
+            try:
+                fecha_actual = datetime.now().date()
+                val = (
+                    pd.Timestamp.combine(
+                        date=fecha_actual,
+                        time=valor
+                    )  # type: ignore
+                )
+                return val
+            except Exception:
+                return None
+
         # Si es una cadena
         if isinstance(valor, str):
             try:
-                val = pd.to_datetime(valor, errors='raise')
+                val = pd.to_datetime(valor, errors='raise')  # type: ignore
                 return val
             except Exception:
                 try:
                     # Puede ser timedelta
-                    val = pd.to_timedelta(valor, errors='raise')
+                    val = pd.to_timedelta(valor, errors='raise')  # type: ignore
                     return val
                 except Exception:
                     return None
         # Si es numerico o otro
         return None
 
-    def formato_diferencia(self, dif: pd.Timedelta) -> str:
+    def formato_diferencia(
+        self,
+        dif: pd.Timedelta
+    ) -> str:
         """Formatea un pd.Timedelta"""
-        def formato_hhmmss(td: pd.Timedelta):
+        def formato_hhmmss(td: pd.Timedelta) -> str:
             total_sec = int(td.total_seconds())
             horas, remanente = divmod(total_sec, 3600)
             minutos, segundos = divmod(remanente, 60)
             return f"{horas:02d}:{minutos:02d}:{segundos:02d}"
 
-        def formato_mmss(td: pd.Timedelta):
+        def formato_mmss(td: pd.Timedelta) -> str:
             total_seg = int(td.total_seconds())
             minutos, segundos = divmod(total_seg, 60)
             return f"{minutos:02d}:{segundos:02d}"
 
-        def formato_dia_hhmmss(td: pd.Timedelta):
+        def formato_dia_hhmmss(td: pd.Timedelta) -> str:
             dias = td.days
             remanente_seg = int(td.total_seconds()) - dias * 86400
             horas, remanente = divmod(remanente_seg, 3600)
@@ -362,14 +474,14 @@ class DiferenciaTiempoOperacion(Operacion):
                     f"""{dias} {'dias' if dias != 1 else 'día'},
                     {horas:02d}:{minutos:02d}:{segundos:02d}"""
                 )
-            else:
-                return (
-                    f"{horas:02d}h {minutos:02d}m {segundos:02d}s"
-                )
+            return (
+                f"{horas:02d}h {minutos:02d}m {segundos:02d}s"
+            )
+
         # Si self.formato es callable
         if callable(self.formato):
             return self.formato(dif)
-        # Si la cadena, se reconocen los formatos predeinidos
+        # Si la cadena, se reconocen los formatos predefinidos
         elif isinstance(self.formato, str):
             formato_lower = self.formato.lower()
             if formato_lower == "hh:mm:ss":
@@ -384,43 +496,74 @@ class DiferenciaTiempoOperacion(Operacion):
             return str(dif)
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Validacion de columnas
+        # if (
+        #     self.columna_fin not in df.columns
+        # ):
+        #     return df
+
+        # # Detectar automaticamente la ultima columna de control disponible
+        # texto = self.columna_fin
+        # txt = re.sub(r"\d+$", "", texto)
+        # columnas_ctrl = [c for c in df.columns if c.startswith(txt)]
+        # if not columnas_ctrl:
+        #     return df
+
+        # # Ordenar por indice numerico  tomar la ultima
+        # columnas_ctrl.sort(key=lambda x: int(x.split(" ")[1]))
+        # ultima_columna = columnas_ctrl[-1]
+
         # Trabajamos de forma no destructiva
-        def calcular_diferencia(fila):
+        def calcular_diferencia(fila: pd.Series) -> Union[pd.Timedelta, float]:
+
             val_inicio = self.convertir_valores(fila[self.columna_inicio])
             val_fin = self.convertir_valores(fila[self.columna_fin])
+
             if (val_inicio is None) or (val_fin is None):
                 return np.nan
+
             # Si ambos valores son Timestamp
             if (
                 isinstance(val_inicio, pd.Timestamp)
                 and isinstance(val_fin, pd.Timestamp)
             ):
+                if val_inicio > val_fin:
+                    val_inicio, val_fin = val_fin, val_inicio
                 return val_fin - val_inicio
+
             # Si ambos son Timedelta
             if (
                 isinstance(val_inicio, pd.Timedelta)
                 and isinstance(val_fin, pd.Timedelta)
             ):
                 return val_fin - val_inicio
+
             # Si uno es Timedelta y el otro Timestamp
             return np.nan
-        diferencia = df.apply(calcular_diferencia, axis=1)
+
+        diferencia = df.apply(calcular_diferencia, axis=1)  # type: ignore
+
+        def aplicar_formato(td: Any) -> Union[str, Any]:
+            if pd.notna(td):
+                return self.formato_diferencia(td)
+            return td
 
         # Formateo de la diferencia
-        if self.formato is not None:
-            diferencia = diferencia.apply(
-                lambda td: (
-                    self.formato_diferencia(td)
-                    if pd.notna(td)
-                    else td
-                )
+        if self.formato:
+            diferencia = diferencia.apply(  # type: ignore
+                aplicar_formato
             )
+
         df[self.columna_resultado] = diferencia
         return df
 
 
 class PromedioDiferenciaTiempoOperacion(Operacion):
-    def __init__(self, columna_resultado, nueva_columna):
+    def __init__(
+        self,
+        columna_resultado: str,
+        nueva_columna: str
+    ):
         """
         Parametros:
         ----------
@@ -432,18 +575,35 @@ class PromedioDiferenciaTiempoOperacion(Operacion):
         self.nueva_columna = nueva_columna
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        promedio = df[self.columna_resultado].mean()
-        df[self.nueva_columna] = promedio
+        """
+        Calcula el promedio de la columna de diferencia de tiempo
+        y lo asigna a una nueva columna
+        """
+        # Validar datos
+        if self.columna_resultado not in df.columns:
+            raise KeyError(
+                f"La columna {self.columna_resultado} no existe en el"
+                f"DataFrame."
+            )
+
+        promedio: Union[pd.Timedelta, float] = df[self.columna_resultado].mean()
+
+        # Si el promedio es Timedelta, se tiene que convertir a string legible
+        if isinstance(promedio, pd.Timedelta):
+            df[self.nueva_columna] = str(promedio)
+        else:
+            df[self.nueva_columna] = promedio
+
         return df
 
 
-class FormatoHTMLOperacion(Operacion):
+class FormatoHTMLOperacion(OperacionFormato):
     def __init__(
         self,
-        columna_icono=None,
-        icon_mapping=None,
-        color_texto=None,
-        **kwargs
+        color_texto: Optional[str] = None,
+        columna_icono: Optional[str] = None,
+        icon_mapping: Optional[Dict[str, str]] = None,
+        **kwargs: Any
     ):
         """
         Parametros:
@@ -462,29 +622,41 @@ class FormatoHTMLOperacion(Operacion):
         ### DataFrame en una cadena HTML.
         """
         self.columna_icono = columna_icono
-        self.icon_mapping = icon_mapping if icon_mapping is not None else {}
+        self.icon_mapping = icon_mapping or {}
         self.color_texto = color_texto
         self.kwargs = kwargs
 
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, df: pd.DataFrame) -> Optional[str]:
+        """
+        Convierte el DataFrame en HTML, aplicando iconos y color de texto
+        """
         # Si se ha definido una columna para iconos y existe un mapping,
         # actualizamos cada celda de esa columna anteponiendo el icono correspondiente.
-        if self.columna_icono is not None and self.icon_mapping:
-            df[self.columna_icono] = df[self.columna_icono].apply(
-                lambda x: (
-                    f"{self.icon_mapping.get(x, '')} {x}"
-                    if x in self.icon_mapping
-                    else x
-                )
+        if self.columna_icono and self.icon_mapping:
+            def agregar_icono(x: Any) -> str:
+                x_str = str(x)
+                if x_str in self.icon_mapping:
+                    return f"{self.icon_mapping[x_str]} {x_str}"
+
+                return x_str
+
+            df[self.columna_icono] = (
+                df[self.columna_icono].apply(agregar_icono)  # type: ignore
             )
-        html_resultado = df.to_html(**self.kwargs)
+
+        html_resultado: str = df.to_html(**self.kwargs)  # type: ignore
         if self.color_texto:
-            return f'<div style="color: {self.text_color};">{html_resultado}</div>'
-        return html_resultado
+            return f'<div style="color: {self.color_texto};">{html_resultado}</div>'
+
+        return html_resultado  # type: ignore
 
 
 class TransponerFilasAColumnasOperacion(Operacion):
-    def __init__(self, sep="_", filas=None):
+    def __init__(
+        self,
+        sep: str = "_",
+        filas: Optional[List[Any]] = None
+    ):
         """
         Parametros:
         ----------
@@ -517,9 +689,9 @@ class TransponerFilasAColumnasOperacion(Operacion):
 class FormatoFechaOperacion(Operacion):
     def __init__(
         self,
-        columnas,
-        formato='%d de %B de %Y, %H:%M:%S',
-        locale_str='es_PE.UTF-8'
+        columnas: Union[str, List[str]],
+        formato: str = '%d de %B de %Y, %H:%M:%S',
+        locale_str: str = 'es_ES.UTF-8'
     ):
         """
         Parametros:
@@ -543,45 +715,34 @@ class FormatoFechaOperacion(Operacion):
         except locale.Error as e:
             logger.error("Error al cambiar el locale:", e)
 
-        def formatear_valor(x):
-            if pd.isna(x):
+        def formatear_valor(x: Any):
+            if pd.isna(x):  # type: ignore
                 return ""
             if isinstance(x, pd.Timestamp):
                 return x.strftime(self.formato)
             # Si el objeto es timedelta
             elif isinstance(x, pd.Timedelta):
-                componente = x.components  # Obtiene dias, horas, minutos  segundos
-                dias = componente.days
-                horas = componente.hours
-                minutos = componente.minutes
-                segundos = componente.seconds
-                # Si hay dias se incluye en el formato
-                if dias > 0 or horas > 0:
-                    if dias > 0:
-                        return (
-                            f"""{dias} {'dias' if dias != 1 else 'día'},
-                            {horas:02d}:{minutos:02d}:{segundos:02d}"""
-                        )
-                    else:
-                        return (
-                            f"{horas:02d}h {minutos:02d}m {segundos:02d}s"
-                        )
-                else:
-                    # Si no ha horas, se muestra solo MM:SS
-                    return f"{minutos:02d}m {segundos:02d}s"
-            else:
-                return str(x)
+                return self._formatear_timedelta(x)
+
+            return str(x)
 
         for columna in self.columnas:
             if columna in df.columns:
-                # convertir la columnas a datetime (si no lo es)
+                # Convertir la columnas a datetime (si no lo es)
                 if (
-                    not pd.api.types.is_datetime64_any_dtype(df[columna])
-                    and not pd.api.types.is_timedelta64_dtype(df[columna])
+                    not pd.api.types.is_datetime64_any_dtype(  # type: ignore
+                        df[columna]
+                    )
+                    and not pd.api.types.is_timedelta64_dtype(  # type: ignore
+                        df[columna]
+                    )
                 ):
-                    df[columna] = pd.to_datetime(df[columna], errors='coerce')
-                # Aplicar formato si el valor es alido
-                df[columna] = df[columna].apply(formatear_valor)
+                    df[columna] = pd.to_datetime(  # type: ignore
+                        df[columna],
+                        errors='coerce'
+                    )
+                # Aplicar formato si el valor es valido
+                df[columna] = df[columna].apply(formatear_valor)  # type: ignore
         # Restaurar el locale original
         try:
             locale.setlocale(locale.LC_TIME, original_locale)
@@ -589,9 +750,29 @@ class FormatoFechaOperacion(Operacion):
             pass
         return df
 
+    def _formatear_timedelta(self, td: pd.Timedelta) -> str:
+        comp = td.components
+        dias = comp.days
+        horas = comp.hours
+        minutos = comp.minutes
+        segundos = comp.seconds
+
+        if dias > 0:
+            return f"""{dias} {'dias' if dias != 1 else 'día'},
+                {horas:02d}:{minutos:02d}:{segundos:02d}"""
+        if horas > 0:
+            return f"{horas:02d}h {minutos:02d}m {segundos:02d}s"
+
+        return f"{minutos:02d}m {segundos:02d}s"
+
 
 class CambiarColorTextoCondicionalOperacion(Operacion):
-    def __init__(self, condicion, color: str, columnas=None):
+    def __init__(
+        self,
+        condicion: Callable[[Any], bool],
+        color: str,
+        columnas: Optional[List[str]] = None
+    ):
         """
         Parametros:
         ----------
@@ -607,23 +788,27 @@ class CambiarColorTextoCondicionalOperacion(Operacion):
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         # si no se especifica, aplicar a todas las columnas
-        columnas = self.columnas if self.columnas is not None else df.columns
-        for columna in columnas:
+        columnas_objetivo = self.columnas if self.columnas is not None else df.columns
+        for columna in columnas_objetivo:
             if columna in df.columns:
-                df[columna] = df[columna].apply(
-                    lambda x: (
-                        f'<span style="color: {self.color};">{x}</span>'
-                        if self.condicion(x)
-                        else x
-                    )
+                df[columna] = df[columna].apply(  # type: ignore
+                    self._aplicar_color
                 )
         return df
+
+    def _aplicar_color(self, valor: Any) -> Any:
+        if self.condicion(valor):
+            return f'<span style="color: {self.color};">{valor}</span>'
+        return valor
 
 
 # -----------------------------------------------------------------------------
 # Clase DataFrameBuilder
 class DataFrameBuilder:
-    def __init__(self, data=None):
+    def __init__(
+        self,
+        data: Optional[Union[pd.DataFrame, Dict[Any, Any], List[Dict[Any, Any]]]] = None
+    ):
         """
         data : Puede ser un diccionario o una lista de diccionarios
         """
@@ -632,35 +817,53 @@ class DataFrameBuilder:
         else:
             self._base_df = pd.DataFrame(data) if data is not None else pd.DataFrame()
         self._operaciones: List[Operacion] = []
+        self._operaciones_formato: List[OperacionFormato] = []
 
-    def set_data(self, data):
+    def set_data(
+        self,
+        data: Union[pd.DataFrame, Dict[Any, Any], List[Dict[Any, Any]]]
+    ):
         if isinstance(data, pd.DataFrame):
             self._base_df = data.copy()
         else:
             self._base_df = pd.DataFrame(data)
         return self
 
-    def agregar_operacion(self, op: Operacion):
+    def agregar_operacion(
+        self,
+        op: Operacion
+    ):
         self._operaciones.append(op)
         return self
 
+    def agregar_operacion_formato(
+        self,
+        op: OperacionFormato
+    ):
+        self._operaciones_formato.append(op)
+        return self
+
     # Metodos helper para operaciones comunes
-    def filtrar(self, condicion):
+    def filtrar(self, condicion: Callable[[pd.DataFrame], pd.Series]):
         return self.agregar_operacion(FiltraOperacion(condicion))
 
-    def agregar_columnas(self, mapeado: dict):
+    def agregar_columnas(self, mapeado: dict[str, Callable[[pd.DataFrame], pd.Series]]):
         return self.agregar_operacion(AgregarColumnasOperacion(mapeado))
 
-    def cambiar_nombre_columnas(self, mapeado: dict):
+    def cambiar_nombre_columnas(self, mapeado:  Dict[str, str]):
         return self.agregar_operacion(CambiarNombreColumnasOperacion(mapeado))
 
-    def eliminar_columna(self, columna: str):
+    def eliminar_columna(self, columna: Union[str, List[str]]):
         return self.agregar_operacion(EliminarColumnaOperacion(columna))
 
-    def seleccionar_columna(self, columnas):
+    def seleccionar_columna(self, columnas: Union[str, List[str]]):
         return self.agregar_operacion(SeleccionarColumnasOperacion(columnas))
 
-    def agrupar_por(self, columnas: list, funcion_ag: dict):
+    def agrupar_por(
+        self,
+        columnas: Union[str, List[str]],
+        funcion_ag: Dict[Any, Any]
+    ):
         return self.agregar_operacion(AgruparPorOperacion(columnas, funcion_ag))
 
     def explode_columna(self, columna: str):
@@ -669,7 +872,7 @@ class DataFrameBuilder:
     def expandir_lista_a_columnas(
         self,
         columna: str,
-        prefijo: str = None,
+        prefijo: Optional[str] = None,
         drop_original: bool = True
     ):
         resultado = self.agregar_operacion(
@@ -680,7 +883,11 @@ class DataFrameBuilder:
     def ordenar_por(self, columna: str, ascendente: bool = True):
         return self.agregar_operacion(OrdenarPorOperacion(columna, ascendente))
 
-    def transponer_filas_a_columnas(self, sep="_", filas=None):
+    def transponer_filas_a_columnas(
+        self,
+        sep: str = "_",
+        filas: Optional[List[Any]] = None
+    ):
         """
         Agrega una operación que transforma (transpone) las filas seleccionadas en
         columnas.
@@ -717,12 +924,25 @@ class DataFrameBuilder:
 
     def unir(
         self,
-        otros,
-        como='inner',
-        en_izq=None,
-        en_der=None,
-        en=None,
-        sufijos=('_x', '_y')
+        otros: Union[pd.DataFrame, List[pd.DataFrame]],
+        como: Literal[
+            "inner",
+            "left",
+            "right",
+            "outer",
+            "cross",
+            "left_anti",
+            "right_anti"
+        ] = "inner",
+        en_izq: Optional[str] = None,
+        en_der: Optional[str] = None,
+        en: Optional[str] = None,
+        sufijos: Union[
+            List[Optional[str]],
+            Tuple[str, str],
+            Tuple[None, str],
+            Tuple[str, None]
+        ] = ("_x", "_y")
     ):
         resultado = self.agregar_operacion(
             InnerJoinOperacion(otros, como, en_izq, en_der, en, sufijos)
@@ -746,7 +966,7 @@ class DataFrameBuilder:
         columna_inicio: str,
         columna_fin: str,
         columna_resultado: str,
-        formato
+        formato: Optional[Union[str, Callable[[pd.Timedelta], str]]] = None
     ):
         self.agregar_operacion(
             DiferenciaTiempoOperacion(
@@ -770,9 +990,9 @@ class DataFrameBuilder:
 
     def cambiar_color_texto_condicional(
         self,
-        condicion,
-        color,
-        columnas
+        condicion: Callable[[Any], bool],
+        color: str,
+        columnas: Optional[List[str]] = None
     ):
         self.agregar_operacion(
             CambiarColorTextoCondicionalOperacion(condicion, color, columnas)
@@ -781,9 +1001,9 @@ class DataFrameBuilder:
 
     def formatear_fecha(
         self,
-        columnas,
-        formato='%d de %B de %Y, %H:%M:%S',
-        locale_str='es_ES.UTF-8'
+        columnas: Union[str, List[str]],
+        formato: str = '%d de %B de %Y, %H:%M:%S',
+        locale_str: str = 'es_ES.UTF-8'
     ):
         self.agregar_operacion(
             FormatoFechaOperacion(columnas, formato, locale_str)
@@ -792,20 +1012,45 @@ class DataFrameBuilder:
 
     def formatear_html(
         self,
-        columna_icono=None,
-        icon_mapping=None,
-        **kwargs
+        color_texto: Optional[str] = None,
+        columna_icono: Optional[str] = None,
+        icon_mapping: Optional[Dict[str, str]] = None,
+        **kwargs: Any
     ):
-        self.agregar_operacion(
-            FormatoHTMLOperacion(columna_icono, icon_mapping, **kwargs)
+        self.agregar_operacion_formato(
+            FormatoHTMLOperacion(columna_icono, color_texto, icon_mapping, **kwargs)
         )
         return self
 
     def construir(self) -> pd.DataFrame:
         resultado = self._base_df.copy()
+        # Operacion de datos
         for operacion in self._operaciones:
             resultado = operacion.apply(resultado)
+
         return resultado
+
+    def construir_Html(self) -> str:
+        resultado = self._base_df.copy()
+        # Operacion de datos
+        for operacion in self._operaciones:
+            resultado = operacion.apply(resultado)
+        # Operaciones de formato
+        if not self._operaciones_formato:
+            raise RuntimeError(
+                "Debe existir al menos una operacion final de formato para devolver \
+                str, al construir HMTL de una DataFrame"
+            )
+        resultado_formato: Optional[str] = None
+        for operacion in self._operaciones_formato:
+            resultado_formato = operacion.apply(resultado)
+
+        if resultado_formato is None:
+            raise RuntimeError(
+                "La operacion final no devolvio un resultado valido."
+            )
+
+        return resultado_formato
 
 
 # Ejemplo de uso

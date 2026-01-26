@@ -47,6 +47,6 @@ class Configuracion(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_config(id_config):
+    def obtener_config(id_config: int):
         resultado = Configuracion.query.get(id_config)
         return resultado

@@ -1,7 +1,8 @@
 import logging
+from typing import cast
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import login_required  # type: ignore
 
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
@@ -24,10 +25,10 @@ def listar_controles():
     controles = Control.obtener_todos()
     secuencia = SecuenciaControlRuta.obtener_todos()
     form = ControlForm()
-    if form.validate_on_submit():
-        codigo = form.codigo.data
-        latitud = form.latitud.data
-        longitud = form.longitud.data
+    if form.validate_on_submit():  # type: ignore
+        codigo = cast(str, form.codigo.data)
+        latitud = cast(str, form.latitud.data)
+        longitud = cast(str, form.longitud.data)
         consulta = Control.obtener_por_codigo(codigo=codigo)
         if consulta is None:
             try:
@@ -55,7 +56,7 @@ def listar_controles():
 @bp.route("/eliminar/<int:control_id>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def eliminar_control(control_id):
+def eliminar_control(control_id: int):
     control = Control.obtener_id(control_id)
     if control is not None:
         control.eliminar()
@@ -73,7 +74,7 @@ def listar_control_ruta():
     form.ruta.choices = [(r.id_ruta, r.codigo) for r in rutas]
     form.control.choices = [(c.id_control, c.codigo) for c in controles]
 
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # type: ignore
         ruta = form.ruta.data
         control = form.control.data
         ultimo = SecuenciaControlRuta.obtener_secuencia_por_ruta(ruta)
@@ -109,16 +110,28 @@ def listar_control_ruta():
 @login_required
 @admin_required
 def eliminar_control_ruta(scr_id: int):
-    secuencia = SecuenciaControlRuta.obtener_por_id(scr_id)
-    todos = SecuenciaControlRuta.obtener_todos_secuencia_por_ruta(secuencia.id_ruta)
-    if secuencia is None:
-        # cambiar la secuencia de los elementos mayores siguientes
+    try:
+        secuencia = SecuenciaControlRuta.obtener_por_id(scr_id)
+        if secuencia is None:
+            flash("La secuencia no existe", "error")
+            return redirect(url_for("control.listar_control_ruta"))
+
+        # Obtener todas las secuencias de la misma ruta
+        todos = SecuenciaControlRuta.obtener_todos_secuencia_por_ruta(secuencia.id_ruta)
+
+        # Ajustar a las secuencias posteriores
         aux = int(secuencia.secuencia)
         for sec in todos:
             if aux < sec.secuencia:
                 sec.secuencia = sec.secuencia-1
                 sec.guardar()
+
         # eliminar secuencia de db
         secuencia.eliminar()
+
+        flash("Secuencia eliminada correctamente", "success")
+    except Exception as e:
+        logger.error(f"Error al eliminar secuencia{scr_id}: {e}")
+        flash("Ocurrio un error inesperado al eliminar la secuencia", "error")
 
     return redirect(url_for('control.listar_control_ruta'))

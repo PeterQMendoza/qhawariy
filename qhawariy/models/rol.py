@@ -1,3 +1,4 @@
+from typing import List, Optional
 from qhawariy import db
 
 
@@ -5,8 +6,8 @@ class Rol(db.Model):
     """Modelo Rol describe el rol que se asignara al usuario
     """
     __tablename__ = "roles"
-    id_rol = db.Column(db.Integer, primary_key=True)
-    rol = db.Column(db.String(20), unique=True, nullable=False)
+    id_rol: int = db.Column(db.Integer, primary_key=True)
+    rol: str = db.Column(db.String(20), unique=True, nullable=False)
     # Relaciones
     rusuarios = db.relationship(
         "UsuarioRol",
@@ -14,7 +15,7 @@ class Rol(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, rol):
+    def __init__(self, rol: str):
         self.rol = rol
 
     def __repr__(self):
@@ -30,13 +31,13 @@ class Rol(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_rol_por_id(id):
+    def obtener_rol_por_id(id: int):
         return Rol.query.get(id)
 
     @staticmethod
-    def obtener_todos_roles():
-        return Rol.query.all()
+    def obtener_todos_roles() -> List["Rol"]:
+        return Rol.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_por_rol(rol):
-        return Rol.query.filter_by(rol=rol).first()
+    def obtener_por_rol(rol: str) -> Optional["Rol"]:
+        return Rol.query.filter_by(rol=rol).first()  # type: ignore

@@ -1,4 +1,6 @@
 import logging
+from typing import List, Optional, TypedDict
+from flask.typing import ResponseReturnValue
 import folium.plugins
 import pandas as pd
 import datetime
@@ -11,11 +13,12 @@ from folium.plugins import (
 
 from flask import (
     Blueprint,
+    g,
     render_template,
     current_app
 )
 from flask_login import (
-    login_required,
+    login_required,  # type: ignore
     current_user
 )
 # from werkzeug.urls import url_parse
@@ -42,116 +45,135 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("estadistica", __name__, url_prefix="/estadistica")
 
 
+class PuntoFlota(TypedDict):
+    x: str
+    y: int
+
+
+class TiempoVP(TypedDict):
+    Flota: str
+    Tiempo: Optional[datetime.datetime]
+    Ruta: str
+
+
+def ordenar_valor(lista: list[PuntoFlota]) -> list[PuntoFlota]:
+    """Ordena lista de diccionarios por el valor y en orden descendente"""
+    n = len(lista)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n-i-1):
+            if lista[j]['y'] < lista[j+1]['y']:
+                lista[j], lista[j+1] = lista[j+1], lista[j]
+                swapped = True
+        if not swapped:
+            break
+    return lista
+
+
+def inicializar_copia_vacia(base: List[dict[str, int]]) -> List[dict[str, int]]:
+    """Devuelve una copia vacia profunda con valores 'y' inicializados"""
+    copia = copy.deepcopy(base)
+    for em in copia:
+        em.update(y=0)
+    return copia
+
+
 @bp.route("/estadistica", methods=["GET", "POST"])
 @login_required
-def mostrar_estadisticas():
-    # Mostrar las estadisticas com punto de referencia al nombre codigo de las rutas
-    # Para visualizar panel
-    if current_user.is_authenticated:
-        id_user = current_user.id_usuario
-        ur = UsuarioRol.obtener_por_id_usuario(id_user)
-        rol = ur.rol
-    else:
-        rol = None
-
+def mostrar_estadisticas() -> ResponseReturnValue:
+    # Validacion de usuario
     if not current_user.is_authenticated:
-        return current_app.login_manager.unauthorized()
+        return current_app.login_manager.unauthorized()  # type: ignore
 
-    # Datos para grafico de linea
-    # obtener todas las fechas registradas
+    id_user = current_user.id_usuario
+    ur = UsuarioRol.obtener_por_id_usuario(id_user)
+    rol = ur.rol if ur else None
+
+    # Fechas y datos base
     fechas = Fecha.obtener_todas_fechas()
-    lista_todas_las_fechas = [f.fecha for f in fechas]
+    lista_fechas = [f.fecha for f in fechas]
     dat1 = VehiculoProgramado.estadistica_vp_fecha_programa()
-    data_list1 = [{'x': v.strftime('%d-%m-%Y'), 'y': r} for c, v, r in dat1]
-    # df=[v for c,v,r in dat1]
-    df = lista_todas_las_fechas
+    data_list1 = [{'x': v.strftime('%d-%m-%Y'), 'y': r} for _, v, r in dat1]
 
+    # Rutas y secuencias
     rutas = RutaTerminal.obtener_todas_rt()
-    lista_rutas = []
-    for lr in rutas:
-        lista_rutas.append(
-            VehiculoProgramado.estadistica_vp_fecha_programa_y_ruta(lr.ruta.id_ruta)
-        )
+    lista_rutas = [
+        VehiculoProgramado.estadistica_vp_fecha_programa_y_ruta(lr.ruta.id_ruta)
+        for lr in rutas
+    ]
 
-    # Para obtener registro de 0 para cada dia si no tiene programaciones de vehiculos
-    # Copia profunda sin referencia
-    empty = copy.deepcopy(data_list1)
-    for em in empty:
-        for k, a in em.items():
-            em.update(y=0)
+    empty = inicializar_copia_vacia(data_list1)
+    lista_copia_vacias = [
+        copy.deepcopy(empty)
+        for _ in rutas
+    ]
 
-    # crear copias vacias para cada ruta
-    lista_copia_vacias = []
-    for i in range(len(rutas)):
-        aux = copy.deepcopy(empty)
-        lista_copia_vacias.append(aux)
-
-    for i in range(len(rutas)):
-        for o, f, c in lista_rutas[i]:
-            if f in df:
+    for i, ruta_data in enumerate(lista_rutas):
+        for _, f, c in ruta_data:
+            if f in lista_fechas:
                 for em in lista_copia_vacias[i]:
                     if em['x'] == f.strftime('%d-%m-%Y'):
                         em.update({'x': f.strftime('%d-%m-%Y'), 'y': c})
 
+    # Estadistica por flota
     dat2 = VehiculoProgramado.estadistica_vp_flota_programa()
     vehiculos = Vehiculo.obtener_todos_vehiculos_activos()
-    t_empty = [{'x': 'Flota '+str(v.flota), 'y': 0} for v in vehiculos]
-    data_list2 = [{'x': 'Flota '+str(v), 'y': r} for c, v, r in dat2]
+    t_empty: List[PuntoFlota] = [
+        {'x': f'Flota {v.flota}', 'y': 0} for v in vehiculos
+    ]
+
+    data_list2: List[PuntoFlota] = [
+        {'x': f'Flota +{v}', 'y': r} for _, v, r in dat2
+    ]
+
     # Ordenar dicccionario por valor
-    d_test = copy.deepcopy(data_list2)
-    for v in d_test:
+    for v in data_list2:
         for e in t_empty:
             if v['x'] == e['x']:
                 e['y'] = v['y']
-    n = len(t_empty)
-    for i in range(n):
-        swapped = False
-        for j in range(0, n-i-1):
-            if t_empty[j]['y'] < t_empty[j+1]['y']:
-                t_empty[j], t_empty[j+1] = t_empty[j+1], t_empty[j]
-                swapped = True
-        if not swapped:
-            break
+    t_empty = ordenar_valor(t_empty)
 
-    #
+    # Programados vs no programados
     veh = Vehiculo.estadistica_todos_vehiculos_activos()
     dat3 = VehiculoProgramado.estadistica_vp_fecha_programado_no_programado()
     data_list3 = None
-    if dat3 is not None:
-        data_list3 = []
-    else:
+    if dat3:
         total = veh[0][1]
         dt = dat3[0][1].strftime('%d-%m-%Y')
         pro = dat3[0][2]
-        data_list3 = [[pro, (total-pro)], dt]
+        data_list3 = [([pro, (total-pro)], dt)]
+    else:
+        data_list3 = []
 
     # GRAFICO DE LA DONA
-    # Datos de cantidad de vehiculos por ruta
+    # Cantidad de vehiculos por ruta
     dat4 = VehiculoProgramado.estadistica_cantidad_vehiculos_por_ruta()
-    data_list4 = {str(s): c for o, s, c in dat4}
+    data_list4 = {str(s): c for _, s, c in dat4}
 
     # GRAFICO DE BARRA PROPIETARIO
     # Conteo de vehiculo activo y no activo por propietario
     props = Propietario.obtener_todos_propietarios()
+    propietarios = [f"{p.nombres} {p.apellidos}" for p in props]
+    ids = [p.id_propietario for p in props]
+    da = [0]*len(ids)
+    dna = [0]*len(ids)
+
     dat_activo = PropietarioVehiculo.estadistica_pv_y_vehiculo_propietario(True)
     dat_no_activo = PropietarioVehiculo.estadistica_pv_y_vehiculo_propietario(False)
-    data_list_activo = [{i: c} for o, i, c in dat_activo]
-    data_list_no_activo = [{i: c} for o, i, c in dat_no_activo]
-    propietarios = [str(p.nombres)+" "+str(p.apellidos) for p in props]
-    id = [p.id_propietario for p in props]
-    da = [0]*len(id)
-    dna = [0]*len(id)
+    data_list_activo = [{i: c} for _, i, c in dat_activo]
+    data_list_no_activo = [{i: c} for _, i, c in dat_no_activo]
+
     for i in data_list_activo:
         for k, v in i.items():
-            aux = id.index(k)
-            if k in id:
+            aux = ids.index(k)
+            if k in ids:
                 da[aux] = v
             else:
                 da[aux] = 0
     for i in data_list_no_activo:
         for k, v in i.items():
-            aux = id.index(k)
-            if k in id:
+            aux = ids.index(k)
+            if k in ids:
                 dna[aux] = v
             else:
                 dna[aux] = 0
@@ -163,66 +185,44 @@ def mostrar_estadisticas():
         {
             'tiempo': t.strftime("%H:%M"),
             'cantidad': c
-        } for v, t, c in vp if t is not None
+        } for _, t, c in vp if t is not None
     ]
 
     # Estadistica para viajes
     # Cantidad de viajes hechos por vehiculos
     viajes_por_vehiculos = Viaje.estadistica_viajes_por_vehiculo()
-    vpv = [
-        {'x': "Flota "+str(f), 'y': conteo} for vo, f, conteo in viajes_por_vehiculos
+    vpv: List[PuntoFlota] = [
+        {'x': f"Flota{f}", 'y': conteo} for _, f, conteo in viajes_por_vehiculos
     ]
-    vpvs = [
+    vpvs: List[PuntoFlota] = [
         # Inicia con cada conteo de vehiculo 0
         {'x': 'Flota '+str(v.flota), 'y': 0} for v in vehiculos
     ]
     # Ordenar dicccionario por valor
-    d_test = copy.deepcopy(vpv)
-    for v in d_test:
+    for v in vpv:
         for e in vpvs:
             if v['x'] == e['x']:
                 e['y'] = v['y']
-    n = len(vpvs)
-    for i in range(n):
-        swapped = False
-        for j in range(0, n-i-1):
-            if vpvs[j]['y'] < vpvs[j+1]['y']:
-                vpvs[j], vpvs[j+1] = vpvs[j+1], vpvs[j]
-                swapped = True
-        if not swapped:
-            break
+    vpvs = ordenar_valor(vpvs)
 
     # Cantidad de viajes por fecha y ruta
     total_viajes_por_fecha = Viaje.estadistica_viajes_por_fecha()
     lista_tvf = [
-        {'x': f.strftime('%d-%m-%Y'), 'y': c} for v, f, c in total_viajes_por_fecha
+        {'x': f.strftime('%d-%m-%Y'), 'y': c} for _, f, c in total_viajes_por_fecha
     ]
-    lista_fechas = lista_todas_las_fechas
-    lista_viajes_fecha_ruta = []
-    for r in rutas:
-        lista_viajes_fecha_ruta.append(
-            Viaje.estadistica_viajes_por_fecha_ruta(r.ruta.id_ruta)
-        )
 
-    # Inicializamos una dict con valores a 0 de todos los viajes realizados por fecha
-    # Copia profunda sin referencia
-    lvfr = copy.deepcopy(lista_tvf)
-    for em in lvfr:
-        for k, a in em.items():
-            em.update(y=0)
+    lvfr = inicializar_copia_vacia(lista_tvf)
+    lvfrs = [copy.deepcopy(lvfr) for _ in rutas]
 
-    # Creamos copias vacias de viajes para cada ruta
-    lvfrs = []
-    for i in range(len(rutas)):
-        aux = copy.deepcopy(lvfr)
-        lvfrs.append(aux)
-
-    for i in range(len(rutas)):
-        for o, f, c in lista_viajes_fecha_ruta[i]:
+    for i, ruta_data in enumerate(
+        [Viaje.estadistica_viajes_por_fecha_ruta(r.ruta.id_ruta) for r in rutas]
+    ):
+        for _, f, c in ruta_data:
             if f in lista_fechas:
                 for em in lvfrs[i]:
                     if em['x'] == f.strftime('%d-%m-%Y'):
-                        em.update({'x': f.strftime('%d-%m-%Y'), 'y': c})
+
+                        em.update({'y': c})
 
     return render_template(
         "estadistica/muestra_estadistica.html",
@@ -243,25 +243,81 @@ def mostrar_estadisticas():
     )
 
 
+def obtener_intervalo_fecha() -> tuple[datetime.datetime, datetime.datetime]:
+    """Devuelve el intervalo entre ayer y ahora en la zona horaria LIMA_TZ."""
+    ahora = datetime.datetime.now(tz=LIMA_TZ)
+    inicio_dia = datetime.datetime(
+        year=ahora.year, month=ahora.month, day=ahora.day,
+        hour=0, minute=0, second=0, tzinfo=LIMA_TZ
+    )
+    hace = inicio_dia - datetime.timedelta(days=1)
+    return hace, ahora
+
+
+def obtener_terminales_y_controles(
+) -> tuple[list[list[float]], list[tuple[str, list[float]]]]:
+    """Devuelve coordenadas de terminales y controles."""
+    terminales = Terminal.obtener_todos_terminales()
+    controles = Control.obtener_todos()
+
+    coords_terminales = [
+        [float(t.latitud), float(t.longitud)]
+        for t in terminales if t and t.latitud and t.longitud
+    ]
+
+    coords_controles = [
+        [float(c.latitud), float(c.longitud)]
+        for c in controles if c and c.longitud and c.latitud
+    ]
+
+    codigos = [str(c.codigo) for c in controles]
+    data_controles = list(zip(codigos, coords_controles))
+
+    return coords_terminales, data_controles
+
+
+def configurar_scripts_personalizados(m: folium.Map) -> None:
+    """Agregar scripts para posicionar controles"""
+    scripts = {
+        "zoom_control": f"""<script nonce="{g.nonce}">
+        document.addEventListener("DOMContentLoaded", function() {{
+            document.querySelector("div.leaflet-bottom.leaflet-right").insertBefore(
+                document.querySelector("div.leaflet-control-zoom"),
+                document.querySelector("div.leaflet-control-attribution")
+            );
+        }});
+        </script>""",
+        "control_scale": f"""<script nonce="{g.nonce}">
+        document.addEventListener("DOMContentLoaded", function() {{
+            document.querySelector("div.leaflet-bottom.leaflet-right").insertBefore(
+                document.querySelector("div.leaflet-control-scale"),
+                document.querySelector("div.leaflet-control-attribution")
+            );
+        }});
+        </script>""",
+        "control_locate": f"""<script nonce="{g.nonce}">
+        document.addEventListener("DOMContentLoaded", function() {{
+            document.querySelector("div.leaflet-top.leaflet-right").insertBefore(
+                document.querySelector("div.leaflet-control-locate"),
+                document.querySelector("leaflet-control-layers")
+            );
+        }});
+        </script>"""
+    }
+    for script in scripts.values():
+        m.get_root().html.add_child(folium.Element(script))  # type: ignore
+
+
 @bp.route("/map", methods=["GET", "POST"])
 @login_required
-def mostrar_mapa():
-    # obtener las coordenadas gps de las terminales, de las rutas programadas
-    # y mostrarlas en el mapa
-    ahora = datetime.datetime.now(tz=LIMA_TZ)
-    date = datetime.datetime(
-        year=ahora.year,
-        month=ahora.month,
-        day=ahora.day,
-        hour=0,
-        minute=0,
-        second=0
-    )
-    hace = date-datetime.timedelta(days=1)
+def mostrar_mapa() -> ResponseReturnValue:
+    # Intervalos de fechas
+    hace, ahora = obtener_intervalo_fecha()
 
+    # Vehiculos programados
     vps = VehiculoProgramado.obtener_todos_vp_fecha(hace, ahora)
     # ruta = [v.programa.ruta.codigo for v in vps]
-    tiempos_vp = [
+    tiempos_vp: List[TiempoVP] = [
         {
             "Flota": str(vp.vehiculo.flota),
             "Tiempo": vp.tiempo,
@@ -272,95 +328,46 @@ def mostrar_mapa():
     # daf=daf.set_index("ruta")
 
     # Mostrar las terminales y controles en el mapa
-    terminales = Terminal.obtener_todos_terminales()
-    controles = Control.obtener_todos()
-    # data_terminales = {
-    #     'Direccion': [d.direccion for d in terminales if d != '' and d is not None]
-    # }
-    latitud_terminales = [
-        str(t.latitud) for t in terminales if t != '' and t is not None
-    ]
-    longitud_terminales = [
-        str(t.longitud) for t in terminales if t != '' and t is not None]
-    latitud_controles = [
-        str(c.latitud) for c in controles if c != '' and c is not None
-    ]
-    longitud_controles = [
-        str(c.longitud) for c in controles if c != '' and c is not None
-    ]
-    # obtener lon y lat de una cadena de texto
-    coords_terminales = [list(z) for z in zip(latitud_terminales, longitud_terminales)]
-    coords_controles = [list(z) for z in zip(latitud_controles, longitud_controles)]
-    codigos = [str(c.codigo) for c in controles]
-    data_controles = [list(c) for c in zip(codigos, coords_controles)]
+    coords_terminales, data_controles = obtener_terminales_y_controles()
 
     # Obtener una DataFrame con las coodenadas de las rutas
     # dgp=dataframe_rutas()
     filename = "rutas_ETMS_tc-34.shp"
-    file = FactoryShapefile()
-    shp = file.crearArchivo(filename)
+    shp = FactoryShapefile().crearArchivo(filename)
     dgp = shp.geo_data_frame
-
-    dgp['ind'] = [i for i in range(dgp.shape[0])]
-    dgp['coords'] = dgp.apply(shp.obtenerLongitudLatitud, axis=1)
+    dgp['ind'] = range(dgp.shape[0])
+    dgp['coords'] = dgp.apply(shp.obtenerLongitudLatitud, axis=1)  # type: ignore
     dgp = dgp.to_crs(3857)
 
-    LatLng = folium.LatLngPopup()
-
+    # Crear mapa base
     m = folium.Map(
         control_scale=True,
         zoom_control=True
-    ).add_child(
-        LatLng
+    ).add_child(  # type: ignore
+        folium.LatLngPopup()
     )
+    configurar_scripts_personalizados(m)
 
-    # Establecer la posicion de zoom control lado inferior derecho
-    map_script_zoom_control = """<script>
-        document.addEventListener("DOMContentLoaded", function() {\
-        document.querySelector("div.leaflet-bottom.leaflet-right").insertBefore(\
-            document.querySelector("div.leaflet-control-zoom"),
-            document.querySelector("div.leaflet-control-attribution")\
-        );\
-    });</script>"""
-    m.get_root().html.add_child(folium.Element(map_script_zoom_control))
-
-    # Establecer la posicion de control de escala al lado inferior derecha
-    map_script_control_scale = """<script>\
-        document.addEventListener("DOMContentLoaded", function() {\
-        document.querySelector("div.leaflet-bottom.leaflet-right").insertBefore(\
-            document.querySelector("div.leaflet-control-scale"),
-            document.querySelector("div.leaflet-control-attribution")\
-        );\
-        });</script>"""
-    m.get_root().html.add_child(folium.Element(map_script_control_scale))
-
-    # Establecer la posicion de ubicacion al lado superior derecha
-    map_script_control_locate = """<script>
-        document.addEventListener("DOMContentLoaded", function() {\
-            document.querySelector("div.leaflet-top.leaflet-right").insertBefore(\
-                document.querySelector("div.leaflet-control-locate"),
-                document.querySelector("leaflet-control-layers")\
-            );\
-        });</script>"""
-    m.get_root().html.add_child(folium.Element(map_script_control_locate))
-
-    colors = COLORES
+    # Recorridos
 
     folium.GeoJson(
         dgp,
         name="Recorrido",
         tooltip=folium.GeoJsonTooltip(fields=["Código", "Dirección"]),
-        style_function=lambda x: {
-            "color": colors[x['properties']['ind']],
+        style_function=lambda x: {  # type: ignore
+            "color": COLORES[x['properties']['ind']],
             "weight": 5,
             "fillOpacity": 0.9,
-        },
+        },  # type: ignore
         show=False,
-    ).add_to(m)
-    m.fit_bounds(m.get_bounds())
+    ).add_to(m)  # type: ignore
+    m.fit_bounds(m.get_bounds())  # type: ignore
 
-    ida = folium.FeatureGroup(name="Recorrido ida").add_to(m)
-    vuelta = folium.FeatureGroup(name="Recorrido vuelta", show=False).add_to(m)
+    ida = folium.FeatureGroup(name="Recorrido ida").add_to(m)  # type: ignore
+    vuelta = folium.FeatureGroup(
+        name="Recorrido vuelta",
+        show=False
+    ).add_to(m)  # type: ignore
 
     AntPath(
         locations=dgp.coords.iloc[0],
@@ -370,7 +377,7 @@ def mostrar_mapa():
         color='#05be50',
         opacity='0.8',
         pulseColor='#05be50',
-    ).add_to(ida)
+    ).add_to(ida)  # type: ignore
 
     AntPath(
         locations=dgp.coords.iloc[1],
@@ -380,51 +387,54 @@ def mostrar_mapa():
         color='#eb0046',
         opacity='0.8',
         pulseColor='#eb0046',
-    ).add_to(vuelta)
-    # mostrar lista de puntos gps de los terminales registrados
-    fg = folium.FeatureGroup(name="Terminales").add_to(m)
+    ).add_to(vuelta)  # type: ignore
+
+    # Mostrar los terminales
+    fg = folium.FeatureGroup(name="Terminales").add_to(m)  # type: ignore
     for p in coords_terminales:
         folium.Marker(
             p,
             popup="Terminal de la Empresa de Transporte.",
             icon=folium.Icon(color="red", icon="ok-sign"),
             draggable=True
-        ).add_to(fg)
-    # mostrar lista de puntos gps de los controles registrados
-    fg2 = folium.FeatureGroup(name="Controles").add_to(m)
-    for c, co in data_controles:
+        ).add_to(fg)  # type: ignore
+
+    # Mostrar controles
+    fg2 = folium.FeatureGroup(name="Controles").add_to(m)  # type: ignore
+    for cod, coords in data_controles:
         folium.Marker(
-            co,
-            popup=f'Punto de Control:{c}',
+            coords,
+            popup=f'Punto de Control:{cod}',
             icon=folium.Icon(color="blue", icon="ok-sign"),
             draggable=True
-        ).add_to(fg2)
+        ).add_to(fg2)  # type: ignore
 
-    folium.FitOverlays().add_to(m)
-    folium.LayerControl().add_to(m)
-
+    # Plugins
+    folium.FitOverlays().add_to(m)  # type: ignore
+    folium.LayerControl().add_to(m)  # type: ignore
     folium.plugins.LocateControl(
         auto_start=False,
         strings={
             "title": "Mostrar tu posicion actual",
             "popup": "Tu te encuentras dentro de esta area"
         }
-    ).add_to(m)
+    ).add_to(m)  # type: ignore
 
     folium.plugins.Geocoder(
         collapsed=True
-    ).add_to(m)
+    ).add_to(m)  # type: ignore
 
     folium.plugins.Fullscreen(
         position='topright',
         title="Pantalla Completa",
         title_cancel='Salir Pantalla Completa',
-    ).add_to(m)
+    ).add_to(m)  # type: ignore
 
-    m.get_root().render()
-    header = m.get_root().header.render()
-    body_html = m.get_root().html.render()
-    script = m.get_root().script.render()
+    # Renderizado
+    m.get_root().render()  # type: ignore
+    header = m.get_root().header.render()  # type: ignore
+    body_html = m.get_root().html.render()  # type: ignore
+    script = m.get_root().script.render()  # type: ignore
 
     # icon_seq=folium.f
     # Element("""<link rel="shortcut icon"
@@ -440,21 +450,3 @@ def mostrar_mapa():
         vps=tiempos_vp,
         ruta=daf.to_html()
     )
-
-
-# def obtenerLonLatDeString(lista: list):
-#     lat = []
-#     lon = []
-#     for g in lista:
-#         if g != '' and g is not None:
-#             try:
-#                 x, y = g.split(',')
-#                 lon.append(float(y))
-#                 lat.append(float(x))
-#             except Exception as e:
-#                 flash(
-#                   f"""Los datos registrados en la terminal no presenta el fomato de:
-#                   'Latitud,Longitud' \nDetalles de error:{e}""",
-#                   "Error"
-#                 )
-#     return [list(z) for z in zip(lat, lon)]

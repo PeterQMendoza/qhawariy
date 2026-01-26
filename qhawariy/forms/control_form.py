@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired, Length
 
 # Formularios para cambiar datos de la entidad Control
 class ControlTiempoForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     tiempo = TimeField(
         "Tiempo",
@@ -26,7 +26,7 @@ class ControlTiempoForm(FlaskForm):
 
 
 class ControlForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     codigo = StringField(
@@ -52,7 +52,7 @@ class ControlForm(FlaskForm):
 
 
 class ControlRutaForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     ruta = SelectField(
         "Seleccione ruta",

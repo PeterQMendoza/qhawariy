@@ -7,11 +7,14 @@ Configuracion de logging, permite registrar los eventos de la aplicacio
 import logging
 from logging.handlers import RotatingFileHandler, SMTPHandler
 import os
+from typing import cast
+
+from flask import Flask
 
 from qhawariy.utilities.filters import RequestCorrelationFilter
 
 
-def configure_logging(app):
+def configure_logging(app: Flask):
     """
         Configura el modulo de logs. Establece los manejadores para cada logger
 
@@ -22,9 +25,9 @@ def configure_logging(app):
         :param app: Instancia de la aplicacion Flask
     """
     # Configuracion inicial
-    log_dir = app.config.get("LOGS_FOLDER", "logs")
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "transacciones.log")
+    log_folder = cast(str, app.config["LOGS_FOLDER"])
+    os.makedirs(log_folder, exist_ok=True)
+    log_file = os.path.join(log_folder, "transacciones.log")
 
     # Configura logging en archivo con rotacion
     file_handler = RotatingFileHandler(log_file, maxBytes=5_000_000, backupCount=5)
@@ -40,7 +43,9 @@ def configure_logging(app):
     # Agregar el filtro
     console_handler.addFilter(RequestCorrelationFilter())
 
-    if app.config.get("APP_ENV") in {"local", "testing", "development"}:
+    env: str = app.config.get("APP_ENV", "")  # type: ignore
+
+    if env in {"local", "testing", "development"}:
         console_handler.setLevel(logging.DEBUG)
     else:
         console_handler.setLevel(logging.INFO)
@@ -48,14 +53,21 @@ def configure_logging(app):
     # Configuracion logging por correo si esta en modo produccion
     mail_handler = None
     if (
-        app.config.get('APP_ENV') == "PRODUCTION" and
-        app.config.get('MAIL_SERVER')
+        app.config.get('APP_ENV', '') == "PRODUCTION" and  # type: ignore
+        app.config.get('MAIL_SERVER', '')  # type: ignore
     ):
         mail_handler = SMTPHandler(
-            mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
-            fromaddr=app.config['ADMINS'],
+            mailhost=(
+                app.config['MAIL_SERVER'],
+                app.config['MAIL_PORT']
+            ),  # type: ignore
+            fromaddr=app.config['ADMINS'],  # type: ignore
+            toaddrs=app.config['MAIL_USERNAME'],  # type: ignore
             subject=f"[ERROR][{app.config['APP_ENV']}] la aplicacion fallo",
-            credentials=(app.config['MAIL_USERNAME'], app.config['PASSWORD']),
+            credentials=(
+                app.config['MAIL_USERNAME'],
+                app.config['PASSWORD']
+            ),  # type: ignore
             secure=()
         )
         mail_handler.setLevel(logging.ERROR)

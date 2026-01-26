@@ -1,3 +1,4 @@
+from typing import List, Optional
 from sqlalchemy import desc
 
 from qhawariy import db
@@ -7,13 +8,13 @@ class SecuenciaControlRuta(db.Model):
     """ Modelo SecuenciaControlRuta: Establece la secuencia de controles
     dentro de una ruta """
     __tablename__ = 'secuencias_controles_rutas'
-    id_scr = db.Column(db.Integer, primary_key=True)
-    secuencia = db.Column(db.Integer, nullable=False)
-    id_ruta = db.Column(
+    id_scr: int = db.Column(db.Integer, primary_key=True)
+    secuencia: int = db.Column(db.Integer, nullable=False)
+    id_ruta: int = db.Column(
         db.Integer, db.ForeignKey('rutas.id_ruta'),
         nullable=False
     )
-    id_control = db.Column(
+    id_control: int = db.Column(
         db.Integer,
         db.ForeignKey('controles.id_control'),
         nullable=False
@@ -58,24 +59,25 @@ class SecuenciaControlRuta(db.Model):
         return resultado
 
     @staticmethod
-    def obtener_todos():
-        resultado = SecuenciaControlRuta.query.all()
-        return resultado
+    def obtener_todos() -> List["SecuenciaControlRuta"]:
+        return SecuenciaControlRuta.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_secuencia_por_ruta(ruta_id: int):
-        resultado = SecuenciaControlRuta.query.filter_by(
-            id_ruta=ruta_id
-        ).order_by(
-            desc(SecuenciaControlRuta.secuencia)
-        ).first()
-        return resultado
+    def obtener_secuencia_por_ruta(ruta_id: int) -> Optional["SecuenciaControlRuta"]:
+        return (
+            SecuenciaControlRuta.query.filter_by(
+                id_ruta=ruta_id
+            )
+            .order_by(desc(SecuenciaControlRuta.secuencia))  # type: ignore
+            .first()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_todos_secuencia_por_ruta(ruta_id: int):
-        resultado = SecuenciaControlRuta.query.filter_by(
-            id_ruta=ruta_id
-        ).order_by(
-            desc(SecuenciaControlRuta.secuencia)
-        ).all()
-        return resultado
+    def obtener_todos_secuencia_por_ruta(ruta_id: int) -> List["SecuenciaControlRuta"]:
+        return (
+            SecuenciaControlRuta.query.filter_by(
+                id_ruta=ruta_id
+            ).order_by(
+                desc(SecuenciaControlRuta.secuencia)  # type: ignore
+            ).all()
+        )  # type: ignore

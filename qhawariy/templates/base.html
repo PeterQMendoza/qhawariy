@@ -106,15 +106,19 @@
                         <div class="">
                             <div class="flex items-center">
                                 {% if category=='info' %}
-                                <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-error-info.svg') }}" width="20px" height="20px"></object>
+                                <img src="{{ url_for('static', filename='img/icon-error-info.svg') }}" width="20px" height="20px" alt="icono informacion">
                                 <p class="uppercase ml-2">información</p>
                                 {% endif %}
                                 {% if category=='message' %}
-                                <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-error-message.svg') }}" width="20px" height="20px"></object>
+                                <img src="{{ url_for('static', filename='img/icon-error-message.svg') }}" width="20px" height="20px" alt="icono mesaje">
                                 <p class="uppercase ml-2">Mensaje</p>
                                 {% endif %}
+                                {% if category=='success' %}
+                                <img src="{{ url_for('static', filename='img/icon-success.svg') }}" width="20px" height="20px" alt="icono exito">
+                                <p class="uppercase ml-2">Hecho</p>
+                                {% endif %}
                                 {% if category=='error' %}
-                                <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-error-critical.svg') }}" width="20px" height="20px"></object>
+                                <img src="{{ url_for('static', filename='img/icon-error-critical.svg') }}" width="20px" height="20px" alt="icono error">
                                 <p class="uppercase ml-2">Error</p>
                                 {% endif %}
                                 <img src="{{ url_for('static', filename='img/icon-close.svg') }}" class="icon-close-m p-1 m-2 rounded-full absolute right-0 bg-white cursor-pointer" width="20px" height="20px" alt="cerrar"/>

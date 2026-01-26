@@ -24,12 +24,12 @@ def compile_stylesheet_bundles(assets: Environment) -> Environment:
         extra={"rel": "stylesheet/css"},
     )
 
-    assets.register('estilos_principales', principal)
-    assets.register('estilos_timeline_fleet', timeline_fleet)
+    assets.register('estilos_principales', principal)  # type: ignore
+    assets.register('estilos_timeline_fleet', timeline_fleet)  # type: ignore
 
     if app.config['APP_ENV_DEVELOPMENT'] == 'development':
-        principal.build()
-        timeline_fleet.build()
+        principal.build()  # type: ignore
+        timeline_fleet.build()  # type: ignore
     return assets
 
 
@@ -87,23 +87,23 @@ def compile_js_assets(assets: Environment) -> Environment:
         output="dist/js/timeline_fleet_qhawariy.min.js",
     )
 
-    assets.register('principal_js', principal)
-    assets.register('calendar_js', calendar)
-    assets.register('programacion_js', programacion)
-    assets.register('loading_js', loading)
-    assets.register('estadistica_js', estadistica)
-    assets.register('time_js', time)
-    assets.register('chart_js', chartjs)
-    assets.register('timeline_fleet_js', timeline_fleet)
+    assets.register('principal_js', principal)  # type: ignore
+    assets.register('calendar_js', calendar)  # type: ignore
+    assets.register('programacion_js', programacion)  # type: ignore
+    assets.register('loading_js', loading)  # type: ignore
+    assets.register('estadistica_js', estadistica)  # type: ignore
+    assets.register('time_js', time)  # type: ignore
+    assets.register('chart_js', chartjs)  # type: ignore
+    assets.register('timeline_fleet_js', timeline_fleet)  # type: ignore
 
     # Cambiar en modo produccion
     if app.config['APP_ENV_DEVELOPMENT'] == "development":
-        principal.build()
-        calendar.build()
-        programacion.build()
-        loading.build()
-        estadistica.build()
-        time.build()
-        chartjs.build()
-        timeline_fleet.build()
+        principal.build()  # type: ignore
+        calendar.build()  # type: ignore
+        programacion.build()  # type: ignore
+        loading.build()  # type: ignore
+        estadistica.build()  # type: ignore
+        time.build()  # type: ignore
+        chartjs.build()  # type: ignore
+        timeline_fleet.build()  # type: ignore
     return assets

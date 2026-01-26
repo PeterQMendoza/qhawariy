@@ -92,7 +92,7 @@
     </div>
 {% endblock %}
 {% block javascript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ g.nonce }}">
         document.addEventListener('DOMContentLoaded',()=>{
             window.location.replace('{{path|safe}}{{filename|safe}}');
         });

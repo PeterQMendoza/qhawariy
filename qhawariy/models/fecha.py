@@ -1,4 +1,5 @@
 import datetime
+from typing import List, Optional
 # import pytz
 from sqlalchemy import asc
 
@@ -13,8 +14,8 @@ class Fecha(db.Model):
     tambien es utilzado para reportar los viejas
     """
     __tablename__ = "fechas"
-    id_fecha = db.Column(db.Integer, primary_key=True)
-    fecha = db.Column(
+    id_fecha: int = db.Column(db.Integer, primary_key=True)
+    fecha: datetime.datetime = db.Column(
         db.DateTime,
         default=datetime.datetime(
             year=ahora.year,
@@ -38,7 +39,7 @@ class Fecha(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, fecha):
+    def __init__(self, fecha: datetime.datetime):
         self.fecha = fecha
 
     def __repr__(self):
@@ -54,27 +55,26 @@ class Fecha(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_id(id):
+    def obtener_id(id: int) -> Optional["Fecha"]:
         resultado = Fecha.query.get(id)
         return resultado
 
     @staticmethod
-    def obtener_todas_fechas():
-        resultado = Fecha.query.all()
-        return resultado
+    def obtener_todas_fechas() -> List["Fecha"]:
+        return Fecha.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_fecha_por_fecha(fecha):
-        resultado = Fecha.query.filter_by(fecha=fecha).first()
-        return resultado
+    def obtener_fecha_por_fecha(fecha: datetime.datetime) -> Optional["Fecha"]:
+        return Fecha.query.filter_by(fecha=fecha).first()  # type: ignore
 
     @staticmethod
-    def obtener_rango_fecha(ini, fin):
-        resultado = Fecha.query.filter(
-            Fecha.fecha >= ini
-        ).filter(
-            Fecha.fecha <= fin
-        ).order_by(
-            asc(Fecha.fecha)
-        ).all()
-        return resultado
+    def obtener_rango_fecha(
+        ini: datetime.datetime,
+        fin: datetime.datetime
+    ) -> List["Fecha"]:
+        return (
+            Fecha.query
+            .filter(Fecha.fecha >= ini, Fecha.fecha <= fin)  # type: ignore
+            .order_by(asc(Fecha.fecha))  # type: ignore
+            .all()
+        )  # type: ignore

@@ -1,3 +1,4 @@
+from typing import List
 from qhawariy import db
 
 
@@ -15,7 +16,7 @@ class PlanSalida(db.Model):
         nullable=False
     )
 
-    def __init__(self, id_usuario, id_vp):
+    def __init__(self, id_usuario: int, id_vp: int):
         self.id_usuario = id_usuario
         self.id_vp = id_vp
 
@@ -32,9 +33,9 @@ class PlanSalida(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_plan_salida_por_id(id):
+    def obtener_plan_salida_por_id(id: int):
         return PlanSalida.query.get(id)
 
     @staticmethod
-    def obtener_todos_plan_salida():
-        return PlanSalida.query.all()
+    def obtener_todos_plan_salida() -> List["PlanSalida"]:
+        return PlanSalida.query.all()  # type: ignore

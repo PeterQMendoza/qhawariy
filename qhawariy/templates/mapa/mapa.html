@@ -75,7 +75,7 @@
         </div>
     </div>
     {{ body_html|safe }}
-    <script>
+    <script nonce="{{ g.nonce }}">
         {{ script|safe }}
     </script>
 </body>

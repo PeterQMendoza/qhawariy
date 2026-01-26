@@ -1,3 +1,4 @@
+from typing import Optional
 from qhawariy import db
 
 
@@ -6,9 +7,9 @@ class ProximaRuta(db.Model):
     Modelo ProximaRuta
     """
     __tablename__ = "proximas_rutas"
-    id_pr = db.Column(db.Integer, primary_key=True)
-    id_ruta = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=False)
-    id_ruta2 = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=True)
+    id_pr: int = db.Column(db.Integer, primary_key=True)
+    id_ruta: int = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=False)
+    id_ruta2: int = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=True)
 
     # Relacion entre tablas
     actual = db.relationship(
@@ -52,6 +53,5 @@ class ProximaRuta(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_por_ruta_actual(ruta_id: int):
-        resultado = ProximaRuta.query.filter_by(id_ruta=ruta_id).first()
-        return resultado
+    def obtener_por_ruta_actual(ruta_id: int) -> Optional["ProximaRuta"]:
+        return ProximaRuta.query.filter_by(id_ruta=ruta_id).first()  # type: ignore

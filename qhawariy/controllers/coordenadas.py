@@ -1,6 +1,8 @@
 import json
 import csv
 import logging
+import os
+from typing import Optional, cast
 
 from flask import (
     Blueprint,
@@ -23,7 +25,7 @@ bp = Blueprint("coordenadas", __name__, url_prefix="/coordenadas")
 
 
 @bp.route("/api/<int:fleet>", methods=["POST"])
-@csrf.exempt
+@csrf.exempt  # type: ignore
 @cross_origin(origins="http://localhost:4200", supports_credentials=True)
 def recibir_coordenadas(fleet: int):
     # token = request.headers.get('X-CSRFToken')
@@ -34,19 +36,27 @@ def recibir_coordenadas(fleet: int):
     #     return jsonify({"error": "Token invalido o expirado"}), 500
     token = request.headers.get('X-CSRFToken')
     if not token:
-        token = session.get('csrf_token')
+        token = cast(Optional[str], session.get('csrf_token'))  # type: ignore
+    if token is None:
+        current_app.logger.error("CSRF token ausente")
+        return jsonify({"error": "CSRF token ausente"}), 400
+
     try:
         validate_csrf(token)
     except ValidationError as e:
         current_app.logger.error(f"{__name__} error CSRF token invalido: {e}")
         return jsonify({"error": "CSRF token invalid", "message": str(e)}), 400
 
+    filename = f"{fleet}coord.csv"
+    folder = cast(
+        str,
+        current_app.config.get("COORD_DATA_FOLDER", ".")  # type: ignore
+    )
+    path = os.path.join(folder, filename)
+    data = request.get_json()
     try:
-        data = request.get_json()
         lat = data.get('latitud')
         lon = data.get('longitud')
-        filename = str(fleet)+"coord.csv"
-        path = current_app.config.get("COORD_DATA_FOLDER", ".")+"/"+filename
         with open(path, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([lat, lon])
@@ -64,7 +74,10 @@ def recibir_coordenadas(fleet: int):
 @bp.route("unsign", methods=["GET"])
 def unsign():
     # Para decodificar firma
-    serializer = URLSafeSerializer(current_app.secret_key)
+    secret_key = current_app.secret_key
+    if secret_key is None:
+        return jsonify({"Error": "SECRET_KEY no esta configurado"}), 500
+    serializer = URLSafeSerializer(secret_key)
     signed_data = request.args
     if not signed_data:
         return jsonify({"error": "No ha proporcionado dato firmado"}), 400
@@ -90,7 +103,7 @@ def get_csrf():
     # samesite='Strict'
     # )
     # return response
-    token = session.get('csrf_token')
+    token = cast(Optional[str], session.get('csrf_token'))  # type: ignore
     if not token:
         token = generate_csrf()
         session['csrf_token'] = token
@@ -110,7 +123,10 @@ def get_csrf():
 def sign():
     # Para firmar datos
     data = request.json
-    serializer = URLSafeSerializer(current_app.secret_key)
+    secret_key = current_app.secret_key
+    if secret_key is None:
+        return jsonify({"Error": "SECRET_KEY no esta configurado"}), 500
+    serializer = URLSafeSerializer(secret_key)
     if not data:
         return jsonify({"error": "Dato no porporcionado"}), 400
     signed_data = {

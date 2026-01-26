@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import Optional, cast
 
 from flask import (
     Blueprint,
@@ -12,15 +13,15 @@ from flask import (
     current_app,
 )
 
+from flask.typing import ResponseReturnValue
 from flask_login import (
-    login_user,
+    login_user,  # type: ignore
     logout_user,
     current_user,
-    login_required
+    login_required  # type: ignore
 )
 
 from flask_mail import Message
-from flask_wtf import csrf
 
 from werkzeug.utils import redirect
 # from werkzeug.urls import url_parse
@@ -40,7 +41,7 @@ from qhawariy.forms.auth_form import (
     CambiarDatosForm,
     RestablecerPasswordForm
 )
-from qhawariy.services.auth_service.send_mail import send_email
+from qhawariy.services.auth_service.send_mail import send_email  # type: ignore
 from qhawariy.services.notifications_service.factory import NotificacionFactory
 from qhawariy.utilities.decorators import admin_required
 
@@ -60,16 +61,15 @@ TIME_EXPIRE_LOGIN = datetime.timedelta(hours=1)
 @admin_required
 def register():
     form = RegisterForm()
-    if form.validate_on_submit():
-        nombres = form.nombres.data
-        apellidos = form.apellidos.data
-        dni = form.dni.data
-        email = form.email.data
-        telefono = form.telefono.data
-        clave = form.clave.data
+    if form.validate_on_submit():  # type: ignore
+        nombres = cast(str, form.nombres.data)
+        apellidos = cast(str, form.apellidos.data)
+        dni = cast(str, form.dni.data)
+        email = cast(str, form.email.data)
+        telefono = cast(str, form.telefono.data)
+        clave = cast(str, form.clave.data)
         # Comprueba si el usuario este ya registrado con ese email
         user = Usuario.obtener_usuario_por_correo_electronico(email)
-
         if user:
             flash(f"El email: {email} ya fue registrado por otro usuario", "error")
         else:
@@ -98,6 +98,7 @@ def register():
                 # Asignar el rol de administrador
                 rol = rol_admin
 
+            user_registro: Optional[Usuario] = None
             try:
                 user_registro = Usuario(
                     nombres=nombres,
@@ -112,6 +113,9 @@ def register():
                 logger.error(f"Error: no ha sido posible registrar al usuario\n{e}")
 
             # Se establece como trabajador
+            if user_registro is None:
+                flash("No se pudo registrar el usuario", "error")
+                return render_template("auth/register.html", form=form)
             usuario_rol = UsuarioRol(user_registro.id_usuario, rol.id_rol)
             usuario_rol.guardar()
 
@@ -120,7 +124,7 @@ def register():
             msg = f"<p> Hola,<strong>{apellidos}{nombres}</strong>,Bienvenido al qh</p>"
             send_email(
                 subject=" Bienvenido a Qhawariy",
-                sender=current_app.config['DONT_REPLY_FROM_EMAIL'],
+                sender=cast(str, current_app.config['DONT_REPLY_FROM_EMAIL']),
                 recipients=[email,],
                 text_body=text,
                 html_body=msg
@@ -140,12 +144,11 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("home.index"))
     form = LoginForm()
-    csrf.generate_csrf()
 
     error = None
-    if form.validate_on_submit():
-        email = form.email.data
-        password = form.password.data
+    if form.validate_on_submit():  # type: ignore
+        email = cast(str, form.email.data)
+        password = cast(str, form.password.data)
         user = Usuario.obtener_usuario_por_correo_electronico(email)
         if user is not None:
             is_check_password = user.revisar_clave(password)
@@ -183,8 +186,9 @@ def restablecer_password():
     if current_user.is_authenticated:
         return redirect(url_for("home.index"))
     form = RestablecerPasswordForm()
-    if form.validate_on_submit():
-        user = Usuario.obtener_usuario_por_correo_electronico(form.email.data)
+    if form.validate_on_submit():  # type: ignore
+        mail_validated = cast(str, form.email.data)
+        user = Usuario.obtener_usuario_por_correo_electronico(mail_validated)
         if user:
             envia_restablecer_password_email(user)
             flash(
@@ -203,18 +207,23 @@ def restablecer_password():
 
 
 @bp.route("/restablece-password/<token>/<int:usuario_id>", methods=["GET", "POST"])
-def restablecer_nuevo_password(token, usuario_id):
+def restablecer_nuevo_password(token: str, usuario_id: int):
     if current_user.is_authenticated:
         return redirect(url_for("home.index"))
     user = Usuario.obtener_usuario_por_id(usuario_id)
+    if user is None:
+        flash("El usuario no existe", "error")
+        return redirect(url_for("auth.login"))
     tok = user.generar_token_restablecer_password()
     #
     usuario_validado = Usuario.validar_token_restablece_password(token, usuario_id)
     if not usuario_validado:
         flash("Error los credenciales no son validos", "error")
+        return redirect(url_for("auth.login"))
     form = CrearNuevoPasswordForm()
-    if form.validate_on_submit():
-        usuario_validado.establecer_clave(form.password.data)
+    if form.validate_on_submit():  # type: ignore
+        pass_user = cast(str, form.password.data)
+        usuario_validado.establecer_clave(pass_user)
         usuario_validado.guardar()
         NotificacionFactory.crear_notificacion(
             usuario_validado.id_usuario,
@@ -234,16 +243,22 @@ def restablecer_nuevo_password(token, usuario_id):
 
 
 @bp.route('/edit', methods=("GET", "POST"))
-@login_manager.needs_refresh_handler
+@login_manager.needs_refresh_handler  # type: ignore
 @login_required
-def edit():
+def edit() -> ResponseReturnValue:
     id_user = current_user.id_usuario
     user = Usuario.obtener_usuario_por_id(id_user)
+    if user is None:
+        flash("El usuario no existe en la sesion dada", "error")
+        return redirect(url_for("auth.login"))
     form_datos = CambiarDatosForm(obj=user)
     form_email = CambiaEmailForm(obj=user)
     form_clave = CambiaClaveForm(obj=user)
     error = ''
-    if form_clave.validate_on_submit() and form_clave.submit_clave.data:
+    if (
+        form_clave.validate_on_submit() and  # type: ignore
+        form_clave.submit_clave.data
+    ):
         if form_clave.password.data == form_clave.password_confirmado.data:
             user.establecer_clave(form_clave.password.data)
             user.guardar()
@@ -261,7 +276,10 @@ def edit():
         else:
             error = """La nueva contraseña y la contraseña de
                 confirmacion deben ser los mismos"""
-    if form_email.validate_on_submit() and form_email.submit_email.data:
+    if (
+        form_email.validate_on_submit() and  # type: ignore
+        form_email.submit_email.data
+    ):
         user.correo_electronico = form_email.email.data
         user.guardar()
         logout_user()
@@ -275,7 +293,10 @@ def edit():
         if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for("auth.login")
         return redirect(next_page)
-    if form_datos.validate_on_submit() and form_datos.submit_datos.data:
+    if (
+        form_datos.validate_on_submit() and  # type: ignore
+        form_datos.submit_datos.data
+    ):
         user.nombres = form_datos.nombres.data
         user.apellidos = form_datos.apellidos.data
         user.dni = form_datos.dni.data
@@ -301,18 +322,18 @@ def edit():
     )
 
 
-@login_manager.user_loader
+@login_manager.user_loader  # type: ignore
 # @bp.before_request#Conocer al usuario
-@scheduler.authenticate
-def load_user(user_id):
-    user = Usuario.query.filter_by(id_alternativo=user_id).first()
-    current_app.logger.warning('Vista para usuario %s', user.nombres)
-    if not id:
+@scheduler.authenticate  # type: ignore
+def load_user(user_id: str) -> Optional["Usuario"]:
+    user = Usuario.obtener_usuario_por_id_alternativo(user_id)
+    if user is None:
         return None
+    current_app.logger.warning('Vista para usuario %s', user.nombres)
     return user
 
 
-@login_manager.unauthorized_handler
+@login_manager.unauthorized_handler  # type: ignore
 def unauthorized():
     flash(message="Debes iniciar sesión para visualizar la página", category="message")
     return redirect(url_for("auth.login"))

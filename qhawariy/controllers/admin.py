@@ -1,7 +1,7 @@
 
 import logging
 import os
-import string
+from typing import List, cast
 from urllib.parse import urlparse
 import pandas as pd
 from datetime import datetime
@@ -19,7 +19,7 @@ from flask import (
     abort,
     send_file
 )
-from flask_login import (current_user, login_required)
+from flask_login import (current_user, login_required)  # type: ignore
 
 from qhawariy.forms.admin_form import ConfiguracionForm, UserAdminForm
 
@@ -43,11 +43,12 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 def descargar_xls():
     users = Usuario.obtener_todos_usuarios()
     # result_dicts = [u for u in users]
-    name = []
-    last_name = []
-    telefono = []
-    email = []
-    dni = []
+    name: List[str] = []
+    last_name: List[str] = []
+    telefono: List[str] = []
+    email: List[str] = []
+    dni: List[str] = []
+
     for u in users:
         name.append(u.nombres)
         last_name.append(u.apellidos)
@@ -65,8 +66,13 @@ def descargar_xls():
         }
     )
     output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='openpyxl')
-    data.to_excel(writer, startrow=0, merge_cells=False, sheet_name="Usuarios")
+    writer: pd.ExcelWriter = pd.ExcelWriter(output, engine='openpyxl')
+    data.to_excel(  # type: ignore
+        writer,
+        startrow=0,
+        merge_cells=False,
+        sheet_name="Usuarios"
+    )
     # workbook=writer.book
     # worksheet=writer.sheets["Usuario"]
 
@@ -79,10 +85,13 @@ def descargar_xls():
 @bp.route("/descargar_log/<string:tipo>", methods=["GET"])
 @login_required
 @admin_required
-def descargar_log_filtrado(tipo: string):
+def descargar_log_filtrado(tipo: str):
     """Descargar log filtrado por tipo de evento"""
     # Ruta de los archivos
-    path_dir = current_app.config.get("LOGS_FOLDER", "logs")
+    path_dir: str = cast(
+        str,
+        current_app.config.get("LOGS_FOLDER", "logs")  # type: ignore
+    )
     log_file = os.path.join(path_dir, "transacciones.log")
     log_filtrado_path = os.path.join(path_dir, f"filtrado_{tipo}.log")
 
@@ -141,19 +150,17 @@ def listar_usuarios():
 @bp.route("/usuario/<int:user_id>/", methods=["GET", "PUT"])
 @login_required
 @admin_required
-def editar_usuario(user_id):
+def editar_usuario(user_id: int):
     # Para actualizar usuario existente
     roles = Rol.obtener_todos_roles()
     ur = UsuarioRol.obtener_por_id_usuario(user_id)
-    user = ur.usuario
-    rol = ur.rol
-
-    if user is None:
-        logger.info(f"El usuario {user_id} no existe")
+    if ur is None:
+        logger.info(f"No existe relacion UsuarioRol para el usuario {user_id}")
         abort(404)
+
     form = UserAdminForm(obj=ur)
     form.rol.choices = [(r.id_rol, r.rol) for r in roles]
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # type: ignore
         ur.id_rol = form.rol.data
         ur.guardar()
         logger.info(f"Guardando el usuario {user_id}")
@@ -162,15 +169,15 @@ def editar_usuario(user_id):
     return render_template(
         "admin/edita_usuario.html",
         form=form,
-        user=user,
-        rol=rol.rol
+        user=ur.usuario,
+        rol=ur.rol.rol
     )
 
 
 @bp.route("/usuario/eliminar/<int:user_id>/", methods=["POST"])
 @login_required
 @admin_required
-def eliminar_usuario(user_id):
+def eliminar_usuario(user_id: int):
     logger.info(f"Se va ha eliminar al usuario {user_id}")
     user = Usuario.obtener_usuario_por_id(user_id)
     if user is None:
@@ -184,7 +191,7 @@ def eliminar_usuario(user_id):
 @bp.route("/configuracion/<int:config_id>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def configurar(config_id):
+def configurar(config_id: int):
     configuracion = Configuracion.obtener_config(config_id)
     # controles=Control.obtener_todos()
     # items=[(ctrl.id_control,ctrl.codigo)for ctrl in controles]
@@ -195,7 +202,7 @@ def configurar(config_id):
 
         config = Configuracion()
 
-        if form.validate_on_submit():
+        if form.validate_on_submit():  # type: ignore
             tiempo_espera_vehiculo = form.tiempo_espera_vehiculo.data
             tiempo_en_recorrido = form.tiempo_total_en_recorrido.data
             horario_inicio = form.horario_inicio.data
@@ -222,7 +229,7 @@ def configurar(config_id):
         # for subform in form.secuencia_control_vuelta:
         #     subform.control.choices=items
 
-        if form.validate_on_submit():
+        if form.validate_on_submit():  # type: ignore
             tiempo_espera_vehiculo = form.tiempo_espera_vehiculo.data
             tiempo_en_recorrido = form.tiempo_total_en_recorrido.data
             horario_inicio = form.horario_inicio.data

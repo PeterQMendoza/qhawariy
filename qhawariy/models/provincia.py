@@ -1,3 +1,4 @@
+from typing import List
 from qhawariy import db
 
 
@@ -7,8 +8,8 @@ class Provincia(db.Model):
     """
     __tablename__ = "provincias"
 
-    id_provincia = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50), nullable=False)
+    id_provincia: int = db.Column(db.Integer, primary_key=True)
+    nombre: str = db.Column(db.String(50), nullable=False)
 
     # Relaciones
     provincias = db.relationship(
@@ -17,7 +18,7 @@ class Provincia(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, nombre):
+    def __init__(self, nombre: str):
         self.nombre = nombre
 
     def __repr__(self):
@@ -33,5 +34,5 @@ class Provincia(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_todos_provincias():
-        return Provincia.query.all()
+    def obtener_todos_provincias() -> List["Provincia"]:
+        return Provincia.query.all()  # type: ignore

@@ -1,6 +1,7 @@
 # import datetime
 # import pytz
 
+from typing import List, Optional
 from sqlalchemy import desc
 # from sqlalchemy.sql import func
 
@@ -37,7 +38,7 @@ class Programacion(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, id_fecha, id_ruta):
+    def __init__(self, id_fecha: int, id_ruta: int):
         self.id_fecha = id_fecha
         self.id_ruta = id_ruta
 
@@ -54,48 +55,62 @@ class Programacion(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_programacion_por_id(id):
+    def obtener_programacion_por_id(id: int):
         return Programacion.query.get(id)
 
     @staticmethod
-    def obtener_todos_programaciones():
-        resultado = Programacion.query.all()
-        return resultado
+    def obtener_todos_programaciones() -> List["Programacion"]:
+        return Programacion.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_por_fecha_y_ruta(fecha, ruta):
-        return Programacion.query.filter_by(id_fecha=fecha, id_ruta=ruta).first()
+    def obtener_por_fecha_y_ruta(
+        fecha: int,
+        ruta: int
+    ) -> Optional["Programacion"]:
+        return (
+            Programacion.query.
+            filter_by(id_fecha=fecha, id_ruta=ruta)
+            .first()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_por_fecha(fecha_id):
-        return Programacion.query.filter_by(id_fecha=fecha_id).first()
+    def obtener_por_fecha(fecha_id: int) -> Optional["Programacion"]:
+        return (
+            Programacion.query
+            .filter_by(id_fecha=fecha_id)
+            .first()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_programa_join_ruta():
+    def obtener_programa_join_ruta() -> List["Programacion"]:
         """"""
-        resultado = Programacion.query.join(
-            Programacion, Ruta.id_ruta == Programacion.id_ruta
-        ).join(
-            RutaTerminal, RutaTerminal.id_ruta == Ruta.id_ruta
-        ).join(
-            Terminal, Terminal.id_terminal == RutaTerminal.id_terminal
-        ).join(
-            Fecha, Fecha.id_fecha == Programacion.id_fecha
-        ).add_columns(
-            Programacion.id_programacion,
-            Fecha.fecha,
-            Programacion.id_ruta,
-            Terminal.direccion,
-            Ruta.id_ruta,
-            Ruta.codigo
-        ).order_by(
-            desc(Programacion.id_fecha)
-        ).limit(22).all()
-        return resultado
+        return (
+            Programacion.query
+            .join(Ruta, Ruta.id_ruta == Programacion.id_ruta)
+            .join(RutaTerminal, RutaTerminal.id_ruta == Ruta.id_ruta)  # type: ignore
+            .join(
+                Terminal,
+                Terminal.id_terminal == RutaTerminal.id_terminal  # type: ignore
+            )
+            .join(Fecha, Fecha.id_fecha == Programacion.id_fecha)  # type: ignore
+            .add_columns(
+                Programacion.id_programacion,
+                Fecha.fecha,  # type: ignore
+                Programacion.id_ruta,  # type: ignore
+                Terminal.direccion,  # type: ignore
+                Ruta.id_ruta,
+                Ruta.codigo  # type: ignore
+            )
+            .order_by(desc(Programacion.id_fecha))  # type: ignore
+            .limit(22)
+            .all()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_programas():
-        resultado = Programacion.query.order_by(
-            desc(Programacion.id_fecha)
-        ).limit(22).all()
-        return resultado
+    def obtener_programas() -> List["Programacion"]:
+        return (
+            Programacion.query
+            .order_by(desc(Programacion.id_fecha))  # type: ignore
+            .limit(22)
+            .all()
+        )  # type: ignore

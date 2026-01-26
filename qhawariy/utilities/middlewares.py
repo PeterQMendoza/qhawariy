@@ -1,4 +1,5 @@
 import locale
+import logging
 import time
 from typing import Any, Dict, Optional
 import uuid
@@ -18,7 +19,11 @@ from flask_wtf.csrf import validate_csrf, generate_csrf  # type: ignore
 from wtforms.validators import ValidationError
 from werkzeug.exceptions import HTTPException
 
+from qhawariy.utilities.builtins import DEFAULT_NEXT
+
 # from qhawariy.utilities.decorators import middleware_debugger
+
+logger = logging.getLogger(__name__)
 
 
 # Correlation ID
@@ -51,6 +56,14 @@ def log_request_start():
     )
 
 
+# Middleware para inyectar next
+def agregar_next_por_defecto():
+    if "next" not in request.args:
+        # Reescribir la query string con next=/
+        args = request.args.to_dict()
+        args["next"] = DEFAULT_NEXT
+
+
 # @middleware_debugger
 def log_request_end(response: Response) -> Response:
     duration = time.time() - getattr(request, "start_time", time.time())
@@ -68,6 +81,7 @@ def log_request_end(response: Response) -> Response:
 def add_security_headers(response: Response) -> Response:
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+    # response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     # Politicas de seguridad
     # (Genera error al definirlo aqui, se sobrescribe add_nonce)
@@ -86,7 +100,7 @@ def add_security_headers(response: Response) -> Response:
 # @middleware_debugger
 def add_isolation_headers(response: Response) -> Response:
     response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
-    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    # response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
     return response
 
 
@@ -101,7 +115,22 @@ def generate_nonce():
 def add_csp_header(response: Response) -> Response:
     """Agrega el nonce en la directiva CSP para los scripts en línea"""
     nonce = getattr(g, 'nonce', '')
-    csp = f"script-src 'self' 'nonce-{nonce}'; object-src 'self';"
+    csp = (
+        f"default-src 'self'; "
+        f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net \
+            https://code.jquery.com https://cdnjs.cloudflare.com https://unpkg.com \
+            'unsafe-inline'; "
+        f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net \
+            https://cdnjs.cloudflare.com https://unpkg.com \
+            https://netdna.bootstrapcdn.com; "
+        f"img-src 'self' data: blob: https://tile.openstreetmap.org \
+            https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        f"font-src 'self' https://cdnjs.cloudflare.com \
+            https://netdna.bootstrapcdn.com; "
+        f"connect-src 'self' https://tile.openstreetmap.org https://cdn.jsdelivr.net \
+            https://unpkg.com; "
+        f"object-src 'none'; "
+    )
     response.headers['Content-Security-Policy'] = csp
     return response
 
@@ -134,12 +163,23 @@ def add_cors_headers(response: Response) -> Response:
 
 # Gestion global de errores
 def handle_global_error(error: HTTPException) -> Response:
-    response = jsonify({
+    logger.exception("Error capturado en la aplicacion", exc_info=error)
+    status_code = getattr(error, "code", 500)
+
+    # Construir la respuesta JSON
+    response_data: Dict[Any, Any] = {
         "nombre": __name__,
         "error": "Ha ocurrido un error inesperado.",
-        "message": str(error)
-    })
-    response.status_code = 500
+        "tipo": error.__class__.__name__,
+        "estado": status_code
+    }
+
+    # Si estas en modo debug, incluir el mensaje tecnico
+    if current_app.config.get("DEBUG", False):  # type: ignore
+        response_data["message"] = str(error)
+
+    response = jsonify(response_data)
+    response.status_code = status_code
     return response
 
 

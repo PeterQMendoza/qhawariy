@@ -39,7 +39,7 @@ class ProgramacionForm(FlaskForm):
 
 
 class AgregaVehiculoProgramadoForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     vehiculo = SelectField(
         'Seleccione un vehiculo',

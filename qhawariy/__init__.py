@@ -46,6 +46,7 @@ from qhawariy.utilities.middlewares import (
     add_correlation_id,
     add_csp_header,
     add_isolation_headers,
+    agregar_next_por_defecto,
     assign_correlation_id,
     configurar_local,
     handle_global_error,
@@ -296,6 +297,7 @@ def register_middlewares(app: Flask):
     app.before_request(log_request_start)
     app.before_request(configurar_local)
     app.before_request(generate_nonce)
+    app.before_request(agregar_next_por_defecto)
     # app.before_request(csrf_protect)
 
     # app.after_request(set_csrf_cookie)

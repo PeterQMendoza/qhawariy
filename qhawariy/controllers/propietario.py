@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import cast
 import pandas as pd
 
 from flask import (
@@ -13,7 +14,7 @@ from flask import (
     request,
     current_app
 )
-from flask_login import login_required
+from flask_login import login_required  # type: ignore
 
 from urllib.parse import urlparse
 # from werkzeug.urls import url_parse
@@ -53,7 +54,7 @@ def listar_propietarios():
 
     title = "Lista de propietarios"
     form = BuscarPropietarioForm()
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # type: ignore
         busca = form.dni.data
         siguiente_pagina = request.args.get("next", None)
         if not siguiente_pagina or urlparse(siguiente_pagina).netloc != '':
@@ -72,12 +73,12 @@ def listar_propietarios():
 @bp.route("/buscar/<string:busca>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def buscar_propietario(busca):
+def buscar_propietario(busca: str):
     busqueda = Propietario.buscar_propietarios_dni(busca)
     form = BuscarPropietarioForm()
     title = "Resultado de buscar propietario con DNI: {b} ".format(b=busca)
-    if form.validate_on_submit():
-        busca = form.dni.data
+    if form.validate_on_submit():  # type: ignore
+        busca = cast(str, form.dni.data)
         siguiente_pagina = request.args.get("next", None)
         if not siguiente_pagina or urlparse(siguiente_pagina).netloc != '':
             siguiente_pagina = url_for("propietario.buscar_propietario", busca=busca)
@@ -97,11 +98,11 @@ def buscar_propietario(busca):
 def agregar_propietario():
     form = PropietarioForm()
     error = None
-    if form.validate_on_submit():
-        nombres = form.nombres.data
-        apellidos = form.apellidos.data
-        telefono = form.telefono.data
-        documento_identificacion = form.documento_identificacion.data
+    if form.validate_on_submit():  # type: ignore
+        nombres = cast(str, form.nombres.data)
+        apellidos = cast(str, form.apellidos.data)
+        telefono = cast(str, form.telefono.data)
+        documento_identificacion = cast(str, form.documento_identificacion.data)
         propietario = Propietario.obtener_propietario_por_dni(documento_identificacion)
         if propietario is not None:
             error = f"""Propietario con Identidad: {documento_identificacion} ya se
@@ -123,12 +124,12 @@ def agregar_propietario():
 @bp.route("/actualiza/<int:propietario_id>/", methods=["GET", "POST"])
 @login_required
 @admin_required
-def actualizar_propietario(propietario_id):
+def actualizar_propietario(propietario_id: int):
 
     propietario = Propietario.obtener_propietario_por_id(propietario_id)
     form = CambiarPropietarioForm(obj=propietario)
     if propietario is not None:
-        if form.validate_on_submit():
+        if form.validate_on_submit():  # type: ignore
             propietario.nombres = form.nombres.data
             propietario.apellidos = form.apellidos.data
             propietario.telefono = form.telefono.data
@@ -148,7 +149,7 @@ def actualizar_propietario(propietario_id):
 @bp.route("/elimina/<int:propietario_id>/", methods=["GET", "POST"])
 @login_required
 @admin_required
-def eliminar_propietario(propietario_id):
+def eliminar_propietario(propietario_id: int):
     propietario = Propietario.obtener_propietario_por_id(propietario_id)
     if propietario is not None:
         propietario.eliminar()
@@ -173,8 +174,8 @@ def relacionar_propietario_vehiculo():
     # Conteo de vehiculo activo y no activo por propietario
     dat_activo = PropietarioVehiculo.estadistica_pv_y_vehiculo_propietario(True)
     dat_no_activo = PropietarioVehiculo.estadistica_pv_y_vehiculo_propietario(False)
-    data_list_activo = [{i: c} for o, i, c in dat_activo]
-    data_list_no_activo = [{i: c} for o, i, c in dat_no_activo]
+    data_list_activo = [{i: c} for _, i, c in dat_activo]
+    data_list_no_activo = [{i: c} for _, i, c in dat_no_activo]
     pros = [str(p.nombres)+" "+str(p.apellidos) for p in propietarios]
     id = [p.id_propietario for p in propietarios]
     da = [0]*len(id)
@@ -194,7 +195,7 @@ def relacionar_propietario_vehiculo():
             else:
                 dna[aux] = 0
 
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # type: ignore
         propietario = form.propietario.data
         vehiculo = form.vehiculo.data
         p_v = PropietarioVehiculo(propietario, vehiculo)
@@ -218,7 +219,7 @@ def relacionar_propietario_vehiculo():
 @bp.route("/propietario_vehiculo/elimina/<int:pv_id>/", methods=["GET", "POST"])
 @login_required
 @admin_required
-def eliminar_pv(pv_id):
+def eliminar_pv(pv_id: int):
     pv = PropietarioVehiculo.obtener_propietario_vehiculo_por_id(pv_id)
     if pv is not None:
         pv.eliminar()
@@ -231,9 +232,9 @@ def eliminar_pv(pv_id):
 def cargar_archivo_propietarios():
 
     form = UploadFileForm()
-    path = current_app.config['UPLOAD_FOLDER']
+    path = cast(str, current_app.config['UPLOAD_FOLDER'])
     lista_archivos = hacer_arbol(path=path)
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # type: ignore
         if 'file' not in request.files:
             flash('No existe el archivo')
             return redirect(request.url)
@@ -242,10 +243,10 @@ def cargar_archivo_propietarios():
         if file.filename == '':
             flash('Archivo no seleccionado')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+        if file and allowed_file(file.filename):  # type: ignore
+            filename = secure_filename(file.filename)  # type: ignore
             file.save(os.path.join(
-                current_app.config['UPLOAD_FOLDER'],
+                cast(str, current_app.config['UPLOAD_FOLDER']),
                 filename
             ))
             return redirect(url_for("propietario.cargar_archivo_propietarios"))
@@ -259,28 +260,35 @@ def cargar_archivo_propietarios():
 @bp.route("/descargar/<name>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def descargar_archivo(name):
+def descargar_archivo(name: str):
     propietarios = Propietario.obtener_todos_propietarios()
+    df_propietarios = pd.DataFrame(propietarios)
     excel = FactoryExcel()
     excel.crearArchivo(
         filename=NOMBRE_ARCHIVO,
-        dataframe=propietarios,
+        dataframe=[df_propietarios],
         tipo='lista',
         sheetnames=['propietarios'],
         recorrido=None,
         date=None
     ).guardar()
-    return send_from_directory(current_app.config["DOWNLOAD_FOLDER"], name)
+    return send_from_directory(
+        directory=cast(str, current_app.config["DOWNLOAD_FOLDER"]),
+        path=name
+    )
 
 
 @bp.route("/agregar_masivo/<name>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def agregar_masivo(name):
+def agregar_masivo(name: str):
     extension = os.path.splitext(name)[1][1:]
     if extension == 'xlsx':
+        folder = cast(str, current_app.config["UPLOAD_FOLDER"])
+        path = os.path.join(folder, name)
+
         archivo = pd.read_excel(
-            current_app.config["UPLOAD_FOLDER"]+"\\"+name,
+            path,
             index_col=0
         )
         # vehiculo=Vehiculo()
@@ -325,11 +333,16 @@ def agregar_masivo(name):
 @bp.route("/eliminar_archivo_subido/<name>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def eliminar_archivo_subido(name):
+def eliminar_archivo_subido(name: str):
     # extension = os.path.splitext(name)[1][1:]
     filename = name
     try:
-        os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+        os.remove(
+            os.path.join(
+                cast(str, current_app.config['UPLOAD_FOLDER']),
+                filename
+            )
+        )
         return redirect(url_for("propietario.cargar_archivo_propietarios"))
     except Exception as e:
         flash(f"Error al eliminar el archivo {e}", "error")

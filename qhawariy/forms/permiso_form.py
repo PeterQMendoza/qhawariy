@@ -1,7 +1,10 @@
+import datetime
 from flask_wtf import FlaskForm
 from wtforms import (
     DateField,
     DateTimeField,
+    Field,
+    Form,
     SearchField,
     SelectField,
     SubmitField,
@@ -11,7 +14,7 @@ from wtforms.validators import DataRequired, InputRequired
 from wtforms_html5 import AutoAttrMeta
 
 
-def validate_numeric(form, field):
+def validate_numeric(form: Form, field: Field):
     if not field.data.isdigit():
         raise ValidationError(
             """EL valor debe ser numerico, que indique el numero de flota de un
@@ -20,7 +23,7 @@ def validate_numeric(form, field):
 
 
 class AgregaPermisoForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     id_vehiculo = SelectField(
@@ -45,16 +48,19 @@ class AgregaPermisoForm(FlaskForm):
 
     agregar = SubmitField("Agregar")
 
-    def validate_fecha_menor(form, field):
-        if form.fecha_inicio.data and field.data:
-            if field.data <= form.fecha_inicio.data:
+    def validate_fecha_menor(self, field: Field) -> None:
+        fecha_inicio: datetime.date | None = self.fecha_inicio.data
+        fecha_final: datetime.date | None = field.data
+
+        if fecha_inicio and fecha_final:
+            if fecha_final <= fecha_inicio:
                 raise ValidationError(
                     """La fecha final debe ser posterior a la fecha de inicio."""
                 )
 
 
 class EditaPermisoForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     id_vehiculo = SelectField(
@@ -81,7 +87,7 @@ class EditaPermisoForm(FlaskForm):
 
 
 class BuscaPermisoForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     busca = SearchField(

@@ -1,14 +1,14 @@
 from __future__ import annotations
+import os
 
 # from os.path import join
 # import datetime
-from openpyxl import Workbook
 import pandas as pd
 import geopandas as gpd
 
 from abc import ABC, abstractmethod
 # from os import walk
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Sequence, cast
 
 from flask import current_app
 
@@ -170,7 +170,7 @@ class Contexto():
 
     def realizar(
         self,
-        data: List[Dict[str, Any]],
+        data: Sequence[pd.DataFrame],
         filename: str,
         routes: Optional[List[str]],
         sheetnames: Optional[List[str]],
@@ -192,7 +192,7 @@ class Estrategia(ABC):
     @abstractmethod
     def construirArchivo(
         self,
-        data: List[Dict[str, Any]],
+        data: Sequence[pd.DataFrame],
         filename: str,
         routes: Optional[List[str]],
         sheetnames: Optional[List[str]],
@@ -204,7 +204,7 @@ class Estrategia(ABC):
 class EstrategiaExcelLista(Estrategia):
     def construirArchivo(
         self,
-        data: List[Dict[str, Any]],
+        data: Sequence[pd.DataFrame],
         filename: str,
         routes: Optional[List[str]],
         sheetnames: Optional[List[str]],
@@ -261,7 +261,7 @@ class EstrategiaExcelResumen(Estrategia):
     # ):
     def construirArchivo(
         self,
-        data: List[Dict[str, Any]],
+        data: Sequence[pd.DataFrame],
         filename: str,
         routes: Optional[List[str]],
         sheetnames: Optional[List[str]],
@@ -445,7 +445,7 @@ class EstrategiaExcelResumen(Estrategia):
                 count = count+1
 
         # Cerrar el escritor Excel de pandas
-        writer.close()
+        # writer.close()
 
 
 class Archivo(ABC):
@@ -466,11 +466,11 @@ class ArchivoExcel(Archivo):
     def __init__(
         self,
         nombre_archivo: str,
-        dataframe: list,
+        dataframe: List[pd.DataFrame],
         tipo: str,
-        nombres_hojas: list | None,
-        recorridos: list | None,
-        fecha: str | None
+        nombres_hojas: Optional[List[str]] = None,
+        recorridos: Optional[List[str]] = None,
+        fecha: Optional[str] = None
     ):
         self.nombre = nombre_archivo
         self.dataframe = dataframe
@@ -478,22 +478,30 @@ class ArchivoExcel(Archivo):
         self.recorridos = recorridos
         self.nombres_hojas = nombres_hojas
         self.tipo = tipo
-        fname = current_app.config['DOWNLOAD_FOLDER']+"\\"+nombre_archivo+".xlsx"
+        fname = os.path.join(
+            cast(str, current_app.config['DOWNLOAD_FOLDER']),
+            nombre_archivo + ".xlsx"
+        )
         self.ruta_archivo = fname
 
-    def guardar(self):
-        contexto = None
-        if self.tipo == 'lista':
-            contexto = Contexto(EstrategiaExcelLista())
-        elif self.tipo == 'resumen':
-            contexto = Contexto(EstrategiaExcelResumen())
+    def guardar(self) -> None:
+        """Guardar el archivo excel usando la estrategia"""
+        estrategias = {  # type: ignore
+            "lista": EstrategiaExcelLista,
+            "resumen": EstrategiaExcelResumen,
+        }
 
-        contexto.realizar(data=self.dataframe,
-                          filename=self.ruta_archivo,
-                          routes=self.recorridos,
-                          sheetnames=self.nombres_hojas,
-                          date=self.fecha
-                          )
+        if self.tipo not in estrategias:
+            raise ValueError(f"Tipo desconocido: {self.tipo}")
+
+        contexto = Contexto(estrategias[self.tipo]())  # type: ignore
+        contexto.realizar(
+            data=self.dataframe,
+            filename=self.ruta_archivo,
+            routes=self.recorridos,
+            sheetnames=self.nombres_hojas,
+            date=self.fecha
+        )
 
 
 class ArchivoCSV(Archivo):
@@ -510,43 +518,69 @@ class ArchivoShapefile(Archivo):
     parameter: nombre_archivo: Debe contener la extesion de archivo ".shp"
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename: str):
+        if not filename.endswith(".shp"):
+            raise ValueError("El archivo debe tener la extension .shp")
+
         self.nombre_archivo = filename
-        ruta_archivo = current_app.config['SHAPEFILE_FOLDER']+"\\"+self.nombre_archivo
-        self.geo_data_frame = gpd.read_file(ruta_archivo)
+        ruta_archivo = os.path.join(
+            current_app.config.get("SHAPEFILE_FOLDER", ""),  # type: ignore
+            self.nombre_archivo
+        )
+        self.geo_data_frame = gpd.read_file(ruta_archivo)  # type: ignore
 
     def guardar(self):
-        pass
+        """ Guarda el GeoDataFrame en el mismo shapefile. """
+        ruta_archivo: str = os.path.join(
+            current_app.config.get("SHAPEFILE_FOLDER", ""),  # type: ignore
+            self.nombre_archivo
+        )
+        self.geo_data_frame.to_file(ruta_archivo)  # type: ignore
 
     @staticmethod
-    def obtenerLongitudLatitud(frame):
+    def obtenerLongitudLatitud(frame: gpd.GeoSeries) -> List[List[float]]:
         """
-        funcion auxiliar que retorna longitud y latitud de una DataFrame de Geopandas
+        Función auxiliar que retorna coordenadas [latitud, longitud]
+        a partir de una geometría puntual de GeoPandas.
+
+        Parameters
+        ----------
+        frame : gpd.GeoSeries
+            Serie de geometrías (Point) de GeoPandas.
+
+        Returns
+        -------
+        List[List[float]]
+            Lista de pares [lat, lon].
         """
-        xy = frame.geometry.xy
-        longs = xy[0].tolist()
-        lats = xy[1].tolist()
-        return [list(z) for z in zip(lats, longs)]
+        xcoords, ycoords = frame.geometry.xy  # type: ignore
+        return (
+            [
+                [lat, lon]
+                for lat, lon in zip(ycoords.tolist(), xcoords.tolist())  # type: ignore
+            ]
+        )
 
 
 class Factory(ABC):
-    def __init__(self):
-        pass
+    # def __init__(self):
+    #     pass
 
-    def crearArchivo(self) -> Archivo:
-        pass
+    @abstractmethod
+    def crearArchivo(self, *args: Any, **kwargs: Any) -> Archivo:
+        ...
 
 
 class FactoryExcel(Factory):
     def crearArchivo(
         self,
         filename: str,
-        dataframe: pd.DataFrame,
+        dataframe: List[pd.DataFrame],
         tipo: str,
-        sheetnames: List,
-        recorrido: List,
-        date: str
-    ):
+        sheetnames: List[str],
+        recorrido: Optional[List[str]],
+        date: Optional[str]
+    ) -> ArchivoExcel:
         archivo_excel = ArchivoExcel(
             nombre_archivo=filename,
             tipo=tipo,
@@ -559,12 +593,12 @@ class FactoryExcel(Factory):
 
 
 class FactoryCSV(Factory):
-    def crearArchivo(self):
+    def crearArchivo(self) -> ArchivoCSV:
         archivo_csv = ArchivoCSV()
         return archivo_csv
 
 
 class FactoryShapefile(Factory):
-    def crearArchivo(self, filename: str):
+    def crearArchivo(self, filename: str) -> ArchivoShapefile:
         archivo_shapefile = ArchivoShapefile(filename=filename)
         return archivo_shapefile

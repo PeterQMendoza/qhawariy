@@ -1,5 +1,6 @@
 
 import datetime
+from typing import List
 import pytz
 from qhawariy import db
 
@@ -20,7 +21,7 @@ class Asociado(db.Model):
     lima_tz = pytz.timezone('America/Lima')
     fecha_registro = db.Column(db.DateTime, default=datetime.datetime.now(tz=lima_tz))
 
-    def __init__(self, id_usuario, id_pv):
+    def __init__(self, id_usuario: int, id_pv: int):
         self.id_usuario = id_usuario
         self.id_pv = id_pv
 
@@ -37,9 +38,9 @@ class Asociado(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_asociado_por_id(id):
+    def obtener_asociado_por_id(id: int):
         return Asociado.query.get(id)
 
     @staticmethod
-    def obtener_todos_asociados():
-        return Asociado.query.all()
+    def obtener_todos_asociados() -> List["Asociado"]:
+        return Asociado.query.all()  # type: ignore

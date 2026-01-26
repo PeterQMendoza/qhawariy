@@ -1,4 +1,5 @@
 import datetime
+from typing import List, Optional
 import pytz
 from qhawariy import db
 
@@ -7,10 +8,10 @@ class Ruta(db.Model):
     """Modelo Ruta:
     """
     __tablename__ = "rutas"
-    id_ruta = db.Column(db.Integer, primary_key=True)
-    codigo = db.Column(db.String(8), unique=True, nullable=False)
+    id_ruta: int = db.Column(db.Integer, primary_key=True)
+    codigo: str = db.Column(db.String(8), unique=True, nullable=False)
     lima_tz = pytz.timezone('America/Lima')
-    inicio_vigencia = db.Column(
+    inicio_vigencia: datetime.datetime = db.Column(
         db.DateTime,
         default=datetime.datetime.now(lima_tz),
         nullable=False
@@ -20,7 +21,7 @@ class Ruta(db.Model):
         default=datetime.datetime.now(lima_tz),
         nullable=False
     )
-    documento = db.Column(db.String(300), nullable=False)
+    documento: str = db.Column(db.String(300), nullable=False)
 
     # Relaciones de muchos a uno
     rutas_programas = db.relationship(
@@ -44,7 +45,13 @@ class Ruta(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, codigo, inicio_vigencia, fin_vigencia, documento):
+    def __init__(
+        self,
+        codigo: str,
+        inicio_vigencia: datetime.datetime,
+        fin_vigencia: datetime.datetime,
+        documento: str
+    ):
         self.codigo = codigo
         self.inicio_vigencia = inicio_vigencia
         self.fin_vigencia = fin_vigencia
@@ -63,19 +70,19 @@ class Ruta(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_ruta_por_id(id):
+    def obtener_ruta_por_id(id: int) -> Optional["Ruta"]:
         return Ruta.query.get(id)
 
-    @staticmethod
-    def obtener_ruta_por_direccion_destino_origen(
-        direccion_origen,
-        direccion_destino
-    ):
-        return Ruta.query.filter_by(
-            direccion_destino=direccion_destino,
-            direccion_origen=direccion_origen
-        ).first()
+    # @staticmethod
+    # def obtener_ruta_por_direccion_destino_origen(
+    #     direccion_origen,
+    #     direccion_destino
+    # ):
+    #     return Ruta.query.filter_by(
+    #         direccion_destino=direccion_destino,
+    #         direccion_origen=direccion_origen
+    #     ).first()
 
     @staticmethod
-    def obtener_todos_rutas():
-        return Ruta.query.all()
+    def obtener_todos_rutas() -> List["Ruta"]:
+        return Ruta.query.all()  # type: ignore

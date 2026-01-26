@@ -2,18 +2,31 @@
 import datetime
 import os
 import random
-from typing import Any, Dict, Iterable, Optional, cast
+from typing import Any, Dict, Iterable, List, Optional, cast
 
+from flask import flash
 import pandas as pd
 # import geopandas as gpd
 
 from os import walk
 
 
-def convertir_DataFrame(list):
-    data_list = [a_dict(item) for item in list]
+def convertir_DataFrame(lista: List[Any]) -> pd.DataFrame:
+    data_list = [a_dict(item) for item in lista]
     df = pd.DataFrame(data_list)
     return df
+
+
+def validar_dataframe(
+    nombre: str,
+    datos: List[Any],
+    requerido: bool = True
+) -> pd.DataFrame:
+    if not datos:
+        if requerido:
+            flash(f"No existen datos de {nombre}", "error")
+        return pd.DataFrame()
+    return convertir_DataFrame(datos)
 
 
 def a_dict(row: Optional[Any]) -> Dict[str, Any]:
@@ -24,22 +37,23 @@ def a_dict(row: Optional[Any]) -> Dict[str, Any]:
     return {key: getattr(row, key) for key in keys}
 
 
-def archivo_existe(ruta):
+def archivo_existe(ruta: str) -> bool:
     return os.path.exists(ruta)
 
 
-def hacer_arbol(path):
-    fn = []
-    for (dirpath, dirnames, filenames) in walk(path):
+def hacer_arbol(path: str) -> List[Any]:
+    fn: List[Any] = []
+    # for (dirpath, dirnames, filenames) in walk(path):
+    for (_, _, filenames) in walk(path):
         fn.extend(filenames)
         break
 
     return fn
 
 
-def generar_numero(lenght=8):
+def generar_numero(lenght: int = 8):
     """Genera numero pseudoaleatorio"""
-    return ''.join([str(random.randint(0, 9)) for i in range(lenght)])
+    return ''.join([str(random.randint(0, 9)) for _ in range(lenght)])
 
 
 def obtener_tiempo_actual():
@@ -53,52 +67,67 @@ class Calendario():
     """
     def __init__(
         self,
-        year,
-        month,
-        lista_fechas,
-        primer_dia_lista,
-        primer_dia_semana
+        anio: int,
+        mes: int,
+        lista_fechas: List[Any],
+        primer_dia_lista: int,
+        primer_dia_semana: int
     ):
-        self.year = year
-        self.month = month
-        self.actual = datetime.date(year=year, month=month, day=primer_dia_lista)
-        if month >= 12:
-            next_month = 1
-            next_year = self.year+1
-        else:
-            next_month = self.month+1
-            next_year = self.year
-        self.ultimo = datetime.date(
-            year=next_year,
-            month=next_month,
-            day=1
-        )-datetime.timedelta(days=1)
+        self.anio = anio
+        self.mes = mes
+        self.actual = datetime.date(year=anio, month=mes, day=primer_dia_lista)
+
+        self.ultimo = self._calcular_ultimo_dia_mes(anio, mes)
         self.primer_dia_semana = primer_dia_semana
         self.ultimo_dia_mes = self.ultimo.day
-        self.dia = 0
-        self.dia_actual = 0
         self.ultima_celda = self.primer_dia_semana+self.ultimo_dia_mes
-        self.fechas = []
 
-        # Para busqueda por dias no continuas
-        lista_dias = []
-        for a in lista_fechas:
-            if getattr(a, "fecha"):
-                lista_dias.append(getattr(a, "fecha").day)
+        # Lista de dias que tienen objeto Fecha asociado
+        self.lista_dias = [
+            getattr(a, "fecha").day for a in lista_fechas if getattr(a, "fecha", None)
+        ]
 
-        # Agregando 42 celdas de 6 filas(semanas) y de 7 columnas(dias)
+        # Construir de las celdas del calendario
+        self.fechas: List[Any] = self._construir_celdas(lista_fechas)
+
+    @staticmethod
+    def _calcular_ultimo_dia_mes(
+        anio: int,
+        mes: int
+    ) -> datetime.date:
+        """ Devuelve el ultimo dia del mes dado."""
+        if mes == 12:
+            siguiente_mes, siguiente_anio = 1, anio+1
+        else:
+            siguiente_mes, siguiente_anio = mes+1, anio
+        return (
+            datetime.date(siguiente_anio, siguiente_mes, 1) -
+            datetime.timedelta(days=1)
+        )
+
+    def _construir_celdas(
+        self,
+        lista_fechas: List[Any]
+    ) -> List[Any]:
+        """ Construye 42 celdas (6 semanas x 7 dias) del calendario"""
+        fechas: List[Any] = []
+        dia = 0
+
         for i in range(1, 43):
             if i == self.primer_dia_semana:
-                self.dia = 1
+                dia = 1
+
             if i < self.primer_dia_semana or i >= self.ultima_celda:
-                self.fechas.append(str(''))
+                fechas.append("")
             else:
-                if self.dia in lista_dias:
-                    index = lista_dias.index(self.dia)
-                    self.fechas.append(lista_fechas[index])
+                if dia in self.lista_dias:
+                    index = self.lista_dias.index(dia)
+                    fechas.append(lista_fechas[index])
                 else:
-                    self.fechas.append(str(self.dia))
-                self.dia = self.dia+1
-            if i % 7 == 0:
-                if self.dia > self.ultimo_dia_mes:
-                    break
+                    fechas.append(str(dia))
+                dia += 1
+
+            # Si llegamos al final de una semana y ya pasamos el ultimo
+            if i % 7 == 0 and dia > self.ultimo_dia_mes:
+                break
+        return fechas

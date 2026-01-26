@@ -1,19 +1,26 @@
 # import datetime
 # import pytz
 
+from typing import List, Optional
 from qhawariy import db
 from sqlalchemy.sql import asc
 
 
 class Propietario(db.Model):
     __tablename__ = "propietarios"
-    id_propietario = db.Column(db.Integer, primary_key=True)
-    nombres = db.Column(db.String(50), nullable=False)
-    apellidos = db.Column(db.String(50), nullable=False)
-    telefono = db.Column(db.String(15), nullable=False)
-    documento_identificacion = db.Column(db.String(15), nullable=False)
+    id_propietario: int = db.Column(db.Integer, primary_key=True)
+    nombres: str = db.Column(db.String(50), nullable=False)
+    apellidos: str = db.Column(db.String(50), nullable=False)
+    telefono: str = db.Column(db.String(15), nullable=False)
+    documento_identificacion: str = db.Column(db.String(15), nullable=False)
 
-    def __init__(self, nombres, apellidos, telefono, documento_identificacion):
+    def __init__(
+        self,
+        nombres: str,
+        apellidos: str,
+        telefono: str,
+        documento_identificacion: str,
+    ):
         self.nombres = nombres
         self.apellidos = apellidos
         self.telefono = telefono
@@ -32,21 +39,37 @@ class Propietario(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_propietario_por_id(id):
+    def obtener_propietario_por_id(id: int):
         return Propietario.query.get(id)
 
     @staticmethod
-    def obtener_propietario_por_dni(dni):
-        return Propietario.query.filter_by(documento_identificacion=dni).first()
+    def obtener_propietario_por_dni(dni: str) -> Optional["Propietario"]:
+        return (
+            Propietario.query
+            .filter_by(documento_identificacion=dni)
+            .first()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_propietario_por_apellidos(apellido):
-        return Propietario.query.filter_by(apellidos=apellido).first()
+    def obtener_propietario_por_apellidos(apellido: str) -> Optional["Propietario"]:
+        return (
+            Propietario.query
+            .filter_by(apellidos=apellido)
+            .first()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_todos_propietarios():
-        return Propietario.query.order_by(asc(Propietario.apellidos)).all()
+    def obtener_todos_propietarios() -> List["Propietario"]:
+        return (
+            Propietario.query
+            .order_by(asc(Propietario.apellidos))
+            .all()
+        )  # type: ignore
 
     @staticmethod
-    def buscar_propietarios_dni(dni):
-        return Propietario.query.filter_by(documento_identificacion=dni).all()
+    def buscar_propietarios_dni(dni: str) -> List["Propietario"]:
+        return (
+            Propietario.query
+            .filter_by(documento_identificacion=dni)
+            .all()
+        )  # type: ignore

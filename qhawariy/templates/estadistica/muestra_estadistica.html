@@ -157,7 +157,7 @@
 </div>
 {% endblock %}
 {% block javascript %}
-<script type="text/javascript">
+<script type="text/javascript" nonce="{{g.nonce}}">
     document.addEventListener("DOMContentLoaded",()=>{
         // Funciones de ayuda
         function agregar_formato_dataset(da,label,color,order) {

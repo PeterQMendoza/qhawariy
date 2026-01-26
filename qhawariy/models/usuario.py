@@ -1,4 +1,5 @@
 import datetime
+from typing import List, Optional, cast
 from flask import current_app
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 import pytz
@@ -16,18 +17,21 @@ class Usuario(db.Model, UserMixin):
     """Modelo Usuario define a todos los usuarios que pertencen e ingresan al sistema
     """
     __tablename__ = "usuarios"
-    id_usuario = db.Column(db.Integer, primary_key=True)
-    nombres = db.Column(db.String(50), nullable=False)
-    apellidos = db.Column(db.String(50), nullable=False)
-    dni = db.Column(db.String(15), unique=True, nullable=False)
-    telefono = db.Column(db.String(15), nullable=False)
-    correo_electronico = db.Column(db.String(50), unique=True, nullable=False)
+    id_usuario: int = db.Column(db.Integer, primary_key=True)
+    nombres: str = db.Column(db.String(50), nullable=False)
+    apellidos: str = db.Column(db.String(50), nullable=False)
+    dni: str = db.Column(db.String(15), unique=True, nullable=False)
+    telefono: str = db.Column(db.String(15), nullable=False)
+    correo_electronico: str = db.Column(db.String(50), unique=True, nullable=False)
     lima_tz = pytz.timezone('America/Lima')
-    fecha_registro = db.Column(db.DateTime, default=datetime.datetime.now(tz=lima_tz))
-    clave = db.Column(db.String(128), nullable=False)
+    fecha_registro: datetime.datetime = db.Column(
+        db.DateTime,
+        default=datetime.datetime.now(tz=lima_tz)
+    )
+    clave: str = db.Column(db.String(128), nullable=False)
     # genera un cadena 6 letras para el id altenativo
     # Utilizado para cambio de password
-    id_alternativo = db.Column(db.String(6), nullable=False)
+    id_alternativo: str = db.Column(db.String(6), nullable=False)
 
     # Relaciones
     uroles = db.relationship(
@@ -43,14 +47,21 @@ class Usuario(db.Model, UserMixin):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, nombres, apellidos, dni, telefono, correo_electronico):
+    def __init__(
+        self,
+        nombres: str,
+        apellidos: str,
+        dni: str,
+        telefono: str,
+        correo_electronico: str
+    ):
         self.nombres = nombres
         self.apellidos = apellidos
         self.dni = dni
         self.telefono = telefono
         self.correo_electronico = correo_electronico
         self.id_alternativo = ''.join(
-            (secrets.choice(string.ascii_letters) for i in range(6))
+            (secrets.choice(string.ascii_letters) for _ in range(6))
         )
         # self.id_alternativo = generate_password_hash(
         #     password=dni,
@@ -61,18 +72,19 @@ class Usuario(db.Model, UserMixin):
     def __repr__(self):
         return f'<Usuario {self.correo_electronico}>'
 
-    def establecer_clave(self, clave):
+    def establecer_clave(self, clave: str) -> None:
         self.clave = generate_password_hash(
             password=clave,
             method='pbkdf2',
             salt_length=16
         )
 
-    def revisar_clave(self, clave):
+    def revisar_clave(self, clave: str):
         return check_password_hash(self.clave, clave)
 
     def generar_token_restablecer_password(self):
-        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        secret_key: str = cast(str, current_app.config["SECRET_KEY"])
+        serializer = URLSafeTimedSerializer(secret_key)
         return serializer.dumps(self.correo_electronico, salt=self.clave)
 
     def get_id(self):
@@ -93,7 +105,10 @@ class Usuario(db.Model, UserMixin):
         db.session.commit()
 
     @staticmethod
-    def validar_token_restablece_password(token: str, usuario_id: int):
+    def validar_token_restablece_password(
+        token: str,
+        usuario_id: int
+    ) -> Optional["Usuario"]:
         """
         Metodo estatico que valida el token obtenido de link del email enviado al
         usuario
@@ -101,11 +116,13 @@ class Usuario(db.Model, UserMixin):
         usuario = Usuario.obtener_usuario_por_id(usuario_id)
         if usuario is None:
             return None
-        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        secret_key: str = cast(str, current_app.config["SECRET_KEY"])
+        serializer = URLSafeTimedSerializer(secret_key)
         try:
+            max_age: int = cast(int, current_app.config["RESET_PASS_TOKEN_MAX_AGE"])
             token_usuario_email = serializer.loads(
                 token,
-                max_age=current_app.config["RESET_PASS_TOKEN_MAX_AGE"],
+                max_age=max_age,
                 salt=usuario.clave,
             )
         except (BadSignature, SignatureExpired):
@@ -115,20 +132,30 @@ class Usuario(db.Model, UserMixin):
         return usuario
 
     @staticmethod
-    def obtener_usuario_por_id(id):
+    def obtener_usuario_por_id(id: int):
         return Usuario.query.get(id)
 
     @staticmethod
-    def obtener_usuario_por_nombre(nombre):
-        return Usuario.query.filter_by(nombres=nombre).first()
+    def obtener_usuario_por_id_alternativo(id: str) -> Optional["Usuario"]:
+        return Usuario.query.filter_by(id_alternativo=id).first()  # type: ignore
 
     @staticmethod
-    def obtener_usuario_por_correo_electronico(correo_electronico):
-        return Usuario.query.filter_by(correo_electronico=correo_electronico).first()
+    def obtener_usuario_por_nombre(nombre: str) -> Optional["Usuario"]:
+        return Usuario.query.filter_by(nombres=nombre).first()  # type: ignore
 
     @staticmethod
-    def obtener_todos_usuarios():
-        return Usuario.query.all()
+    def obtener_usuario_por_correo_electronico(
+        correo_electronico: str
+    ) -> Optional["Usuario"]:
+        return (
+            Usuario.query
+            .filter_by(correo_electronico=correo_electronico)
+            .first()
+        )  # type: ignore
+
+    @staticmethod
+    def obtener_todos_usuarios() -> List["Usuario"]:
+        return Usuario.query.all()  # type: ignore
 
     # Saber si hay solo un registro
     @staticmethod
@@ -137,5 +164,5 @@ class Usuario(db.Model, UserMixin):
 
     # validar la no duplicidad del DNI
     @staticmethod
-    def obtener_por_dni(dni: string):
-        return Usuario.query.filter_by(dni=dni).first()
+    def obtener_por_dni(dni: str) -> Optional["Usuario"]:
+        return Usuario.query.filter_by(dni=dni).first()  # type: ignore

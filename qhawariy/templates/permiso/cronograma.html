@@ -10,25 +10,25 @@
     {% if current_user.is_authenticated %}
         <a href="{{url_for('home.index')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
-                <object type="image/svg+xml" data="{{ url_for('static', filename='img/home.svg') }}" class="block q-icon-normal" height="24px" width="24px"></object>
+                <img src="{{ url_for('static', filename='img/home.svg') }}" class="block q-icon-normal" height="24px" width="24px" alt="icon">
             </div>
             Inicio
         </a>
         <a href="{{url_for('cronograma_vehiculos.mostrar_cronograma' ,busca='todos')}}" class="q-link-active q-link-exact-active ">
             <div class="mr-4 w-6 h-6">
-                <object type="image/svg+xml" data="{{ url_for('static', filename='img/schedule_vehicle_blue.svg') }}" class="block q-icon-active" height="24px" width="24px"></object>
+                <img src="{{ url_for('static', filename='img/schedule_vehicle_blue.svg') }}" class="block q-icon-active" height="24px" width="24px" alt="icon">
             </div>
             Asignación de flota
         </a>
         <a href="{{url_for('programacion.agregar_programacion')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
-                <object type="image/svg+xml" data="{{ url_for('static', filename='img/schedule.svg') }}" class="block q-icon-normal" height="24px" width="24px"></object>
+                <img src="{{ url_for('static', filename='img/schedule.svg') }}" class="block q-icon-normal" height="24px" width="24px" alt="icon">
             </div>
             Programaciones
         </a>
         <a href="{{url_for('estadistica.mostrar_estadisticas')}}" class="q-icon-costumer">
             <div class="mr-4 w-6 h-6">
-                <object type="image/svg+xml" data="{{ url_for('static', filename='img/statistic.svg') }}" class="block q-icon-normal" height="24px" width="24px"></object>
+                <img src="{{ url_for('static', filename='img/statistic.svg') }}" class="block q-icon-normal" height="24px" width="24px" alt="icon">
             </div>
             Estadisticas
         </a>
@@ -36,13 +36,13 @@
 {% endblock %}
 {% block linker %}
 <div class="flex">
-    <object type="image/svg+xml" data="{{url_for('static', filename='img/icon-angle-right.svg')}}" width="7px" height="13px"></object>
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" width="7px" height="13px" alt="icono">
 </div>
 <a href="{{ url_for('home.index') }}" class="btn--base">
     <p class="text-h3">Inicio</p>
 </a>
 <div class="flex">
-    <object type="image/svg+xml" data="{{url_for('static', filename='img/icon-angle-right.svg')}}" width="7px" height="13px"></object>
+    <img src="{{url_for('static', filename='img/icon-angle-right.svg')}}" width="7px" height="13px" alt="icono">
 </div>
 <a href="#" class="btn--base">
     <p class="text-h3">Asignación de flota</p>
@@ -53,7 +53,7 @@
     <div class="flex-1">
         <a href="{{url_for('cronograma_vehiculos.agregar_permiso') }}" class="btn btn--base btn-gray-111">
             <div class="flex justify-center items-center">
-                <object type="image/svg+xml" data="{{url_for('static', filename='img/planet.svg')}}" width="24px" height="24px"></object>
+                <img src="{{url_for('static', filename='img/planet.svg')}}" width="24px" height="24px" alt="icono">
                 <p class="ml-2 text-xs sm:hidden">Agregar actividad</p>
             </div>
         </a>
@@ -63,7 +63,7 @@
             {{form_busca.hidden_tag()}}
             <div class="flex items-center relative">
                 <div class=" inline-flex translateY-[-50%] right-unset left-3 absolute top-[50%]">
-                    <object type="image/svg+xml" data="{{ url_for('static', filename='img/icon-len.svg') }}" width="24px" height="24px"></object>
+                    <img src="{{ url_for('static', filename='img/icon-len.svg') }}" width="24px" height="24px" alt="icono">
                 </div>
                 {{ form_busca.busca(class="h-[42px] w-full rounded-full text-gris-900 pr-3 pl-12 border border-gray-209", placeholder="Buscar por flota", autocomplete="on") }}<br>
             </div>
@@ -79,7 +79,7 @@
 </div>
 {% endblock %}
 {% block javascript %}
-<script  type="module">
+<script  type="module" nonce="{{g.nonce}}">
     // 
     import { GanttChart } from "{{ url_for('static', filename='source/js/gantt/gantt-chart.js') }}";
     document.addEventListener("DOMContentLoaded",()=>{
@@ -96,6 +96,8 @@
         });
 
         const ganttCharts=document.querySelectorAll('[role="grid"]');
+        console.log(tasks);
+        console.log(ganttCharts);
         ganttCharts.forEach((ganttChart)=>{
             new GanttChart(ganttChart,tasks,taskDurations,date.month,date.year,link);
         });

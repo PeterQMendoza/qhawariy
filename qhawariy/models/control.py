@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Union
 import numpy as np
 
 from qhawariy import db
@@ -28,7 +28,7 @@ class Control(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, codigo, latitud, longitud):
+    def __init__(self, codigo: str, latitud: str, longitud: str):
         self.codigo = codigo
         self.latitud = latitud
         self.longitud = longitud
@@ -46,19 +46,17 @@ class Control(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_id(id):
+    def obtener_id(id: int):
         resultado = Control.query.get(id)
         return resultado
 
     @staticmethod
-    def obtener_todos():
-        resultado = Control.query.all()
-        return resultado
+    def obtener_todos() -> List["Control"]:
+        return Control.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_por_codigo(codigo):
-        resultado = Control.query.filter_by(codigo=codigo).first()
-        return resultado
+    def obtener_por_codigo(codigo: str) -> Optional["Control"]:
+        return Control.query.filter_by(codigo=codigo).first()  # type: ignore
 
 
 class Tramo:
@@ -94,10 +92,10 @@ class Tramo:
         Calcula la distancia lineal de los dos puntos de control de acuerdo a long y
         latitud establecida
         """
-        lon1 = np.radians(self._nodo_inicial.longitud(float))
-        lat1 = np.radians(self._nodo_inicial.latitud(float))
-        lon2 = np.radians(self._nodo_final.longitud(float))
-        lat2 = np.radians(self._nodo_final.latitud(float))
+        lon1 = np.radians(float(self._nodo_inicial.longitud or 0.0))
+        lat1 = np.radians(float(self._nodo_inicial.latitud or 0.0))
+        lon2 = np.radians(float(self._nodo_final.longitud or 0.0))
+        lat2 = np.radians(float(self._nodo_final.latitud or 0.0))
         # Radio de la tierra en Km con una diferencia de 2m en el punto mas bajo de 6371
         r = 6378.1370
         dlon = np.subtract(lon2, lon1)
@@ -123,7 +121,7 @@ class Tramo:
 class Seccion:
     _tramos: List[Tramo] = []
 
-    def __init__(self, tramos: List[Tramo] | Tramo = None) -> None:
+    def __init__(self, tramos: Optional[Union[List[Tramo], Tramo]] = None) -> None:
         if tramos:
             if isinstance(tramos, List):
                 for tramo in tramos:

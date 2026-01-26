@@ -1,7 +1,9 @@
+from datetime import time
 import logging
+from typing import cast
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import login_required  # type: ignore
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
 
@@ -20,10 +22,13 @@ bp = Blueprint("control_tiempo", __name__, url_prefix="/control_tiempo")
 @bp.route("/lista/<int:viaje_id>", methods=["GET", "POST"])
 @login_required
 @controlador_required
-def listar_controles_tiempos(viaje_id):
+def listar_controles_tiempos(viaje_id: int):
     # Para mostrar los controles de acuerdo a la secuencia
     cts = ControlTiempo.obtener_por_viaje(viaje_id)
     viaje = Viaje.obtener_viaje_por_id(viaje_id)
+    if viaje is None:
+        flash("El viaje no existe", "error")
+        return redirect(url_for("home.index"))
     controles_secuencia = SecuenciaControlRuta.obtener_todos_secuencia_por_ruta(
         viaje.id_ruta
     )
@@ -31,8 +36,8 @@ def listar_controles_tiempos(viaje_id):
     form.control.choices = [
         (cs.id_control, str(cs.control.codigo)) for cs in controles_secuencia
     ]
-    if form.validate_on_submit():
-        tiempo = form.tiempo.data
+    if form.validate_on_submit():  # type: ignore
+        tiempo = cast(time, form.tiempo.data)
         control = form.control.data
         try:
             control_tiempo = ControlTiempo(
@@ -61,8 +66,11 @@ def listar_controles_tiempos(viaje_id):
 @bp.route("/elimina/<int:ct_id>.<int:viaje_id>", methods=["GET", "POST"])
 @login_required
 @controlador_required
-def eliminar_control_tiempo(ct_id, viaje_id):
+def eliminar_control_tiempo(ct_id: int, viaje_id: int):
     ct = ControlTiempo.obtener_por_id(ct_id)
+    if ct is None:
+        flash("No existe control", "error")
+        return redirect(url_for("home.index"))
     ct.eliminar()
     return redirect(
         url_for("control_tiempo.listar_controles_tiempos", viaje_id=viaje_id)

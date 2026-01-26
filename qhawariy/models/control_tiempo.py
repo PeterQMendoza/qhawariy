@@ -1,4 +1,6 @@
 import datetime
+from typing import List
+
 from qhawariy import db
 from qhawariy.models.control import Control
 from qhawariy.models.fecha import Fecha
@@ -42,7 +44,12 @@ class ControlTiempo(db.Model):
         lazy=True
     )
 
-    def __init__(self, tiempo, id_control, id_viaje):
+    def __init__(
+        self,
+        tiempo: datetime.time,
+        id_control: int,
+        id_viaje: int
+    ):
         self.tiempo = tiempo
         self.id_control = id_control
         self.id_viaje = id_viaje
@@ -60,40 +67,37 @@ class ControlTiempo(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_por_id(id):
+    def obtener_por_id(id: int):
         resultado = ControlTiempo.query.get(id)
         return resultado
 
     @staticmethod
-    def obtener_todos():
-        resultado = ControlTiempo.query.all()
-        return resultado
+    def obtener_todos() -> List["ControlTiempo"]:
+        return ControlTiempo.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_por_cantidad_registros(cantidad):
-        resultado = ControlTiempo.query.limit(cantidad).all()
-        return resultado
+    def obtener_por_cantidad_registros(cantidad: int) -> List["ControlTiempo"]:
+        return ControlTiempo.query.limit(cantidad).all()  # type: ignore
 
     @staticmethod
-    def obtener_por_viaje(id_viaje):
-        resultado = ControlTiempo.query.filter_by(id_viaje=id_viaje).all()
-        return resultado
+    def obtener_por_viaje(id_viaje: int) -> List["ControlTiempo"]:
+        return ControlTiempo.query.filter_by(id_viaje=id_viaje).all()  # type: ignore
 
     @staticmethod
-    def vista_diaria(date: datetime.datetime, ruta_id: int):
-        resultado = ControlTiempo.query.join(
+    def vista_diaria(date: datetime.datetime, ruta_id: int) -> List["ControlTiempo"]:
+        resultado = ControlTiempo.query.join(  # type: ignore
             Viaje, Viaje.id_viaje == ControlTiempo.id_viaje
         ).join(
             Control, Control.id_control == ControlTiempo.id_control
         ).join(
-            Fecha, Fecha.id_fecha == Viaje.id_fecha
+            Fecha, Fecha.id_fecha == Viaje.id_fecha  # type: ignore
         ).join(
-            Ruta, Ruta.id_ruta == Viaje.id_ruta
+            Ruta, Ruta.id_ruta == Viaje.id_ruta  # type: ignore
         ).join(
-            Vehiculo, Vehiculo.id_vehiculo == Viaje.id_vehiculo
+            Vehiculo, Vehiculo.id_vehiculo == Viaje.id_vehiculo  # type: ignore
         ).where(
             Ruta.id_ruta == ruta_id,
-            Fecha.fecha == date
+            Fecha.fecha == date  # type: ignore
         ).all()
 
-        return resultado
+        return resultado  # type: ignore

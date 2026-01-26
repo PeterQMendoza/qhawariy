@@ -1,4 +1,5 @@
 import datetime
+from typing import List, Optional
 
 from qhawariy import db
 from qhawariy.models.vehiculo import Vehiculo
@@ -81,36 +82,39 @@ class DisponibleVehiculo(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_id(id):
+    def obtener_id(id: int) -> Optional["DisponibleVehiculo"]:
         resultado = DisponibleVehiculo.query.get(id)
         return resultado
 
     @staticmethod
-    def obtener_todos():
-        resultado = DisponibleVehiculo.query.all()
-        return resultado
+    def obtener_todos() -> List["DisponibleVehiculo"]:
+        return DisponibleVehiculo.query.all()  # type: ignore
 
     @staticmethod
-    def busca_fecha(desde, hasta):
-        resultado = DisponibleVehiculo.query.filter(
-            desde >= DisponibleVehiculo.fecha_inicio,
-            hasta <= DisponibleVehiculo.fecha_final
-        ).all()
-        return resultado
+    def busca_fecha(
+        desde: datetime.datetime,
+        hasta: datetime.datetime
+    ) -> List["DisponibleVehiculo"]:
+        return DisponibleVehiculo.query.filter(
+            DisponibleVehiculo.fecha_inicio >= desde,  # type: ignore
+            DisponibleVehiculo.fecha_final <= hasta  # type: ignore
+        ).all()  # type: ignore
 
     @staticmethod
-    def busca_vehiculo_flota(flota):
-        resultado = DisponibleVehiculo.query.join(
-            Vehiculo, DisponibleVehiculo.id_vehiculo == Vehiculo.id_vehiculo
-        ).where(
-            Vehiculo.flota == flota
-        ).all()
-        return resultado
+    def busca_vehiculo_flota(flota: int) -> List["DisponibleVehiculo"]:
+        return (
+            DisponibleVehiculo.query.join(
+                Vehiculo, DisponibleVehiculo.id_vehiculo == Vehiculo.id_vehiculo
+            )
+            .where(Vehiculo.flota == flota)  # type: ignore
+            .all()
+        )
 
     @staticmethod
-    def obtener_vehiculos_disponibles(fecha: datetime.datetime):
-        resultado = DisponibleVehiculo.query.filter(
-            fecha >= DisponibleVehiculo.fecha_inicio,
-            fecha <= DisponibleVehiculo.fecha_final
-        ).all()
-        return resultado
+    def obtener_vehiculos_disponibles(
+        fecha: datetime.datetime
+    ) -> List["DisponibleVehiculo"]:
+        return DisponibleVehiculo.query.filter(
+            DisponibleVehiculo.fecha_inicio <= fecha,  # type: ignore
+            DisponibleVehiculo.fecha_final >= fecha  # type: ignore
+        ).all()  # type: ignore

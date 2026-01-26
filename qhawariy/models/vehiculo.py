@@ -4,6 +4,7 @@ import datetime
 # import pytz
 
 from abc import ABC, abstractmethod
+from typing import List, Optional
 
 from sqlalchemy import desc
 from sqlalchemy.sql import func
@@ -24,21 +25,19 @@ class Vehiculo(db.Model):
         3=programado: el vehiculo esta en espera de su turno para iniciar viaje
         4=viaje: el vehiculo esta realizando un viaje en este instante
     """
-    _estado = None
-    _esta_viaje = None
 
     __tablename__ = "vehiculos"
-    id_vehiculo = db.Column(db.Integer, primary_key=True)
-    flota = db.Column(db.Integer, nullable=False)
-    placa = db.Column(db.String(8), unique=True, nullable=False)
-    marca = db.Column(db.String(45), nullable=False)
-    modelo = db.Column(db.String(45), nullable=False)
-    fecha_fabricacion = db.Column(
+    id_vehiculo: int = db.Column(db.Integer, primary_key=True)
+    flota: int = db.Column(db.Integer, nullable=False)
+    placa: str = db.Column(db.String(8), unique=True, nullable=False)
+    marca: str = db.Column(db.String(45), nullable=False)
+    modelo: str = db.Column(db.String(45), nullable=False)
+    fecha_fabricacion: datetime.datetime = db.Column(
         db.DateTime, default=datetime.datetime.now(tz=LIMA_TZ)
     )
-    numero_asientos = db.Column(db.Integer, nullable=False)
-    activo = db.Column(db.Boolean, default=False)
-    estado = db.Column(db.Integer, nullable=False)
+    numero_asientos: int = db.Column(db.Integer, nullable=False)
+    activo: bool = db.Column(db.Boolean, default=False)
+    estado: int = db.Column(db.Integer, nullable=False)
 
     # Establecer relacion inversa {Tabla2}*1-->1{Tabla1}
     vehiculos = db.relationship(
@@ -57,14 +56,27 @@ class Vehiculo(db.Model):
         cascade="all,delete-orphan"
     )
 
+    __allow_unmapped__ = True
+
+    _estado: Optional[Estado] = None
+    _esta_viaje: Optional[bool] = None
+
+    @property
+    def esta_viaje(self) -> bool:
+        return bool(self._esta_viaje)
+
+    @esta_viaje.setter
+    def esta_viaje(self, value: bool) -> None:
+        self._esta_viaje = value
+
     def __init__(
         self,
-        flota,
-        placa,
-        marca,
-        modelo,
-        fecha_fabricacion,
-        numero_asientos
+        flota: int,
+        placa: str,
+        marca: str,
+        modelo: str,
+        fecha_fabricacion: datetime.datetime,
+        numero_asientos: int
     ):
         self.flota = flota
         self.placa = placa
@@ -97,22 +109,24 @@ class Vehiculo(db.Model):
                 self.transicion(EstadoViaje())
 
     def establece_espera(self):
-        if self.activo:
+        if self.activo and self._estado is not None:
             self._estado.espera()
 
     def establece_viaje(self):
-        if self.activo:
+        if self.activo and self._estado is not None:
             self._estado.viaje()
 
     def establece_programado(self):
-        if self.activo:
+        if self.activo and self._estado is not None:
             self._estado.programado()
 
     def establece_activo(self):
-        self._estado.activo()
+        if self._estado is not None:
+            self._estado.activo()
 
     def establece_inactivo(self):
-        self._estado.inactivo()
+        if self._estado is not None:
+            self._estado.inactivo()
 
     def guardar(self):
         self.actualizar()
@@ -125,71 +139,85 @@ class Vehiculo(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_vehiculo_por_id(id):
+    def obtener_vehiculo_por_id(id: int):
         resultado = Vehiculo.query.get(id)
         return resultado
 
     @staticmethod
-    def obtener_todos_vehiculos():
-        resultado = Vehiculo.query.order_by(desc(Vehiculo.flota)).all()
+    def obtener_todos_vehiculos() -> List["Vehiculo"]:
+        resultado: List[Vehiculo] = (  # type: ignore
+            Vehiculo.query.order_by(desc(Vehiculo.flota)).all()  # type: ignore
+        )
         for v in resultado:
             v.actualizar()
         return resultado
 
     @staticmethod
-    def obtener_todos_vehiculos_activos():
-        resultado = Vehiculo.query.filter_by(activo=True).order_by(
-            desc(Vehiculo.flota)
-        ).all()
+    def obtener_todos_vehiculos_activos() -> List["Vehiculo"]:
+        resultado: List[Vehiculo] = (  # type: ignore
+            Vehiculo.query.filter_by(activo=True).order_by(
+                desc(Vehiculo.flota)  # type: ignore
+            ).all()
+        )
         for v in resultado:
             v.actualizar()
         return resultado
 
     @staticmethod
-    def obtener_todos_vehiculos_programado():
-        resultado = Vehiculo.query.filter_by(estado=3).order_by(
-            desc(Vehiculo.flota)
-        ).all()
+    def obtener_todos_vehiculos_programado() -> List["Vehiculo"]:
+        resultado: List[Vehiculo] = (  # type: ignore
+            Vehiculo.query.filter_by(estado=3).order_by(
+                desc(Vehiculo.flota)  # type: ignore
+            ).all()
+        )
         for v in resultado:
             v.actualizar()
         return resultado
 
     @staticmethod
-    def obtener_vehiculo_por_placa(placa):
-        return Vehiculo.query.filter_by(placa=placa).first()
+    def obtener_vehiculo_por_placa(placa: str) -> Optional["Vehiculo"]:
+        return Vehiculo.query.filter_by(placa=placa).first()  # type: ignore
 
     @staticmethod
-    def obtener_vehiculo_por_flota(flota):
-        return Vehiculo.query.filter_by(flota=flota).first()
+    def obtener_vehiculo_por_flota(flota: int) -> Optional["Vehiculo"]:
+        return Vehiculo.query.filter_by(flota=flota).first()  # type: ignore
 
     @staticmethod
-    def obtener_vehiculo_por_fabricacion(fecha_fabricacion):
+    def obtener_vehiculo_por_fabricacion(fecha_fabricacion: datetime.datetime):
         return Vehiculo.query.filter_by(fecha_fabricacion=fecha_fabricacion)
 
     @staticmethod
-    def busqueda_flota(palabra):
-        resultado = Vehiculo.query.filter_by(flota=palabra).all()
+    def busqueda_flota(palabra: str) -> List["Vehiculo"]:
+        resultado: List[Vehiculo] = (  # type: ignore
+            Vehiculo.query.filter_by(flota=palabra).all()
+        )
         return resultado
 
     @staticmethod
-    def busqueda_placa(palabra):
-        resultado = Vehiculo.query.filter_by(placa=palabra).all()
+    def busqueda_placa(palabra: str) -> List["Vehiculo"]:
+        resultado: List["Vehiculo"] = (  # type: ignore
+            Vehiculo.query.filter_by(placa=palabra).all()
+        )
         return resultado
 
     @staticmethod
-    def busqueda_marca(palabra):
-        resultado = Vehiculo.query.filter_by(marca=palabra).all()
+    def busqueda_marca(palabra: str) -> List["Vehiculo"]:
+        resultado: List["Vehiculo"] = (  # type: ignore
+            Vehiculo.query.filter_by(marca=palabra).all()
+        )
         return resultado
 
     @staticmethod
-    def busqueda_modelo(palabra):
-        resultado = Vehiculo.query.filter_by(modelo=palabra).all()
+    def busqueda_modelo(palabra: str) -> List["Vehiculo"]:
+        resultado: List["Vehiculo"] = (  # type: ignore
+            Vehiculo.query.filter_by(modelo=palabra).all()
+        )
         return resultado
 
     @staticmethod
     def estadistica_todos_vehiculos_activos():
         return Vehiculo.query.filter_by(activo=True).add_columns(
-            func.count(Vehiculo.id_vehiculo)
+            func.count(Vehiculo.id_vehiculo)  # type: ignore
         ).all()
 
 
@@ -228,7 +256,7 @@ class EstadoViaje(Estado):
         """
         Estado que cambia cuando un vehiculo es castigado
         """
-        self.vehiculo._esta_viaje = False
+        self.vehiculo.esta_viaje = False
         self.vehiculo.estado = 2
         self.vehiculo.transicion(EstadoEspera())
         self.vehiculo.guardar()
@@ -240,7 +268,7 @@ class EstadoViaje(Estado):
         """
         Estado cuando vehiculo continua con la programacion
         """
-        self.vehiculo._esta_viaje = False
+        self.vehiculo.esta_viaje = False
         self.vehiculo.estado = 3
         self.vehiculo.transicion(EstadoProgramado())
         self.vehiculo.guardar()
@@ -260,7 +288,7 @@ class EstadoEspera(Estado):
         pass
 
     def viaje(self) -> None:
-        self.vehiculo._esta_viaje = True
+        self.vehiculo.esta_viaje = True
         self.vehiculo.estado = 4
         self.vehiculo.transicion(EstadoViaje())
         self.vehiculo.guardar()
@@ -287,7 +315,7 @@ class EstadoProgramado(Estado):
         self.vehiculo.guardar()
 
     def viaje(self) -> None:
-        self.vehiculo._esta_viaje = True
+        self.vehiculo.esta_viaje = True
         self.vehiculo.estado = 4
         self.vehiculo.transicion(EstadoViaje())
         self.vehiculo.guardar()

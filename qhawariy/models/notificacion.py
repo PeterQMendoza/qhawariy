@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Optional
 from qhawariy import db
 from qhawariy.utilities.builtins import LIMA_TZ
 
@@ -49,18 +50,18 @@ class Notificacion(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'<Notificacion {self.id}>'
+        return f'<Notificacion {self.id_notificacion}>'
 
     @staticmethod
-    def obtener_todos_por_usuario(id_usuario: int):
-        resultado = Notificacion.query.filter_by(
-            id_usuario=id_usuario
-        ).order_by(
-            Notificacion.creado_en.desc()
-        ).all()
-        return resultado
+    def obtener_todos_por_usuario(id_usuario: int) -> List["Notificacion"]:
+        return (
+            Notificacion.query
+            .filter_by(id_usuario=id_usuario)
+            .order_by(Notificacion.creado_en.desc())
+            .all()
+        )  # type: ignore
 
     @staticmethod
-    def obtener_por_id(id_notificacion):
+    def obtener_por_id(id_notificacion: int) -> Optional["Notificacion"]:
         resultado = Notificacion.query.get(id_notificacion)
         return resultado

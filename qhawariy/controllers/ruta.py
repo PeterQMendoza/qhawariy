@@ -1,5 +1,7 @@
 
+import datetime
 import logging
+from typing import cast
 # import pandas as pd
 # import numpy as np
 
@@ -12,7 +14,7 @@ from flask import (
     url_for,
     abort
 )
-from flask_login import login_required
+from flask_login import login_required  # type: ignore
 # from werkzeug.urls import url_parse
 from urllib.parse import urlparse
 
@@ -63,11 +65,11 @@ def agregar_ruta():
         (r.id_ruta, str(r.codigo)) for r in rutas
     ]
 
-    if form.validate_on_submit():
-        codigo = form.codigo.data
-        inicio_vigencia = form.inicio_vigencia.data
-        fin_vigencia = form.fin_vigencia.data
-        documento = form.documento.data
+    if form.validate_on_submit():  # type: ignore
+        codigo = cast(str, form.codigo.data)
+        inicio_vigencia = cast(datetime.datetime, form.inicio_vigencia.data)
+        fin_vigencia = cast(datetime.datetime, form.fin_vigencia.data)
+        documento = cast(str, form.documento.data)
         terminal1 = form.terminal1.data
         terminal2 = form.terminal2.data
         siguiente_ruta = form.proxima_ruta.data
@@ -106,8 +108,8 @@ def agregar_ruta():
                     diferentes ubicaciones. Los terminales ingresados son iguales
                     'Terminal 1:{t1}' y 'Terminal 2:{t2}'"""
                     .format(
-                        t1=Terminal.obtener_terminal_por_id(terminal1).direccion,
-                        t2=Terminal.obtener_terminal_por_id(terminal2).direccion
+                        t1=Terminal.obtener_terminal_por_id(terminal1),
+                        t2=Terminal.obtener_terminal_por_id(terminal2)
                     ),
                     category='Advertencia'
                 )
@@ -137,7 +139,7 @@ def agregar_terminal():
         (d.id_distrito, str(d.nombre))for d in distritos
     ]
 
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # type: ignore
         direccion = form.direccion.data
         latitud = form.latitud.data
         longitud = form.longitud.data

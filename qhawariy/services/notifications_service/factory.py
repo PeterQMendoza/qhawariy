@@ -1,13 +1,14 @@
 from __future__ import annotations
+from typing import Any
 from qhawariy.models.notificacion import Notificacion
 
 
 class SingletonMeta(type):
     """Clase SingletonMeta """
 
-    _instancias = {}
+    _instancias: dict[Any, Any] = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
         """
         Posibles cambios al valor de los argumentos de `__init__` no
         afecta el retorno de la instancia.

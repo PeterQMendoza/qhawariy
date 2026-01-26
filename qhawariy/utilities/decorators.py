@@ -1,6 +1,6 @@
 # Decoradores usados para estblecer nivel de acceso por roles al sistema
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, Optional, ParamSpec, TypeVar
 
 from flask import (
     Response,
@@ -14,10 +14,12 @@ from flask_wtf.csrf import validate_csrf   # type: ignore
 from wtforms.validators import ValidationError
 
 F = TypeVar("F", bound=Callable[..., Response])
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 # Estableciendo acceso de usuario de acuerdo a roles
-def admin_required(func: F) -> F:
+def admin_required(func: Callable[P, R]) -> Callable[P, R]:
     @wraps(func)
     def decorated_function(*args: Any, **kwargs: Any):
         from qhawariy.models.usuario_rol import UsuarioRol
@@ -31,7 +33,7 @@ def admin_required(func: F) -> F:
     return decorated_function  # type: ignore
 
 
-def operacion_required(func: F) -> F:
+def operacion_required(func: Callable[P, R]) -> Callable[P, R]:
     @wraps(func)
     def decorated_function(*args: Any, **kwargs: Any):
         from qhawariy.models.usuario_rol import UsuarioRol
@@ -45,7 +47,7 @@ def operacion_required(func: F) -> F:
     return decorated_function  # type: ignore
 
 
-def controlador_required(func: F) -> F:
+def controlador_required(func: Callable[P, R]) -> Callable[P, R]:
     @wraps(func)
     def decorated_function(*args: Any, **kwargs: Any):
         from qhawariy.models.usuario_rol import UsuarioRol

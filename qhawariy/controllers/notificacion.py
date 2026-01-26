@@ -9,7 +9,7 @@ from flask import (
 
 from flask_login import (
     current_user,
-    login_required
+    login_required  # type: ignore
 )
 
 from flask_wtf import csrf
@@ -29,7 +29,7 @@ def mostrar_notificaciones():
         # Objeto Usuario.id_usuario
         current_user.id_usuario
     )
-    token = csrf.generate_csrf()
+    token = csrf.generate_csrf()  # type: ignore
     return render_template(
         "notificacion/lista_notificaciones.html",
         notificaciones=notificaciones,
@@ -41,6 +41,7 @@ def mostrar_notificaciones():
 @login_required
 def marcar_como_leida(notificacion_id: int):
     notificacion = Notificacion.obtener_por_id(notificacion_id)
-    notificacion.marcar_como_leida()
-    notificacion.guardar()
+    if notificacion:
+        notificacion.marcar_como_leida()
+        notificacion.guardar()
     return redirect(url_for("notificacion.mostrar_notificaciones"))

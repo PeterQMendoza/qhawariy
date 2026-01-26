@@ -1,3 +1,4 @@
+from typing import List
 from qhawariy import db
 
 
@@ -5,21 +6,21 @@ class Terminal(db.Model):
     """Modelo Terminal:
     """
     __tablename__ = "terminales"
-    id_terminal = db.Column(db.Integer, primary_key=True)
-    direccion = db.Column(db.String(50), nullable=False)
-    latitud = db.Column(db.String(25), nullable=False)
-    longitud = db.Column(db.String(25), nullable=False)
-    id_departamento = db.Column(
+    id_terminal: int = db.Column(db.Integer, primary_key=True)
+    direccion: str = db.Column(db.String(50), nullable=False)
+    latitud: str = db.Column(db.String(25), nullable=False)
+    longitud: str = db.Column(db.String(25), nullable=False)
+    id_departamento: int = db.Column(
         db.Integer,
         db.ForeignKey("departamentos.id_departamento"),
         nullable=False
     )
-    id_provincia = db.Column(
+    id_provincia: int = db.Column(
         db.Integer,
         db.ForeignKey("provincias.id_provincia"),
         nullable=False
     )
-    id_distrito = db.Column(
+    id_distrito: int = db.Column(
         db.Integer,
         db.ForeignKey("distritos.id_distrito"),
         nullable=False
@@ -57,12 +58,12 @@ class Terminal(db.Model):
 
     def __init__(
         self,
-        direccion,
-        latitud,
-        longitud,
-        id_departamento,
-        id_provincia,
-        id_distrito
+        direccion: str,
+        latitud: str,
+        longitud: str,
+        id_departamento: int,
+        id_provincia: int,
+        id_distrito: int
     ):
         self.direccion = direccion
         self.latitud = latitud
@@ -84,9 +85,9 @@ class Terminal(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_terminal_por_id(id):
+    def obtener_terminal_por_id(id: int):
         return Terminal.query.get(id)
 
     @staticmethod
-    def obtener_todos_terminales():
-        return Terminal.query.all()
+    def obtener_todos_terminales() -> List["Terminal"]:
+        return Terminal.query.all()  # type: ignore

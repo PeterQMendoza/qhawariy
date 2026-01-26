@@ -1,3 +1,4 @@
+from typing import List
 from qhawariy import db
 
 
@@ -15,7 +16,7 @@ class Distrito(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, nombre):
+    def __init__(self, nombre: str):
         self.nombre = nombre
 
     def __repr__(self):
@@ -31,5 +32,5 @@ class Distrito(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_todos_distritos():
-        return Distrito.query.all()
+    def obtener_todos_distritos() -> List["Distrito"]:
+        return Distrito.query.all()  # type: ignore

@@ -1,7 +1,7 @@
 import logging
 
 
-def registrar_evento(tipo: str, mensaje):
+def registrar_evento(tipo: str, mensaje: str):
     """
     Registra eventos con diferentes niveles de gravedad
 
@@ -14,7 +14,7 @@ def registrar_evento(tipo: str, mensaje):
         "INFO": logging.info,
         "WARNING": logging.warning,
         "ERROR": logging.error,
-        "CRITAL": logging.critical,
+        "CRITAL": logging.critical
     }
     log_function = niveles.get(tipo.upper(), logging.info)
     log_function(mensaje)
