@@ -1,0 +1,73 @@
+services:
+  web:
+    image: qhawariy:latest
+    build:
+      context: ./qhawariy
+      dockerfile: Dockerfile
+      args:
+        APP_UID: 1000
+        APP_GID: 1000
+    container_name: qhawariy
+    restart: always
+    ports:
+      - "5000:5000"
+    networks:
+      - backend_qh
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://web:5000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - static_data:/qhawariy/static:rw
+      - instance_config:/instance/config:rw
+      - ~/.ssh:/root/.ssh:ro
+    environment:
+      - GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=no
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend_qh
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      # Corregir errores de conexion con IPv6
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-qh
+    restart: always
+    ports:
+      - "8081:80"
+    volumes:
+      - static_data:/qhawariy/static:ro
+      - files_data:/files:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - web
+    networks:
+      - backend_qh
+
+networks:
+  backend_qh:
+    name: network-qh
+    driver: bridge
+
+volumes:
+  mysql_data:
+  static_data:
+  instance_config:
+  files_data:
