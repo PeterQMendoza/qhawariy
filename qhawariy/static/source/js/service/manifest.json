@@ -1,0 +1,42 @@
+{
+    "id":"/?qhawariy_source=pwa",
+    "background_color": "#4D4D4D",
+    "capture_links":"always",
+    "display": "standalone",
+    "display_override":["fullscreen","standalone","minimal-ui"],
+    "icons": [
+        {
+            "src": "/static/img/qhawariy_icon_pwa.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/static/img/qhawariy_icon_pwa_monocromatic.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ],
+    "description":"Aplicacion web para la administracion de flota vehicular",
+    "name": "Qhawariy Aplicación Web",
+    "related_applications":[],
+    "scope":"/",
+    "short_name": "Qhawariy",
+    "shortcuts":[
+        {
+            "name":"Agregar Programacion",
+            "short_name":"Programacion",
+            "description":"Agrega un programacion a un vehiculo",
+            "url":"/programacion/agregar",
+            "icons":[
+                {
+                    "src":"/static/img/schedule_vehicle.svg",
+                    "sizes":"any",
+                    "type":"image/svg+xml"
+                }
+            ]
+        }
+    ],
+    "start_url": "/",
+    "theme_color": "#4D4D4D",
+    "orientation":"portrait"
+}
