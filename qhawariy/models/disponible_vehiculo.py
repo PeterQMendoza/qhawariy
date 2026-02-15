@@ -1,9 +1,11 @@
 import datetime
 from typing import List, Optional
+import uuid
 
 from qhawariy import db
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.utilities.builtins import LIMA_TZ
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 ahora = datetime.datetime.now(LIMA_TZ)
 
@@ -19,7 +21,13 @@ class DisponibleVehiculo(db.Model):
     """
 
     __tablename__ = "disponibles_vehiculos"
-    id_dv = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_dv: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     fecha_inicio = db.Column(
         db.DateTime,
         default=datetime.datetime(
@@ -46,8 +54,8 @@ class DisponibleVehiculo(db.Model):
         nullable=False
     )
     id_vehiculo = db.Column(
-        db.Integer,
-        db.ForeignKey('vehiculos.id_vehiculo', ondelete='CASCADE'),
+        ShortUUID(),
+        db.ForeignKey('app.vehiculos.id_vehiculo', ondelete='CASCADE'),
         nullable=False
     )
 
@@ -104,7 +112,8 @@ class DisponibleVehiculo(db.Model):
     def busca_vehiculo_flota(flota: int) -> List["DisponibleVehiculo"]:
         return (
             DisponibleVehiculo.query.join(
-                Vehiculo, DisponibleVehiculo.id_vehiculo == Vehiculo.id_vehiculo
+                Vehiculo,
+                DisponibleVehiculo.id_vehiculo == Vehiculo.id_vehiculo  # type: ignore
             )
             .where(Vehiculo.flota == flota)  # type: ignore
             .all()

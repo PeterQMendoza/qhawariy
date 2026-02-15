@@ -2,6 +2,7 @@
 from flask_wtf import FlaskForm
 from wtforms import ValidationError
 from wtforms.fields import (
+    core,
     StringField,
     SubmitField,
     PasswordField,
@@ -22,7 +23,7 @@ from wtforms.validators import (
 from qhawariy.models.usuario import Usuario
 
 
-def validar_dni_unico(form, field):
+def validar_dni_unico(form: FlaskForm, field: core.Field):
     """ Valida que el DNI no este duplicado en la BD"""
     usuario = Usuario.obtener_por_dni(field.data)
     if usuario:
@@ -31,7 +32,7 @@ def validar_dni_unico(form, field):
 
 # Formulario para registrar un nuevo usuario al sistema
 class RegisterForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     nombres = StringField("Nombres", validators=[
@@ -85,7 +86,7 @@ class RegisterForm(FlaskForm):
 
 # Formulario para el acceso al sistema
 class LoginForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     email = StringField("Email", validators=[DataRequired("Necesitamos tu email.")])
@@ -106,7 +107,7 @@ class LoginForm(FlaskForm):
 
 # Formulario para cambiar datos de usuario
 class CambiarDatosForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     nombres = StringField(
@@ -135,7 +136,7 @@ class CambiarDatosForm(FlaskForm):
 
 
 class CambiaClaveForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     password = PasswordField("Nueva Contraseña", validators=[
@@ -172,7 +173,7 @@ class CambiaClaveForm(FlaskForm):
 
 
 class CambiaEmailForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     email = StringField("Email", validators=[
         DataRequired("Necesitamos tu email.")
@@ -182,7 +183,7 @@ class CambiaEmailForm(FlaskForm):
 
 
 class RestablecerPasswordForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     email = StringField(
@@ -197,7 +198,7 @@ class RestablecerPasswordForm(FlaskForm):
 
 
 class CrearNuevoPasswordForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     password = PasswordField("Nuevo contraseña", validators=[
@@ -229,7 +230,7 @@ class CrearNuevoPasswordForm(FlaskForm):
 
 
 class NotificacionForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     submit = SubmitField("Marcar como leida")

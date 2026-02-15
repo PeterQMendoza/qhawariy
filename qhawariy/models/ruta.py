@@ -1,14 +1,22 @@
 import datetime
 from typing import List, Optional
+import uuid
 import pytz
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Ruta(db.Model):
     """Modelo Ruta:
     """
     __tablename__ = "rutas"
-    id_ruta: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_ruta: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     codigo: str = db.Column(db.String(8), unique=True, nullable=False)
     lima_tz = pytz.timezone('America/Lima')
     inicio_vigencia: datetime.datetime = db.Column(
@@ -16,7 +24,7 @@ class Ruta(db.Model):
         default=datetime.datetime.now(lima_tz),
         nullable=False
     )
-    fin_vigencia = db.Column(
+    fin_vigencia: datetime.datetime = db.Column(
         db.DateTime,
         default=datetime.datetime.now(lima_tz),
         nullable=False

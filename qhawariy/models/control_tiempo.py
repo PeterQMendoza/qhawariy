@@ -1,5 +1,6 @@
 import datetime
 from typing import List
+import uuid
 
 from qhawariy import db
 from qhawariy.models.control import Control
@@ -7,6 +8,7 @@ from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.viaje import Viaje
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class ControlTiempo(db.Model):
@@ -16,16 +18,22 @@ class ControlTiempo(db.Model):
 
     """
     __tablename__ = 'controles_tiempos'
-    id_ct = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_ct: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     tiempo = db.Column(db.Time, nullable=False)
     id_control = db.Column(
-        db.Integer,
-        db.ForeignKey('controles.id_control'),
+        ShortUUID(),
+        db.ForeignKey('app.controles.id_control'),
         nullable=False
     )
     id_viaje = db.Column(
-        db.Integer,
-        db.ForeignKey('viajes.id_viaje'),
+        ShortUUID(),
+        db.ForeignKey('app.viajes.id_viaje'),
         nullable=False
     )
 
@@ -67,7 +75,7 @@ class ControlTiempo(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_por_id(id: int):
+    def obtener_por_id(id: str):
         resultado = ControlTiempo.query.get(id)
         return resultado
 
@@ -86,9 +94,9 @@ class ControlTiempo(db.Model):
     @staticmethod
     def vista_diaria(date: datetime.datetime, ruta_id: int) -> List["ControlTiempo"]:
         resultado = ControlTiempo.query.join(  # type: ignore
-            Viaje, Viaje.id_viaje == ControlTiempo.id_viaje
+            Viaje, Viaje.id_viaje == ControlTiempo.id_viaje  # type: ignore
         ).join(
-            Control, Control.id_control == ControlTiempo.id_control
+            Control, Control.id_control == ControlTiempo.id_control  # type: ignore
         ).join(
             Fecha, Fecha.id_fecha == Viaje.id_fecha  # type: ignore
         ).join(
@@ -96,7 +104,7 @@ class ControlTiempo(db.Model):
         ).join(
             Vehiculo, Vehiculo.id_vehiculo == Viaje.id_vehiculo  # type: ignore
         ).where(
-            Ruta.id_ruta == ruta_id,
+            Ruta.id_ruta == ruta_id,  # type: ignore
             Fecha.fecha == date  # type: ignore
         ).all()
 

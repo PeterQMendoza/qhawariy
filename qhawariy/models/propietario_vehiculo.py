@@ -1,27 +1,35 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
+import uuid
 from sqlalchemy import desc
 from sqlalchemy.sql import func
 
 from qhawariy import db
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.propietario import Propietario
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class PropietarioVehiculo(db.Model):
     __tablename__ = "propietarios_vehiculos"
-    id_pv: int = db.Column(db.Integer, primary_key=True)
-    id_vehiculo: int = db.Column(
-        db.Integer,
-        db.ForeignKey("vehiculos.id_vehiculo", ondelete="CASCADE"),
+    __table_args__ = {"schema": "app"}
+
+    id_pv: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+    id_vehiculo: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.vehiculos.id_vehiculo", ondelete="CASCADE"),
         nullable=False
     )
-    id_propietario: int = db.Column(
-        db.Integer,
-        db.ForeignKey("propietarios.id_propietario", ondelete="CASCADE"),
+    id_propietario: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.propietarios.id_propietario", ondelete="CASCADE"),
         nullable=False
     )
 
-    def __init__(self, id_propietario: int, id_vehiculo: int):
+    def __init__(self, id_propietario: str, id_vehiculo: str):
         self.id_propietario = id_propietario
         self.id_vehiculo = id_vehiculo
 
@@ -54,40 +62,56 @@ class PropietarioVehiculo(db.Model):
         return PropietarioVehiculo.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_vehiculo_join_propietario():
-        resultado = PropietarioVehiculo.query.join(
-            Propietario,
-            PropietarioVehiculo.id_propietario == Propietario.id_propietario  # type: ignore
-        ).add_columns(
-            PropietarioVehiculo.id_pv,  # type: ignore
-            Propietario.id_propietario,   # type: ignore
-            Propietario.nombres,   # type: ignore
-            Propietario.apellidos,   # type: ignore
-            Vehiculo.id_vehiculo,   # type: ignore
-            Vehiculo.placa,   # type: ignore
-            Vehiculo.flota   # type: ignore
-        ).filter(
-            Propietario.id_propietario == PropietarioVehiculo.id_propietario  # type: ignore
-        ).filter(
-            Vehiculo.id_vehiculo == PropietarioVehiculo.id_vehiculo  # type: ignore
-        ).order_by(desc(Vehiculo.flota)).all()  # type: ignore
-        return resultado
+    def obtener_vehiculo_join_propietario() -> List[Tuple[
+        int,
+        int,
+        str,
+        int,
+        str,
+        str
+    ]]:
+        return (
+            db.session.query(
+                PropietarioVehiculo.id_pv,  # type: ignore
+                Propietario.id_propietario,   # type: ignore
+                Propietario.nombres,   # type: ignore
+                Propietario.apellidos,   # type: ignore
+                Vehiculo.id_vehiculo,   # type: ignore
+                Vehiculo.placa,   # type: ignore
+                Vehiculo.flota   # type: ignore
+            )
+            .join(
+                Propietario,
+                PropietarioVehiculo.id_propietario == Propietario.id_propietario  # type: ignore
+            )
+            .filter(
+                Vehiculo.id_vehiculo == PropietarioVehiculo.id_vehiculo  # type: ignore
+            )
+            .order_by(desc(Vehiculo.flota))  # type: ignore
+            .all()
+        )
 
     @staticmethod
     def estadistica_pv_y_vehiculo_propietario(
         activo: bool
-    ):
-        resultado = PropietarioVehiculo.query.join(
-            Vehiculo,
-            PropietarioVehiculo.id_vehiculo == Vehiculo.id_vehiculo  # type: ignore
-        ).add_columns(
-            Propietario.id_propietario,  # type: ignore
-            func.count(Vehiculo.id_vehiculo)  # type: ignore
-        ).filter(
-            Propietario.id_propietario == PropietarioVehiculo.id_propietario  # type: ignore
-        ).where(
-            Vehiculo.activo == activo  # type: ignore
-        ).group_by(
-            Propietario.id_propietario  # type: ignore
-        ).all()
-        return resultado
+    ) -> List[Tuple[str, int]]:
+        return (
+            db.session.query(
+                Propietario.id_propietario,  # type: ignore
+                func.count(Vehiculo.id_vehiculo)  # type: ignore
+            )
+            .select_from(PropietarioVehiculo)
+            .join(
+                Vehiculo,
+                PropietarioVehiculo.id_vehiculo == Vehiculo.id_vehiculo  # type: ignore
+            )
+            .join(
+                Propietario,
+                PropietarioVehiculo.id_propietario == Propietario.id_propietario  # type: ignore
+            )
+            .filter(
+                Vehiculo.activo.is_(activo)  # type: ignore
+            )
+            .group_by(Propietario.id_propietario)
+            .all()
+        )

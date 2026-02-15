@@ -1,17 +1,15 @@
 import logging
 from typing import cast
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import login_required  # type: ignore
-
-# from werkzeug.urls import url_parse
-from urllib.parse import urlparse
 
 from qhawariy.forms.control_form import ControlForm, ControlRutaForm
 from qhawariy.models.control import Control
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.secuencia_control_ruta import SecuenciaControlRuta
 from qhawariy.utilities.decorators import admin_required
+from qhawariy.utilities.redirect import redireccion_seguro
 
 
 logger = logging.getLogger(__name__)
@@ -27,24 +25,26 @@ def listar_controles():
     form = ControlForm()
     if form.validate_on_submit():  # type: ignore
         codigo = cast(str, form.codigo.data)
-        latitud = cast(str, form.latitud.data)
-        longitud = cast(str, form.longitud.data)
+        latitud = cast(float, form.latitud.data)
+        longitud = cast(float, form.longitud.data)
         consulta = Control.obtener_por_codigo(codigo=codigo)
-        if consulta is None:
-            try:
-                control = Control(codigo=codigo, latitud=latitud, longitud=longitud)
-                control.guardar()
-                siguiente_pagina = request.args.get("next", None)
-                if not siguiente_pagina or urlparse(siguiente_pagina).netloc != '':
-                    siguiente_pagina = url_for("control.listar_controles")
-                return redirect(siguiente_pagina)
-            except Exception as e:
-                flash(f"error:{e}", "error")
-        else:
+        if consulta:
             flash(
                 f"Ya existe un punto de control registrado con codigo:{codigo}",
                 "error"
             )
+            redireccion_seguro("control.listar_controles")
+        else:
+            try:
+                nuevo_control = Control(
+                    codigo=codigo,
+                    latitud=latitud,
+                    longitud=longitud
+                )
+                nuevo_control.guardar()
+            except Exception as e:
+                flash(f"error:{e}", "error")
+                redireccion_seguro("control.listar_controles")
     return render_template(
         "control/lista_control.html",
         controles=controles,
@@ -58,7 +58,7 @@ def listar_controles():
 @admin_required
 def eliminar_control(control_id: int):
     control = Control.obtener_id(control_id)
-    if control is not None:
+    if control:
         control.eliminar()
     return redirect(url_for("control.listar_controles"))
 
@@ -75,29 +75,19 @@ def listar_control_ruta():
     form.control.choices = [(c.id_control, c.codigo) for c in controles]
 
     if form.validate_on_submit():  # type: ignore
-        ruta = form.ruta.data
-        control = form.control.data
-        ultimo = SecuenciaControlRuta.obtener_secuencia_por_ruta(ruta)
-        if ultimo:
-            try:
-                secuencia = SecuenciaControlRuta(ultimo.secuencia+1, ruta, control)
-                secuencia.guardar()
-                siguiente_pagina = request.args.get("next", None)
-                if not siguiente_pagina or urlparse(siguiente_pagina).netloc != '':
-                    siguiente_pagina = url_for("control.listar_control_ruta")
-                return redirect(siguiente_pagina)
-            except Exception as e:
-                flash(f"Ocurrio un error:{e}", "error")
-        else:
-            try:
-                secuencia = SecuenciaControlRuta(1, ruta, control)
-                secuencia.guardar()
-                siguiente_pagina = request.args.get("next", None)
-                if not siguiente_pagina or urlparse(siguiente_pagina).netloc != '':
-                    siguiente_pagina = url_for("control.listar_control_ruta")
-                return redirect(siguiente_pagina)
-            except Exception as e:
-                flash(f"Ocurrio un error:{e}", "error")
+        ruta_id = form.ruta.data
+        control_id = form.control.data
+        try:
+            ultimo = SecuenciaControlRuta.obtener_secuencia_por_ruta(ruta_id)
+            nueva_secuencia = (ultimo.secuencia + 1) if ultimo else 1
+
+            secuencia = SecuenciaControlRuta(nueva_secuencia, ruta_id, control_id)
+            secuencia.guardar()
+
+        except Exception as e:
+            flash(f"Ocurrio un error:{e}", "error")
+            redireccion_seguro("control.listar_control_ruta")
+
     return render_template(
         "control/lista_control_ruta.html",
         form=form,
@@ -112,23 +102,21 @@ def listar_control_ruta():
 def eliminar_control_ruta(scr_id: int):
     try:
         secuencia = SecuenciaControlRuta.obtener_por_id(scr_id)
-        if secuencia is None:
+        if not secuencia:
             flash("La secuencia no existe", "error")
-            return redirect(url_for("control.listar_control_ruta"))
+            return redireccion_seguro("control.listar_control_ruta")
 
         # Obtener todas las secuencias de la misma ruta
         todos = SecuenciaControlRuta.obtener_todos_secuencia_por_ruta(secuencia.id_ruta)
 
         # Ajustar a las secuencias posteriores
-        aux = int(secuencia.secuencia)
         for sec in todos:
-            if aux < sec.secuencia:
-                sec.secuencia = sec.secuencia-1
+            if sec.secuencia > secuencia.secuencia:
+                sec.secuencia -= 1
                 sec.guardar()
 
         # eliminar secuencia de db
         secuencia.eliminar()
-
         flash("Secuencia eliminada correctamente", "success")
     except Exception as e:
         logger.error(f"Error al eliminar secuencia{scr_id}: {e}")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any
+import uuid
 from qhawariy.models.notificacion import Notificacion
 
 
@@ -22,7 +23,7 @@ class SingletonMeta(type):
 class NotificacionFactory(metaclass=SingletonMeta):
     @staticmethod
     def crear_notificacion(
-        id_usuario: int,
+        id_usuario: uuid.UUID,
         mensaje: str,
         prioridad: str = "normal"
     ) -> Notificacion:

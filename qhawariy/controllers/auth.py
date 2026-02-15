@@ -44,6 +44,7 @@ from qhawariy.forms.auth_form import (
 from qhawariy.services.auth_service.send_mail import send_email  # type: ignore
 from qhawariy.services.notifications_service.factory import NotificacionFactory
 from qhawariy.utilities.decorators import admin_required
+from qhawariy.utilities.redirect import redireccion_seguro
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ TIME_EXPIRE_LOGIN = datetime.timedelta(hours=1)
 
 
 # Registrar usuario
-@bp.route("/register", methods=("GET", "POST"))
+@bp.route("/registrar", methods=("GET", "POST"))
 @login_required
 @admin_required
 def register():
@@ -68,74 +69,82 @@ def register():
         email = cast(str, form.email.data)
         telefono = cast(str, form.telefono.data)
         clave = cast(str, form.clave.data)
+
         # Comprueba si el usuario este ya registrado con ese email
         user = Usuario.obtener_usuario_por_correo_electronico(email)
         if user:
             flash(f"El email: {email} ya fue registrado por otro usuario", "error")
-        else:
-            # Establece al primer usuario como administrador
-            us = Usuario.existe_usuario()
-            rol = None
-            if us:
-                # asignar al usuario que se esta registrando como trabajador
-                # que no podra visualizar nada
-                rol_trabajador = Rol.obtener_por_rol("Trabajador")
-                if rol_trabajador is None:
-                    rol_trabajador = Rol("Trabajador")
-                    rol_trabajador.guardar()
-                rol = rol_trabajador
-            else:
-                # No se encuentra ningun usuario registrado
-                # crear todos los roles
-                rol_admin = Rol('Administrador')
-                rol_admin.guardar()
-                rol_controlador = Rol("Controlador")
-                rol_controlador.guardar()
-                rol_operacion = Rol("Operacion")
-                rol_operacion.guardar()
-                rol_trabajador = Rol("Trabajador")
-                rol_trabajador.guardar()
-                # Asignar el rol de administrador
-                rol = rol_admin
+            redireccion_seguro("auth.register", form=form)
 
-            user_registro: Optional[Usuario] = None
-            try:
-                user_registro = Usuario(
-                    nombres=nombres,
-                    apellidos=apellidos,
-                    dni=dni,
-                    telefono=telefono,
-                    correo_electronico=email
-                )
-                user_registro.establecer_clave(clave)
-                user_registro.guardar()
-            except Exception as e:
-                logger.error(f"Error: no ha sido posible registrar al usuario\n{e}")
-
-            # Se establece como trabajador
-            if user_registro is None:
-                flash("No se pudo registrar el usuario", "error")
-                return render_template("auth/register.html", form=form)
-            usuario_rol = UsuarioRol(user_registro.id_usuario, rol.id_rol)
-            usuario_rol.guardar()
-
-            # Envia un email al nuevo usuario por registrase al sistema (deshabilitado)
-            text = f'Hola {apellidos}{nombres},Bienvenido a Sistema experto de Qhawariy'
-            msg = f"<p> Hola,<strong>{apellidos}{nombres}</strong>,Bienvenido al qh</p>"
-            send_email(
-                subject=" Bienvenido a Qhawariy",
-                sender=cast(str, current_app.config['DONT_REPLY_FROM_EMAIL']),
-                recipients=[email,],
-                text_body=text,
-                html_body=msg
+        # Crear usuario
+        user_registro: Optional[Usuario] = None
+        rol = asignar_rol_inicial()
+        try:
+            user_registro = Usuario(
+                nombres=nombres,
+                apellidos=apellidos,
+                dni=dni,
+                telefono=telefono,
+                correo_electronico=email
             )
-            # Redireccionamos a listar usuario
-            next_page = request.args.get("next", None)
-            if not next_page or urlparse(next_page).netloc != '':
-                next_page = url_for("admin.listar_usuarios")
-            return redirect(next_page)
+            user_registro.establecer_clave(clave=clave)
+            user_registro.guardar()
+        except Exception as e:
+            logger.error(f"Error: no ha sido posible registrar al usuario\n{e}")
+            flash("No se pudo registrar el usuario", "error")
+            redireccion_seguro("auth.register", form=form)
+
+        if user_registro is None:
+            flash("No se pudo registrar el usuario", "error")
+            return render_template("auth/register.html", form=form)
+        usuario_rol = UsuarioRol(user_registro.id_usuario, rol.id_rol)
+        usuario_rol.guardar()
+
+        enviar_email_bienvenida(nombres=nombres, apellidos=apellidos, email=email)
+        redireccion_seguro("home.index")
 
     return render_template("auth/register.html", form=form)
+
+
+def asignar_rol_inicial() -> Rol:
+    if Usuario.existe_usuario():
+        rol_trabajador = Rol.obtener_por_rol("Trabajador")
+        if rol_trabajador is None:
+            rol_trabajador = Rol("Trabajador")
+            rol_trabajador.guardar()
+        return rol_trabajador
+    else:
+        roles = {
+            "Administrador": Rol("Administrador"),
+            "Controlador": Rol("Controlador"),
+            "Operacion": Rol("Operacion"),
+            "Trabajador": Rol("Trabajador"),
+        }
+        for r in roles.values():
+            r.guardar()
+        return roles["Administrador"]
+
+
+def enviar_email_bienvenida(
+    nombres: str,
+    apellidos: str,
+    email: str
+) -> None:
+    text = f"Hola {apellidos} {nombres} Bienvenido a Qhawariy"
+    msg = (
+        f"<p>Hola, <strong>{apellidos} {nombres}</strong>, "
+        f"Bienvenido al sistema Qhawariy</p>"
+    )
+    try:
+        send_email(
+            subject="Bienvenido a Qhawariy",
+            sender=cast(str, current_app.config["DONT_REPLY_FROM_EMAIL"]),
+            recipients=[email],
+            text_body=text,
+            html_body=msg,
+        )
+    except Exception as e:
+        logger.warning(f"No se pudo enviar email de bienvenida: {e}")
 
 
 # Inicio de sesion de usuario
@@ -206,8 +215,8 @@ def restablecer_password():
     return render_template("auth/restablece_password.html", form=form)
 
 
-@bp.route("/restablece-password/<token>/<int:usuario_id>", methods=["GET", "POST"])
-def restablecer_nuevo_password(token: str, usuario_id: int):
+@bp.route("/restablece-password/<token>/<string:usuario_id>", methods=["GET", "POST"])
+def restablecer_nuevo_password(token: str, usuario_id: str):
     if current_user.is_authenticated:
         return redirect(url_for("home.index"))
     user = Usuario.obtener_usuario_por_id(usuario_id)

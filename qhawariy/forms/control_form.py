@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField, TimeField
+from wtforms import SelectField, StringField, SubmitField, TimeField, FloatField
 from wtforms_html5 import AutoAttrMeta
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, NumberRange
 
 
 # Formularios para cambiar datos de la entidad Control
@@ -34,17 +34,19 @@ class ControlForm(FlaskForm):
         validators=[DataRequired(), Length(max=8)]
     )
 
-    latitud = StringField(
+    latitud = FloatField(
         "Latitud",
         validators=[
-            DataRequired("Ingrese la ubicacion del punto de control")
+            DataRequired("Ingrese la ubicacion del punto de control"),
+            NumberRange(min=-90, max=90)
         ]
     )
 
-    longitud = StringField(
+    longitud = FloatField(
         "Longitud",
         validators=[
-            DataRequired("Ingrese la ubicacion del punto de control")
+            DataRequired("Ingrese la ubicacion del punto de control"),
+            NumberRange(min=-180, max=180)
         ]
     )
 

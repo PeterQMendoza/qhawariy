@@ -10,20 +10,20 @@ class NumeroForm(FlaskForm):
         'Control',
         validators=[Optional()],
         id='id_control_config',
-        coerce=int
+        coerce=str
     )
 
 
 # Formulario para asignar, cambiar rol a un usuario
 class UserAdminForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     rol = SelectField(
         'Rol',
         validators=[DataRequired("Selecciona un rol")],
         id='select_rol',
-        coerce=int
+        coerce=str
     )
     submit = SubmitField("Guardar")
 
@@ -31,7 +31,7 @@ class UserAdminForm(FlaskForm):
 # Formulario que permite establecer configuracio con respeco a la parte operativa
 # de la aplicacion
 class ConfiguracionForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
 
     tiempo_espera_vehiculo = TimeField(

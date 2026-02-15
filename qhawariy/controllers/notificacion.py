@@ -37,9 +37,9 @@ def mostrar_notificaciones():
     )
 
 
-@bp.route("/leida/<int:notificacion_id>", methods=["POST"])
+@bp.route("/leida/<string:notificacion_id>", methods=["POST"])
 @login_required
-def marcar_como_leida(notificacion_id: int):
+def marcar_como_leida(notificacion_id: str):
     notificacion = Notificacion.obtener_por_id(notificacion_id)
     if notificacion:
         notificacion.marcar_como_leida()

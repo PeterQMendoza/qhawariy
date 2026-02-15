@@ -1,5 +1,6 @@
 import datetime
 from typing import List, Optional, cast
+import uuid
 from flask import current_app
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 import pytz
@@ -11,13 +12,20 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Usuario(db.Model, UserMixin):
     """Modelo Usuario define a todos los usuarios que pertencen e ingresan al sistema
     """
     __tablename__ = "usuarios"
-    id_usuario: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_usuario: uuid.UUID = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     nombres: str = db.Column(db.String(50), nullable=False)
     apellidos: str = db.Column(db.String(50), nullable=False)
     dni: str = db.Column(db.String(15), unique=True, nullable=False)
@@ -107,7 +115,7 @@ class Usuario(db.Model, UserMixin):
     @staticmethod
     def validar_token_restablece_password(
         token: str,
-        usuario_id: int
+        usuario_id: str
     ) -> Optional["Usuario"]:
         """
         Metodo estatico que valida el token obtenido de link del email enviado al
@@ -132,7 +140,7 @@ class Usuario(db.Model, UserMixin):
         return usuario
 
     @staticmethod
-    def obtener_usuario_por_id(id: int):
+    def obtener_usuario_por_id(id: str):
         return Usuario.query.get(id)
 
     @staticmethod

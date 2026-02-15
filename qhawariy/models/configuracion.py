@@ -1,10 +1,18 @@
 import datetime
+import uuid
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Configuracion(db.Model):
     __tablename__ = 'configuraciones'
-    id_config = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_config: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     tiempo_espera_vehiculo = db.Column(
         db.Time,
         nullable=False,
@@ -47,6 +55,6 @@ class Configuracion(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_config(id_config: int):
+    def obtener_config(id_config: str):
         resultado = Configuracion.query.get(id_config)
         return resultado

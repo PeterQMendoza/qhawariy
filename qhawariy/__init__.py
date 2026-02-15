@@ -7,7 +7,8 @@ autor: Peter Pilen Quispe Mendoza
 import os
 import logging
 
-from typing import Optional, Callable, Any, Dict, cast
+from pathlib import Path
+from typing import Optional, Callable, Any, Dict, Type, cast
 
 # from os.path import abspath,dirname,join
 
@@ -31,6 +32,7 @@ from werkzeug.exceptions import HTTPException
 
 # import redis
 
+from instance.config import CONFIG_MAP, BaseConfig
 from qhawariy.utilities.context_processors import inject_nonce
 from qhawariy.utilities.filters import (
     format_datetime,
@@ -90,29 +92,40 @@ csrf = CSRFProtect()
 
 def create_app(test_config: Optional[str] = None) -> Flask:
     """
-        Establece toda la configuracion necesaria para la aplicacion Flask.
-        :param test_config: establece el mapeo de configuracion en el archivo
-            config.py
+    Crea y establece toda la configuracion necesaria para la aplicacion Flask.
+    - test_config: establece el mapeo de configuracion en el archivo
+        config.py
     """
     app = Flask(__name__, instance_relative_config=True)
+
+    # En caso de que no exista el archivo de instancia
+    try:
+        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        logging.getLogger(__name__).exception(
+            "No se pudo crear la instancia: %s",
+            app.instance_path
+        )
 
     # Crear un logger vinculado a la aplicacion
     logger = create_logger(app)
     logger.setLevel(logging.INFO)
 
-    # Cargar la configuracion del folder  de la instancia
-    if test_config is None:
-        app.config.from_pyfile("config\\config.py")
-    elif test_config == "TESTING":
-        app.config.from_pyfile("Config\\testing.py")
-    else:
-        app.config.from_pyfile(test_config, silent=True)
+    # Cargar la configuracion de como ruta de archivo  .py
+    if test_config and Path(test_config).is_file():
+        app.config.from_pyfile(test_config, silent=False)
+        app.logger.info("Configuracion cargada desde archivo: %s", test_config)
 
-    # En caso de que no exista el archivo de instancia
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    # Carga configuracion de tipo clase
+    if test_config == "TESTTING":
+        config_cls: Type[BaseConfig] = CONFIG_MAP.get("testing", CONFIG_MAP["default"])
+        app.config.from_object(config_cls)
+        app.logger.info("Configuracion cargada desde CONFIG_MAP")
+
+    env = os.getenv("APP_ENV", "development").lower()
+    config_cls: Type[BaseConfig] = CONFIG_MAP.get(env) or CONFIG_MAP["default"]
+    app.config.from_object(config_cls)
+    app.logger.info("Configuracion '%s' aplicada desde CONFIG_MAP", env)
 
     # Configuracion de csrf en la app
     csrf.init_app(app)  # type: ignore
@@ -122,7 +135,7 @@ def create_app(test_config: Optional[str] = None) -> Flask:
     # Rutas que empiecen con /api/
     CORS(
         app=app,
-        resources={r"/coordenadas/api/*": {"origins": "http://localost:4200"}},
+        resources={r"/coordenadas/api/*": {"origins": "http://localhost:4200"}},
         supports_credentials=True,
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "X-CSRFToken"]

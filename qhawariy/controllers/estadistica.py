@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, TypedDict
+from typing import List, Optional, Tuple, TypedDict, cast
 from flask.typing import ResponseReturnValue
 import folium.plugins
 import pandas as pd
@@ -45,15 +45,34 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("estadistica", __name__, url_prefix="/estadistica")
 
 
+class ProgramacionVsNo(TypedDict):
+    programados: int
+    no_programados: int
+    fecha: str
+
+
+class PuntoFecha(TypedDict):
+    x: str
+    y: int
+
+
 class PuntoFlota(TypedDict):
     x: str
     y: int
+
+
+class PuntoTiempo(TypedDict):
+    tiempo: str
+    cantidad: str
 
 
 class TiempoVP(TypedDict):
     Flota: str
     Tiempo: Optional[datetime.datetime]
     Ruta: str
+
+
+DataList3Item = Tuple[List[int], str]
 
 
 def ordenar_valor(lista: list[PuntoFlota]) -> list[PuntoFlota]:
@@ -70,7 +89,7 @@ def ordenar_valor(lista: list[PuntoFlota]) -> list[PuntoFlota]:
     return lista
 
 
-def inicializar_copia_vacia(base: List[dict[str, int]]) -> List[dict[str, int]]:
+def inicializar_copia_vacia(base: List[PuntoFlota]) -> List[PuntoFlota]:
     """Devuelve una copia vacia profunda con valores 'y' inicializados"""
     copia = copy.deepcopy(base)
     for em in copia:
@@ -93,7 +112,10 @@ def mostrar_estadisticas() -> ResponseReturnValue:
     fechas = Fecha.obtener_todas_fechas()
     lista_fechas = [f.fecha for f in fechas]
     dat1 = VehiculoProgramado.estadistica_vp_fecha_programa()
-    data_list1 = [{'x': v.strftime('%d-%m-%Y'), 'y': r} for _, v, r in dat1]
+    data_list1: List[PuntoFecha] = [
+        {'x': v.strftime('%d-%m-%Y'), 'y': r}
+        for v, r in dat1
+    ]
 
     # Rutas y secuencias
     rutas = RutaTerminal.obtener_todas_rt()
@@ -109,7 +131,7 @@ def mostrar_estadisticas() -> ResponseReturnValue:
     ]
 
     for i, ruta_data in enumerate(lista_rutas):
-        for _, f, c in ruta_data:
+        for f, c in ruta_data:
             if f in lista_fechas:
                 for em in lista_copia_vacias[i]:
                     if em['x'] == f.strftime('%d-%m-%Y'):
@@ -123,7 +145,7 @@ def mostrar_estadisticas() -> ResponseReturnValue:
     ]
 
     data_list2: List[PuntoFlota] = [
-        {'x': f'Flota +{v}', 'y': r} for _, v, r in dat2
+        {'x': f'Flota +{v}', 'y': r} for v, r in dat2
     ]
 
     # Ordenar dicccionario por valor
@@ -133,22 +155,28 @@ def mostrar_estadisticas() -> ResponseReturnValue:
                 e['y'] = v['y']
     t_empty = ordenar_valor(t_empty)
 
-    # Programados vs no programados
+    # Cantidad de vehiculos programados vs no programados
     veh = Vehiculo.estadistica_todos_vehiculos_activos()
     dat3 = VehiculoProgramado.estadistica_vp_fecha_programado_no_programado()
-    data_list3 = None
+    data_list3: Optional[List[ProgramacionVsNo]] = None
     if dat3:
         total = veh[0][1]
-        dt = dat3[0][1].strftime('%d-%m-%Y')
-        pro = dat3[0][2]
-        data_list3 = [([pro, (total-pro)], dt)]
+        dt = dat3[0][0].strftime('%d-%m-%Y')
+        pro = dat3[0][1]
+        data_list3 = [
+            {
+                "programados": pro,
+                "no_programados": total-pro,
+                "fecha": dt
+            }
+        ]
     else:
         data_list3 = []
 
     # GRAFICO DE LA DONA
     # Cantidad de vehiculos por ruta
     dat4 = VehiculoProgramado.estadistica_cantidad_vehiculos_por_ruta()
-    data_list4 = {str(s): c for _, s, c in dat4}
+    data_list4 = {str(s): c for s, c in dat4}
 
     # GRAFICO DE BARRA PROPIETARIO
     # Conteo de vehiculo activo y no activo por propietario
@@ -160,8 +188,8 @@ def mostrar_estadisticas() -> ResponseReturnValue:
 
     dat_activo = PropietarioVehiculo.estadistica_pv_y_vehiculo_propietario(True)
     dat_no_activo = PropietarioVehiculo.estadistica_pv_y_vehiculo_propietario(False)
-    data_list_activo = [{i: c} for _, i, c in dat_activo]
-    data_list_no_activo = [{i: c} for _, i, c in dat_no_activo]
+    data_list_activo = [{i: c} for i, c in dat_activo]
+    data_list_no_activo = [{i: c} for i, c in dat_no_activo]
 
     for i in data_list_activo:
         for k, v in i.items():
@@ -180,19 +208,22 @@ def mostrar_estadisticas() -> ResponseReturnValue:
 
     # GRAFICO DE TIEMPOS
     # Para grafico de puntos
-    vp = VehiculoProgramado.estadistica_vp_tiempos()
-    tiempos = [
-        {
-            'tiempo': t.strftime("%H:%M"),
-            'cantidad': c
-        } for _, t, c in vp if t is not None
+    vp: List[Tuple[
+        Optional[datetime.datetime],
+        int
+    ]] = VehiculoProgramado.estadistica_vp_tiempos()
+    tiempos: List[PuntoTiempo] = [
+        cast(PuntoTiempo, {
+            "tiempo": t.strftime("%H:%M"),
+            "cantidad": c
+        }) for t, c in vp if t is not None
     ]
 
     # Estadistica para viajes
     # Cantidad de viajes hechos por vehiculos
     viajes_por_vehiculos = Viaje.estadistica_viajes_por_vehiculo()
     vpv: List[PuntoFlota] = [
-        {'x': f"Flota{f}", 'y': conteo} for _, f, conteo in viajes_por_vehiculos
+        {'x': f"Flota{f}", 'y': conteo} for f, conteo in viajes_por_vehiculos
     ]
     vpvs: List[PuntoFlota] = [
         # Inicia con cada conteo de vehiculo 0
@@ -207,8 +238,9 @@ def mostrar_estadisticas() -> ResponseReturnValue:
 
     # Cantidad de viajes por fecha y ruta
     total_viajes_por_fecha = Viaje.estadistica_viajes_por_fecha()
-    lista_tvf = [
-        {'x': f.strftime('%d-%m-%Y'), 'y': c} for _, f, c in total_viajes_por_fecha
+    lista_tvf: List[PuntoFecha] = [
+        {'x': f.strftime('%d-%m-%Y'), 'y': c}
+        for f, c in total_viajes_por_fecha if f is not None
     ]
 
     lvfr = inicializar_copia_vacia(lista_tvf)
@@ -260,18 +292,38 @@ def obtener_terminales_y_controles(
     terminales = Terminal.obtener_todos_terminales()
     controles = Control.obtener_todos()
 
-    coords_terminales = [
-        [float(t.latitud), float(t.longitud)]
-        for t in terminales if t and t.latitud and t.longitud
-    ]
-
-    coords_controles = [
-        [float(c.latitud), float(c.longitud)]
-        for c in controles if c and c.longitud and c.latitud
-    ]
-
-    codigos = [str(c.codigo) for c in controles]
-    data_controles = list(zip(codigos, coords_controles))
+    coords_terminales: list[list[float]] = []
+    for t in terminales:
+        if t:
+            coords: Optional[Tuple[
+                List[float],
+                List[float]
+            ]] = t.obtener_latitudes_longitudes()
+            if coords is not None:
+                latitudes, longitudes = coords
+                # Combinar en pares [lat, lon]
+                coords_terminales.extend(
+                    [
+                        [lat, lon]
+                        for lat, lon in zip(latitudes, longitudes)
+                    ]
+                )
+    data_controles: List[Tuple[str, List[float]]] = []
+    for c in controles:
+        if c:
+            coords: Optional[Tuple[
+                List[float],
+                List[float]
+            ]] = c.obtener_latitudes_longitudes()
+            if coords is not None:
+                latitudes, longitudes = coords
+                if latitudes and longitudes:
+                    # Tomar primer par como ejemplo
+                    data_controles.append((
+                        str(c.codigo),
+                        [latitudes[0],
+                         longitudes[0]]
+                    ))
 
     return coords_terminales, data_controles
 

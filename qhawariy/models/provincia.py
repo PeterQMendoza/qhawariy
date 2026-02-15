@@ -1,5 +1,7 @@
 from typing import List
+import uuid
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Provincia(db.Model):
@@ -7,8 +9,13 @@ class Provincia(db.Model):
     Modelo: Provincia
     """
     __tablename__ = "provincias"
+    __table_args__ = {"schema": "app"}
 
-    id_provincia: int = db.Column(db.Integer, primary_key=True)
+    id_provincia: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     nombre: str = db.Column(db.String(50), nullable=False)
 
     # Relaciones

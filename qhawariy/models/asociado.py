@@ -1,21 +1,29 @@
 
 import datetime
 from typing import List
+import uuid
 import pytz
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Asociado(db.Model):
     __tablename__ = "asociados"
-    id_asociado = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_asociado: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     id_pv = db.Column(
-        db.Integer,
-        db.ForeignKey("propietarios_vehiculos.id_pv", ondelete="CASCADE"),
+        ShortUUID(),
+        db.ForeignKey("app.propietarios_vehiculos.id_pv", ondelete="CASCADE"),
         nullable=False
     )
     id_usuario = db.Column(
-        db.Integer,
-        db.ForeignKey("usuarios.id_usuario", ondelete="CASCADE"),
+        ShortUUID(),
+        db.ForeignKey("app.usuarios.id_usuario", ondelete="CASCADE"),
         nullable=False
     )
     lima_tz = pytz.timezone('America/Lima')
@@ -38,7 +46,7 @@ class Asociado(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_asociado_por_id(id: int):
+    def obtener_asociado_por_id(id: str):
         return Asociado.query.get(id)
 
     @staticmethod

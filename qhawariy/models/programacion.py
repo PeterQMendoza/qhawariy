@@ -2,6 +2,7 @@
 # import pytz
 
 from typing import List, Optional
+import uuid
 from sqlalchemy import desc
 # from sqlalchemy.sql import func
 
@@ -10,15 +11,30 @@ from qhawariy.models.ruta import Ruta
 from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta_terminal import RutaTerminal
 from qhawariy.models.terminal import Terminal
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Programacion(db.Model):
     """Modelo Programacion:
     """
     __tablename__ = "programaciones"
-    id_programacion = db.Column(db.Integer, primary_key=True)
-    id_fecha = db.Column(db.Integer, db.ForeignKey("fechas.id_fecha"), nullable=False)
-    id_ruta = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=False)
+    __table_args__ = {"schema": "app"}
+
+    id_programacion: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+    id_fecha: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.fechas.id_fecha"),
+        nullable=False
+    )
+    id_ruta: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.rutas.id_ruta"),
+        nullable=False
+    )
     # Establecer relaciones {Table1}*1-->1{Table2}
     ruta = db.relationship(
         "Ruta",
@@ -38,7 +54,7 @@ class Programacion(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, id_fecha: int, id_ruta: int):
+    def __init__(self, id_fecha: str, id_ruta: str):
         self.id_fecha = id_fecha
         self.id_ruta = id_ruta
 
@@ -86,7 +102,7 @@ class Programacion(db.Model):
         """"""
         return (
             Programacion.query
-            .join(Ruta, Ruta.id_ruta == Programacion.id_ruta)
+            .join(Ruta, Ruta.id_ruta == Programacion.id_ruta)  # type: ignore
             .join(RutaTerminal, RutaTerminal.id_ruta == Ruta.id_ruta)  # type: ignore
             .join(
                 Terminal,
@@ -94,11 +110,11 @@ class Programacion(db.Model):
             )
             .join(Fecha, Fecha.id_fecha == Programacion.id_fecha)  # type: ignore
             .add_columns(
-                Programacion.id_programacion,
+                Programacion.id_programacion,  # type: ignore
                 Fecha.fecha,  # type: ignore
                 Programacion.id_ruta,  # type: ignore
                 Terminal.direccion,  # type: ignore
-                Ruta.id_ruta,
+                Ruta.id_ruta,  # type: ignore
                 Ruta.codigo  # type: ignore
             )
             .order_by(desc(Programacion.id_fecha))  # type: ignore

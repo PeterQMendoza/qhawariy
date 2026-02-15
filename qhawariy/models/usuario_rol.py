@@ -1,26 +1,36 @@
 
 from typing import List, Optional
+import uuid
+
 from qhawariy import db
 
 from qhawariy.models.usuario import Usuario
 from qhawariy.models.rol import Rol
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class UsuarioRol(db.Model):
     """Modelo UsuarioRol crea una relacion de tablas union entre Usuario y Rol
     """
     __tablename__ = "usuarios_roles"
-    id_ur: int = db.Column(db.Integer, primary_key=True)
-    id_usuario: int = db.Column(
-        db.Integer,
-        db.ForeignKey("usuarios.id_usuario"),
+    __table_args__ = {"schema": "app"}
+
+    id_ur: uuid.UUID = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+    id_usuario: uuid.UUID = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.usuarios.id_usuario"),
         nullable=False
     )
-    id_rol: int = db.Column(
-        db.Integer,
-        db.ForeignKey("roles.id_rol"),
+    id_rol: uuid.UUID = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.roles.id_rol"),
         nullable=False
     )
+
     # Establecer relaciones de uno a muchos
     usuario = db.relationship(
         "Usuario",
@@ -35,7 +45,7 @@ class UsuarioRol(db.Model):
         single_parent=True
     )
 
-    def __init__(self, id_usuario: int, id_rol: int):
+    def __init__(self, id_usuario: uuid.UUID, id_rol: uuid.UUID):
         self.id_usuario = id_usuario
         self.id_rol = id_rol
 
@@ -52,7 +62,7 @@ class UsuarioRol(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_ur_por_id(id: int):
+    def obtener_ur_por_id(id: uuid.UUID):
         return UsuarioRol.query.get(id)
 
     @staticmethod
@@ -60,11 +70,11 @@ class UsuarioRol(db.Model):
         return UsuarioRol.query.all()  # type: ignore
 
     @staticmethod
-    def obtener_usuarios_por_idrol(idrol: int):
+    def obtener_usuarios_por_idrol(idrol: uuid.UUID):
         return UsuarioRol.query.filter_by(id_rol=idrol)
 
     @staticmethod
-    def obtener_por_id_usuario(idusuario: int) -> Optional["UsuarioRol"]:
+    def obtener_por_id_usuario(idusuario: str) -> Optional["UsuarioRol"]:
         return UsuarioRol.query.filter_by(id_usuario=idusuario).first()  # type: ignore
 
     @staticmethod
@@ -72,15 +82,15 @@ class UsuarioRol(db.Model):
         return (
             UsuarioRol.query.join(
                 Usuario,
-                UsuarioRol.id_usuario == Usuario.id_usuario
+                UsuarioRol.id_usuario == Usuario.id_usuario  # type: ignore
             ).add_columns(
-                Usuario.id_usuario,
+                Usuario.id_usuario,  # type: ignore
                 Usuario.nombres,  # type: ignore
                 Usuario.apellidos,  # type: ignore
                 Usuario.correo_electronico,  # type: ignore
                 Rol.rol  # type: ignore
             ).filter(
-                Usuario.id_usuario == UsuarioRol.id_usuario
+                Usuario.id_usuario == UsuarioRol.id_usuario  # type: ignore
             ).filter(Rol.id_rol == UsuarioRol.id_rol)  # type: ignore
             .all()
         )

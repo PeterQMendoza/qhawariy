@@ -1,10 +1,12 @@
 import datetime
 from typing import List, Optional
+import uuid
 # import pytz
 from sqlalchemy import asc
 
 from qhawariy import db
 from qhawariy.utilities.builtins import LIMA_TZ
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 ahora = datetime.datetime.now(tz=LIMA_TZ)
 
@@ -14,7 +16,13 @@ class Fecha(db.Model):
     tambien es utilzado para reportar los viejas
     """
     __tablename__ = "fechas"
-    id_fecha: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_fecha: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     fecha: datetime.datetime = db.Column(
         db.DateTime,
         default=datetime.datetime(

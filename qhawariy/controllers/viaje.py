@@ -33,7 +33,11 @@ from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.programacion import Programacion
 # from qhawariy.models.timer.tareas import tarea1
 from qhawariy.forms.viaje_form import ViajeForm
-from qhawariy.services.data_service.dataframe_operacion import DataFrameBuilder
+from qhawariy.services.data_service.dataframe_operacion import (
+    DataFrameBuilder,
+    SalidaFilaEstrategia,
+    SalidaHtmlEstrategia
+)
 from qhawariy.utilities.decorators import controlador_required
 from qhawariy.utilities.helpers import Calendario, validar_dataframe
 from qhawariy.utilities.builtins import LIMA_TZ
@@ -273,13 +277,10 @@ def mostrar_dia():
                 como='inner',
                 en='id_fecha'
             )
-            .formatear_fecha(
-                columnas=['fecha'],
-                formato='%d %B'
-            )
             .eliminar_columna(
                 [
                     'id_fecha',
+                    'fecha'
                 ]
             )
         )
@@ -346,41 +347,51 @@ def mostrar_dia():
                 # Agrega columna, llamado 'programado', con los datos de la
                 # columna 'control 1'
                 .agregar_columnas({'programado': lambda x: x['control 1']})
-                # Aumenta tiempo de 'control 1' en 1h:15m:0s<>75min
-                .agregar_tiempo('programado', horas=1, minutos=15, segundos=0)
+                # Ordener de acuerdo a la salida
+                .ordenar_por("control 1", True)
+                # Aumenta tiempo de 'control 1' en 1h:15m:0s<>75min (timedelta)
+                .agregar_tiempo('programado', horas=1, minutos=15, segundos=52)
                 # Agrega una columna 'Diferencia' y calcula la diferencia entre
                 # la columna 'programado' y 'control 4'
                 .diferencia_tiempo(
                     'programado',
                     'control 4',
-                    'diferencia',
-                    formato=None
+                    'diferencia'
                 )
                 # Calcula el promedio entre filas, registro de viaje anterior y actual
                 .promediar_diferencia(
                     "diferencia",
                     "promedio"
                 )
-                # Estalece una condicion a la columna diferencia y cambia el color de
-                # texto si la cumple
-                .cambiar_color_texto_condicional(
-                    condicion=(
-                        lambda x: isinstance(x, pd.Timedelta)
-                        and x > pd.Timedelta(minutes=20)
-                    ),
-                    color='#EB0046',
-                    columnas=['diferencia']
-                )
             )
 
+    builder.formato_tiempo(
+        'programado',
+        "hh:mm:ss"
+    )
+    builder.cambiar_color_tiempo_condicional(
+        # Estalece una condicion a la columna diferencia y cambia el color de
+        # texto si la cumple
+        condicion=(
+            lambda x: isinstance(x, pd.Timedelta)
+            and x.total_seconds() < -60
+        ),
+        color_positivo='#05BE50DE',
+        color_negativo='#EB0046',
+        columnas=['diferencia', 'promedio']
+    )
     # Resultado final convierte la DF en html para ser mostrada
-    resultado_html = builder.formatear_html(
+    builder.formatear_html(
         classes="table",
         escape=False
-    ).construir_Html()
+    )
+    df_operativo = builder.construir(SalidaFilaEstrategia())
+    salida_html = builder.construir(
+        SalidaHtmlEstrategia(builder.operaciones_formato)
+    )
 
     return render_template(
         "viaje/muestra_dia.html",
-        test=resultado_html,
-        test1=viajes
+        test=salida_html,
+        test1=df_operativo[['diferencia', 'promedio']]
     )

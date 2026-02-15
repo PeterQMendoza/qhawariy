@@ -1,20 +1,32 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
+import uuid
+from geoalchemy2 import Geometry, WKTElement
 import numpy as np
 
 from qhawariy import db
+from qhawariy.utilities.gps import GPSMixin
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
-class Control(db.Model):
+class Control(db.Model, GPSMixin):
     """
     Modelo Control:
     Almacena todos los puntos de control de horarios
     de los vehiculos
     """
     __tablename__ = 'controles'
-    id_control = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_control: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     codigo = db.Column(db.String(8), unique=True, nullable=False)
-    latitud = db.Column(db.String(25), nullable=True)
-    longitud = db.Column(db.String(25), nullable=True)
+    ubicacion = db.Column(
+        Geometry(geometry_type="POINT", srid=4326),
+        nullable=False
+    )
 
     # Relacion de muchos a uno
     controles = db.relationship(
@@ -28,10 +40,14 @@ class Control(db.Model):
         cascade="all,delete-orphan"
     )
 
-    def __init__(self, codigo: str, latitud: str, longitud: str):
+    def __init__(
+        self,
+        codigo: str,
+        latitud: float,
+        longitud: float
+    ):
         self.codigo = codigo
-        self.latitud = latitud
-        self.longitud = longitud
+        self.ubicacion = WKTElement(f"POINT({longitud} {latitud})", srid=4326)
 
     def __repr__(self):
         return f"<Control {self.codigo}>"
@@ -41,12 +57,12 @@ class Control(db.Model):
             db.session.add(self)
         db.session.commit()
 
-    def eliminar(self):
+    def eliminar(self) -> None:
         db.session.delete(self)
         db.session.commit()
 
     @staticmethod
-    def obtener_id(id: int):
+    def obtener_id(id: str) -> Optional["Control"]:
         resultado = Control.query.get(id)
         return resultado
 
@@ -92,10 +108,22 @@ class Tramo:
         Calcula la distancia lineal de los dos puntos de control de acuerdo a long y
         latitud establecida
         """
-        lon1 = np.radians(float(self._nodo_inicial.longitud or 0.0))
-        lat1 = np.radians(float(self._nodo_inicial.latitud or 0.0))
-        lon2 = np.radians(float(self._nodo_final.longitud or 0.0))
-        lat2 = np.radians(float(self._nodo_final.latitud or 0.0))
+        def parse_point(
+            wkt: Union[str, WKTElement]
+        ) -> Tuple[float, float]:
+            if isinstance(wkt, WKTElement):
+                wkt_str = str(wkt)
+            else:
+                wkt_str = wkt
+            coords = wkt_str.replace("POINT(", "").replace(")", "").split()
+            lon, lat = map(float, coords)
+            return lon, lat
+
+        lon1, lat1 = parse_point(self._nodo_inicial.ubicacion)
+        lon2, lat2 = parse_point(self._nodo_final.ubicacion)
+
+        lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
+
         # Radio de la tierra en Km con una diferencia de 2m en el punto mas bajo de 6371
         r = 6378.1370
         dlon = np.subtract(lon2, lon1)

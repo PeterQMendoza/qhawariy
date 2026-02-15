@@ -1,12 +1,12 @@
 import locale
 import logging
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 import pandas as pd
 import numpy as np
 from abc import ABC, abstractmethod
-from datetime import datetime, date, time
+from datetime import datetime, time
 
-# from qhawariy.utilities.builtins import LOC, LIMA_TZ
+from qhawariy.utilities.builtins import LIMA_TZ
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,49 @@ class Operacion(ABC):
         """ Aplica la transformacion sobre la Dataframe y retorna el resultado"""
         pass
 
+    @staticmethod
+    def convertir_valores(
+        valor: Any
+    ) -> Optional[Union[pd.Timestamp, pd.Timedelta]]:
+        """ Intentara convertir el valor a un objeto timestamp o time"""
+        if pd.isna(valor):  # type: ignore
+            return None
+        # Si Timestamp o Timedelta
+        if isinstance(valor, pd.Timedelta) or isinstance(valor, pd.Timestamp):
+            return valor
+        # Si es datetime
+        if isinstance(valor, datetime):
+            return pd.Timestamp(valor)
+
+        # Si es time
+        if isinstance(valor, time):
+            try:
+                fecha_actual = datetime.now().date()
+                val = (
+                    pd.Timestamp.combine(
+                        date=fecha_actual,
+                        time=valor
+                    )  # type: ignore
+                )
+                return val
+            except Exception:
+                return None
+
+        # Si es una cadena
+        if isinstance(valor, str):
+            try:
+                val = pd.to_datetime(valor, errors='raise')  # type: ignore
+                return val
+            except Exception:
+                try:
+                    # Puede ser timedelta
+                    val = pd.to_timedelta(valor, errors='raise')  # type: ignore
+                    return val
+                except Exception:
+                    return None
+        # Si es numerico o otro
+        return None
+
 
 class OperacionFormato(ABC):
     @abstractmethod
@@ -26,6 +69,33 @@ class OperacionFormato(ABC):
         realizar al final de todas las operaciones
         """
         pass
+
+    @staticmethod
+    def _formatear_timedelta_default(td: pd.Timedelta) -> str:
+        """Formatea un pd.Timedelta segun el formato elegido"""
+        # Funcion para formato negativo
+        total_segundos = int(td.total_seconds())
+        signo = "-" if total_segundos < 0 else ""
+        abs_seg = abs(total_segundos)
+
+        dias, rem = divmod(abs_seg, 86400)
+        horas, rem = divmod(rem, 3600)
+        minutos, segundos = divmod(rem, 60)
+
+        # Si hay dias
+        if dias > 0:
+            return (
+                f"{signo}{dias} {'dias' if dias != 1 else 'dia'} "
+                f"{horas} h {minutos} m {segundos} s"
+            )
+        # Si hay horas
+        if horas > 0:
+            return f"{horas} h {minutos} m {segundos} s"
+        # Si solo hay minutos y segundos
+        if minutos > 0 or segundos > 0:
+            return f"{signo}{minutos:02d} m {segundos:02d} s"
+        # Si es cero
+        return "00 m 00 s"
 
 
 # Operaciones concretas
@@ -355,32 +425,29 @@ class AgregarTiempoOperacion(Operacion):
         self.nombre_columna = nombre_columna
         self.tiempo = pd.Timedelta(hours=horas, minutes=minutos, seconds=segundos)
 
+    def sumar_tiempo(self, x: Any) -> Optional[pd.Timestamp]:
+        val = Operacion.convertir_valores(x)
+        if val is None:  # type: ignore
+            return None
+        if isinstance(val, pd.Timestamp):
+            return val + self.tiempo
+
+        if isinstance(val, time):
+            fecha_actual = datetime.now(tz=LIMA_TZ).date()
+            ts = pd.Timestamp.combine(fecha_actual, val)
+            return ts + self.tiempo
+
+        if isinstance(val, pd.Timedelta):  # type: ignore
+            fecha_actual = datetime.now(tz=LIMA_TZ).date()
+            base = pd.Timestamp(fecha_actual)
+            return base + val + self.tiempo
+
+        return None
+
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         # Funcion interna para agregar el timedelta a cada celda
-        def sumar_tiempo(x: Any) -> Any:
-            # si es nulo
-            if pd.isna(x):  # type: ignore
-                return x
-            # Si a es Timestamp
-            if isinstance(x, pd.Timestamp):
-                return x + self.tiempo
-            # Si es un objeto datetime.time
-            if isinstance(x, time):
-                # Uso de fecha fija
-                dt_combinado = datetime.combine(date(1900, 1, 1), x)
-                nuevo_dt = dt_combinado + self.tiempo
-                return nuevo_dt.time()
-            # Si es una cadena de otro formato
-            try:
-                ts = cast(pd.Timedelta, pd.to_datetime(x))  # type: ignore
-                return ts + self.tiempo
-            except Exception as e:
-                # Si falla la conversion, retorna sin agregar
-                logger.exception("Fallo la conversion de tiempo", e)
-                return x
-
         df[self.nombre_columna] = (
-            df[self.nombre_columna].apply(sumar_tiempo)  # type: ignore
+            df[self.nombre_columna].apply(self.sumar_tiempo)  # type: ignore
         )
         return df
 
@@ -390,8 +457,7 @@ class DiferenciaTiempoOperacion(Operacion):
         self,
         columna_inicio: str,
         columna_fin: str,
-        columna_resultado: str,
-        formato: Optional[Union[str, Callable[[pd.Timedelta], str]]] = None
+        columna_resultado: str
     ):
         """
         Parametros:
@@ -403,158 +469,87 @@ class DiferenciaTiempoOperacion(Operacion):
         self.columna_inicio = columna_inicio
         self.columna_fin = columna_fin
         self.columna_resultado = columna_resultado
+
+    def calcular_diferencia(self, fila: pd.Series) -> Union[pd.Timedelta, float]:
+        val_inicio = Operacion.convertir_valores(fila[self.columna_inicio])
+        val_fin = Operacion.convertir_valores(fila[self.columna_fin])
+
+        if (val_inicio is None) or (val_fin is None):
+            return np.nan
+
+        # Si ambos valores son Timestamp
+        if (
+            isinstance(val_inicio, pd.Timestamp)
+            and isinstance(val_fin, pd.Timestamp)
+        ):
+            diferencia = val_inicio - val_fin
+            return diferencia
+
+        # Si ambos son Timedelta
+        if (
+            isinstance(val_inicio, pd.Timedelta)
+            and isinstance(val_fin, pd.Timedelta)
+        ):
+            diferencia = val_inicio - val_fin
+            return diferencia
+        # Si uno es Timedelta y el otro Timestamp
+        return np.nan
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Trabajamos de forma no destructiva
+
+        diferencia = df.apply(self.calcular_diferencia, axis=1)  # type: ignore
+
+        df[self.columna_resultado] = diferencia
+        return df
+
+
+class FormatoTiempoOperacion(OperacionFormato):
+    def __init__(
+        self,
+        columnas: Union[str, List[str]],
+        formato: Optional[Union[str, Callable[[pd.Timedelta], str]]] = None
+    ) -> None:
         self.formato = formato
+        self.columnas = columnas if isinstance(columnas, list) else [columnas]
 
-    def convertir_valores(
+    def establece_formato_ts(
         self,
-        valor: Any
-    ) -> Optional[Union[pd.Timestamp, pd.Timedelta]]:
-        """ Intentara convertir el valor a un objeto timestamp o time"""
-        if pd.isna(valor):  # type: ignore
-            return None
-        # Si Timestamp o Timedelta
-        if isinstance(valor, pd.Timedelta) or isinstance(valor, pd.Timestamp):
-            return valor
-        # Si es datetime
-        if isinstance(valor, datetime):
-            return pd.Timestamp(valor)
-
-        # Si es time
-        if isinstance(valor, time):
-            try:
-                fecha_actual = datetime.now().date()
-                val = (
-                    pd.Timestamp.combine(
-                        date=fecha_actual,
-                        time=valor
-                    )  # type: ignore
-                )
-                return val
-            except Exception:
-                return None
-
-        # Si es una cadena
-        if isinstance(valor, str):
-            try:
-                val = pd.to_datetime(valor, errors='raise')  # type: ignore
-                return val
-            except Exception:
-                try:
-                    # Puede ser timedelta
-                    val = pd.to_timedelta(valor, errors='raise')  # type: ignore
-                    return val
-                except Exception:
-                    return None
-        # Si es numerico o otro
-        return None
-
-    def formato_diferencia(
-        self,
-        dif: pd.Timedelta
+        dif: pd.Timestamp
     ) -> str:
-        """Formatea un pd.Timedelta"""
-        def formato_hhmmss(td: pd.Timedelta) -> str:
-            total_sec = int(td.total_seconds())
-            horas, remanente = divmod(total_sec, 3600)
-            minutos, segundos = divmod(remanente, 60)
-            return f"{horas:02d}:{minutos:02d}:{segundos:02d}"
-
-        def formato_mmss(td: pd.Timedelta) -> str:
-            total_seg = int(td.total_seconds())
-            minutos, segundos = divmod(total_seg, 60)
-            return f"{minutos:02d}:{segundos:02d}"
-
-        def formato_dia_hhmmss(td: pd.Timedelta) -> str:
-            dias = td.days
-            remanente_seg = int(td.total_seconds()) - dias * 86400
-            horas, remanente = divmod(remanente_seg, 3600)
-            minutos, segundos = divmod(remanente, 60)
-            if dias > 0:
-                return (
-                    f"""{dias} {'dias' if dias != 1 else 'día'},
-                    {horas:02d}:{minutos:02d}:{segundos:02d}"""
-                )
-            return (
-                f"{horas:02d}h {minutos:02d}m {segundos:02d}s"
-            )
-
-        # Si self.formato es callable
-        if callable(self.formato):
-            return self.formato(dif)
+        """Formatea un pd.Timestamp segun el formato elegido"""
         # Si la cadena, se reconocen los formatos predefinidos
-        elif isinstance(self.formato, str):
+        if isinstance(self.formato, str):
             formato_lower = self.formato.lower()
             if formato_lower == "hh:mm:ss":
-                return formato_hhmmss(dif)
-            elif formato_lower == "mm:ss":
-                return formato_mmss(dif)
-            elif formato_lower == "d hh:mm:ss":
-                return formato_dia_hhmmss(dif)
+                return dif.strftime("%H:%M:%S")
+            elif formato_lower == "hh:mm:ss am/pm":
+                return dif.strftime("%I:%M:%S %p")
+            elif formato_lower == "fecha completa":
+                return dif.strftime("%d/%m/%Y %H:%M:%S")
             else:
-                return str(dif)
+                return dif.strftime(self.formato)
         else:
             return str(dif)
 
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        # Validacion de columnas
-        # if (
-        #     self.columna_fin not in df.columns
-        # ):
-        #     return df
+    def aplicar_formato(self, t: Any) -> Union[str, Any]:
+        if pd.isna(t):  # type: ignore
+            return t
+        if isinstance(t, pd.Timedelta):
+            return self._formatear_timedelta_default(t)
+        if isinstance(t, pd.Timestamp):
+            return self.establece_formato_ts(t)
+        return str(t)
 
-        # # Detectar automaticamente la ultima columna de control disponible
-        # texto = self.columna_fin
-        # txt = re.sub(r"\d+$", "", texto)
-        # columnas_ctrl = [c for c in df.columns if c.startswith(txt)]
-        # if not columnas_ctrl:
-        #     return df
-
-        # # Ordenar por indice numerico  tomar la ultima
-        # columnas_ctrl.sort(key=lambda x: int(x.split(" ")[1]))
-        # ultima_columna = columnas_ctrl[-1]
-
-        # Trabajamos de forma no destructiva
-        def calcular_diferencia(fila: pd.Series) -> Union[pd.Timedelta, float]:
-
-            val_inicio = self.convertir_valores(fila[self.columna_inicio])
-            val_fin = self.convertir_valores(fila[self.columna_fin])
-
-            if (val_inicio is None) or (val_fin is None):
-                return np.nan
-
-            # Si ambos valores son Timestamp
-            if (
-                isinstance(val_inicio, pd.Timestamp)
-                and isinstance(val_fin, pd.Timestamp)
-            ):
-                if val_inicio > val_fin:
-                    val_inicio, val_fin = val_fin, val_inicio
-                return val_fin - val_inicio
-
-            # Si ambos son Timedelta
-            if (
-                isinstance(val_inicio, pd.Timedelta)
-                and isinstance(val_fin, pd.Timedelta)
-            ):
-                return val_fin - val_inicio
-
-            # Si uno es Timedelta y el otro Timestamp
-            return np.nan
-
-        diferencia = df.apply(calcular_diferencia, axis=1)  # type: ignore
-
-        def aplicar_formato(td: Any) -> Union[str, Any]:
-            if pd.notna(td):
-                return self.formato_diferencia(td)
-            return td
+    def apply(self, df: pd.DataFrame) -> Any:
+        # df = df.copy()
 
         # Formateo de la diferencia
-        if self.formato:
-            diferencia = diferencia.apply(  # type: ignore
-                aplicar_formato
-            )
-
-        df[self.columna_resultado] = diferencia
+        for col in self.columnas:
+            if col in df.columns:
+                df[col] = df[col].apply(  # type: ignore
+                    self.aplicar_formato
+                )
         return df
 
 
@@ -589,10 +584,7 @@ class PromedioDiferenciaTiempoOperacion(Operacion):
         promedio: Union[pd.Timedelta, float] = df[self.columna_resultado].mean()
 
         # Si el promedio es Timedelta, se tiene que convertir a string legible
-        if isinstance(promedio, pd.Timedelta):
-            df[self.nueva_columna] = str(promedio)
-        else:
-            df[self.nueva_columna] = promedio
+        df[self.nueva_columna] = promedio
 
         return df
 
@@ -643,7 +635,7 @@ class FormatoHTMLOperacion(OperacionFormato):
             df[self.columna_icono] = (
                 df[self.columna_icono].apply(agregar_icono)  # type: ignore
             )
-
+        df = df.reset_index(drop=True)
         html_resultado: str = df.to_html(**self.kwargs)  # type: ignore
         if self.color_texto:
             return f'<div style="color: {self.color_texto};">{html_resultado}</div>'
@@ -686,7 +678,7 @@ class TransponerFilasAColumnasOperacion(Operacion):
         return pd.DataFrame([nuevo_data])
 
 
-class FormatoFechaOperacion(Operacion):
+class FormatoFechaOperacion(OperacionFormato):
     def __init__(
         self,
         columnas: Union[str, List[str]],
@@ -708,7 +700,7 @@ class FormatoFechaOperacion(Operacion):
         self.formato = formato
         self.locale_str = locale_str
 
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, df: pd.DataFrame) -> Any:
         original_locale = locale.getlocale(locale.LC_TIME)
         try:
             locale.setlocale(locale.LC_TIME, self.locale_str)
@@ -766,7 +758,7 @@ class FormatoFechaOperacion(Operacion):
         return f"{minutos:02d}m {segundos:02d}s"
 
 
-class CambiarColorTextoCondicionalOperacion(Operacion):
+class CambiarColorTextoCondicionalOperacion(OperacionFormato):
     def __init__(
         self,
         condicion: Callable[[Any], bool],
@@ -786,7 +778,7 @@ class CambiarColorTextoCondicionalOperacion(Operacion):
         self.color = color
         self.columnas = columnas
 
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, df: pd.DataFrame) -> Any:
         # si no se especifica, aplicar a todas las columnas
         columnas_objetivo = self.columnas if self.columnas is not None else df.columns
         for columna in columnas_objetivo:
@@ -800,6 +792,132 @@ class CambiarColorTextoCondicionalOperacion(Operacion):
         if self.condicion(valor):
             return f'<span style="color: {self.color};">{valor}</span>'
         return valor
+
+
+class CambiarColorFormatoTiempoCondicionalOperacion(OperacionFormato):
+    def __init__(
+        self,
+        condicion: Optional[Callable[[Any], bool]] = None,
+        color: Optional[str] = None,
+        columnas: Optional[List[str]] = None,
+        color_negativo: Optional[str] = None,
+        color_positivo: Optional[str] = None,
+        formato_timedelta: Optional[Callable[[pd.Timedelta], str]] = None
+    ):
+        """
+        Parámetros
+        ----------
+        condicion
+            Función que recibe el valor de la celda y retorna True si se debe
+            aplicar el color. Si es None, se usa la condición por defecto:
+            detectar pd.Timedelta negativos.
+        color
+            Color a aplicar cuando condicion(valor) es True. Si se pasan
+            color_negativo/color_positivo, este parámetro se ignora.
+        columnas
+            Lista de columnas objetivo. Si None, se aplica a todas.
+        color_negativo
+            Color para Timedelta negativos (ej. 'red' o '#FF0000').
+        color_positivo
+            Color para Timedelta positivos (ej. 'green').
+        formato_timedelta
+            Función opcional que recibe un pd.Timedelta y devuelve la cadena
+            formateada. Si es None se usa el formateador interno ±HH:MM:SS.
+        """
+        # Condición por defecto: detectar Timedelta negativo
+        self.condicion = condicion
+        self.color = color
+        self.columnas = columnas
+        self.color_negativo = color_negativo
+        self.color_positivo = color_positivo
+        self.formato_timedelta = formato_timedelta or self._formatear_timedelta_default
+
+    def apply(self, df: pd.DataFrame) -> Any:
+        columnas_objetivo = (
+            self.columnas if self.columnas is not None else list(df.columns)
+        )
+        for columna in columnas_objetivo:
+            if columna not in df.columns:
+                continue
+            df[columna] = df[columna].apply(self.procesar_valor)  # type: ignore
+        return df
+
+    def procesar_valor(self, valor: Any) -> Any:
+        # Mantener NaN/NaT tal cual
+        if pd.isna(valor):  # type: ignore
+            return valor
+
+        # Si es Timedelta, formatear la cadena legible
+        if isinstance(valor, pd.Timedelta):
+            texto = self.formato_timedelta(valor)
+            # Si se definieron colores por signo, elegir según signo
+            if self.color_negativo or self.color_positivo:
+                if valor.total_seconds() < 0 and self.color_negativo:
+                    return f'<span style="color: {self.color_negativo};">{texto}</span>'
+                if valor.total_seconds() >= 0 and self.color_positivo:
+                    return f'<span style="color: {self.color_positivo};">{texto}</span>'
+                # si no hay color para el signo, aplicar color general si existe
+                if self.color:
+                    return f'<span style="color: {self.color};">{texto}</span>'
+                return texto
+
+        # Si la condición personalizada aplica, envolver con color general
+        try:
+            if self.condicion(valor):  # type: ignore
+                # si es Timedelta y no se formateó antes, formatear ahora
+                if isinstance(valor, pd.Timedelta):
+                    texto = self.formato_timedelta(valor)
+                else:
+                    texto = str(valor)
+                color_a_usar = (
+                    self.color
+                    or self.color_negativo
+                    or self.color_positivo
+                    or "red"
+                )
+                return f'<span style="color: {color_a_usar};">{texto}</span>'
+        except Exception:
+            # Si la condición falla por cualquier motivo, no modificar el valor
+            return valor
+
+        # Valor no cumple condición: si es Timedelta devolver su formato legible,
+        # sino devolver el valor original
+        if isinstance(valor, pd.Timedelta):
+            return self.formato_timedelta(valor)
+        return valor
+
+
+class SalidaEstrategia:
+    def build(self, df: pd.DataFrame) -> Any:
+        raise NotImplementedError
+
+
+class SalidaFilaEstrategia(SalidaEstrategia):
+    def build(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+
+class SalidaHtmlEstrategia(SalidaEstrategia):
+    """
+    SalidaHtmlEstartegia: Determina la estrategia para mostrar un DataFrame en HTML
+    """
+    def __init__(self, operaciones_formato: List[OperacionFormato]) -> None:
+        self.operaciones_formato = operaciones_formato
+
+    def build(self, df: pd.DataFrame) -> str:
+        resultado = df.copy()
+
+        # for col in resultado.select_dtypes(include=['timedelta']).columns:
+        #     resultado[col] = resultado[col].astype(str)
+
+        # Aplicar operaciones de formato adicionales
+        resultado_formato: Optional[str] = None
+        for op in self.operaciones_formato:
+            resultado_formato = op.apply(resultado)
+
+        if resultado_formato is None:
+            raise RuntimeError("La operacion final no devolvio un resultado valido.")
+        return resultado_formato
 
 
 # -----------------------------------------------------------------------------
@@ -818,6 +936,14 @@ class DataFrameBuilder:
             self._base_df = pd.DataFrame(data) if data is not None else pd.DataFrame()
         self._operaciones: List[Operacion] = []
         self._operaciones_formato: List[OperacionFormato] = []
+
+    @property
+    def operaciones_formato(self) -> List[OperacionFormato]:
+        return self._operaciones_formato
+
+    @operaciones_formato.setter
+    def operaciones_formato(self, op: List[OperacionFormato]) -> None:
+        self._operaciones_formato = op
 
     def set_data(
         self,
@@ -965,16 +1091,24 @@ class DataFrameBuilder:
         self,
         columna_inicio: str,
         columna_fin: str,
-        columna_resultado: str,
-        formato: Optional[Union[str, Callable[[pd.Timedelta], str]]] = None
+        columna_resultado: str
     ):
         self.agregar_operacion(
             DiferenciaTiempoOperacion(
                 columna_inicio,
                 columna_fin,
-                columna_resultado,
-                formato
+                columna_resultado
             )
+        )
+        return self
+
+    def formato_tiempo(
+        self,
+        columnas: Union[str, List[str]],
+        formato: Optional[Union[str, Callable[[pd.Timedelta], str]]]
+    ):
+        self.agregar_operacion_formato(
+            FormatoTiempoOperacion(columnas, formato)
         )
         return self
 
@@ -994,8 +1128,27 @@ class DataFrameBuilder:
         color: str,
         columnas: Optional[List[str]] = None
     ):
-        self.agregar_operacion(
+        self.agregar_operacion_formato(
             CambiarColorTextoCondicionalOperacion(condicion, color, columnas)
+        )
+        return self
+
+    def cambiar_color_tiempo_condicional(
+        self,
+        condicion: Optional[Callable[[Any], bool]] = None,
+        color: Optional[str] = None,
+        columnas: Optional[List[str]] = None,
+        color_negativo: Optional[str] = None,
+        color_positivo: Optional[str] = None
+    ):
+        self.agregar_operacion_formato(
+            CambiarColorFormatoTiempoCondicionalOperacion(
+                condicion=condicion,
+                color=color,
+                columnas=columnas,
+                color_negativo=color_negativo,
+                color_positivo=color_positivo
+            )
         )
         return self
 
@@ -1005,7 +1158,7 @@ class DataFrameBuilder:
         formato: str = '%d de %B de %Y, %H:%M:%S',
         locale_str: str = 'es_ES.UTF-8'
     ):
-        self.agregar_operacion(
+        self.agregar_operacion_formato(
             FormatoFechaOperacion(columnas, formato, locale_str)
         )
         return self
@@ -1022,103 +1175,41 @@ class DataFrameBuilder:
         )
         return self
 
-    def construir(self) -> pd.DataFrame:
+    def construir(
+        self,
+        estrategia: SalidaEstrategia = SalidaFilaEstrategia()
+    ) -> Any:
         resultado = self._base_df.copy()
-        # Operacion de datos
+        # Operaciones de datos
         for operacion in self._operaciones:
             resultado = operacion.apply(resultado)
 
-        return resultado
+        # Delegar en la estrategia
+        return estrategia.build(resultado)
 
-    def construir_Html(self) -> str:
-        resultado = self._base_df.copy()
-        # Operacion de datos
-        for operacion in self._operaciones:
-            resultado = operacion.apply(resultado)
-        # Operaciones de formato
-        if not self._operaciones_formato:
-            raise RuntimeError(
-                "Debe existir al menos una operacion final de formato para devolver \
-                str, al construir HMTL de una DataFrame"
-            )
-        resultado_formato: Optional[str] = None
-        for operacion in self._operaciones_formato:
-            resultado_formato = operacion.apply(resultado)
+    # def construir(self) -> pd.DataFrame:
+    #     resultado = self._base_df.copy()
+    #     # Operacion de datos
+    #     for operacion in self._operaciones:
+    #         resultado = operacion.apply(resultado)
 
-        if resultado_formato is None:
-            raise RuntimeError(
-                "La operacion final no devolvio un resultado valido."
-            )
+    #     return resultado
 
-        return resultado_formato
+    # def construir_Html(self) -> str:
+    #     resultado = self.construir()
+    #     # Operaciones de formato
+    #     if not self._operaciones_formato:
+    #         raise RuntimeError(
+    #             "Debe existir al menos una operacion final de formato para devolver \
+    #             str, al construir HMTL de una DataFrame"
+    #         )
+    #     resultado_formato: Optional[str] = None
+    #     for operacion in self._operaciones_formato:
+    #         resultado_formato = operacion.apply(resultado.copy())
 
+    #     if resultado_formato is None:
+    #         raise RuntimeError(
+    #             "La operacion final no devolvio un resultado valido."
+    #         )
 
-# Ejemplo de uso
-# if __name__ == "__main__":
-#     data = {
-#         'A': [1, 2, 3, 4, 5],
-#         'B': [5, 4, 3, 2, 1],
-#         'C': ['apple', 'banana', 'cherry', 'date', 'elderberry']
-#     }
-
-#     data2 = {
-#         'A': [1, 2, 3, 4, 5],
-#         'D': ['Kg', 'Kg', 'Und', 'Date', 'Kg'],
-#         'E': [
-#             '2025-03-31 08:00:23',
-#             '2025-03-31 09:15:00',
-#             '2025-03-31 10:42:00',
-#             '2025-03-31 1:30:00',
-#             '2025-03-31 5:26:00'
-#         ],
-#         'F': [
-#             '2025-03-31 10:00:23',
-#             '2025-03-31 11:14:00',
-#             '2025-03-31 13:04:00',
-#             '2025-03-31 3:30:00',
-#             '2025-03-31 7:29:00'
-#         ],
-#     }
-
-#     icon_mapping = {
-#         'apple': '<i class="fa fa-check" style="color:green;"></i>',
-#         'banana': '<i class="fa fa-info" style="color:blue;"></i>',
-#         'date': '<i class="fa fa-exclamation" style="color:red;"></i>',
-#     }
-
-#     df2 = pd.DataFrame(data2)
-
-#     builder = DataFrameBuilder(data)
-#     df_result = (
-#         builder
-#         .seleccionar_columna(['A', 'C'])
-#         .agregar_columna('A_squared', lambda df: df['A'] ** 2)
-#         .ordenar_por('A')
-#         .construir()
-#     )
-#     resultado = (
-#         builder
-#         .unir(df2, en='A')
-#         .agregar_tiempo('E', horas=1, minutos=24, segundos=37)
-#         .agregar_columna('tiempo_resultado', lambda df: 0)
-#         .diferencia_tiempo('E', 'F', 'tiempo_resultado')
-#         .promediar_diferencia('tiempo_resultado', 'promedio')
-#         .cambiar_color_texto_condicional(
-#             lambda und: und == 'Kg',
-#             color='red',
-#             columnas=['D']
-#         )
-#         .formatear_fecha(['E', 'F', 'tiempo_resultado', 'promedio'])
-#         .formatear_html(
-#             columna_icono='C',
-#             icon_mapping=icon_mapping,
-#             border=1,
-#             classes="table table-striped",
-#             escape=False,
-#         )
-#         .construir()
-#     )
-
-#     print("\nDataFrame resultante:")
-#     print(df_result)
-#     print(resultado)
+    #     return resultado_formato

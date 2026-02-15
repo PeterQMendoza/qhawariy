@@ -97,44 +97,20 @@
                             <p class="text-black-60 mb-6 text-body-3 font-medium"> {{user.correo_electronico}}</p>
                         </div>
                     </div>
+                    {% set roles = {
+                        "Administrador": {"color": "text-green-100", "icon": "icon-admin-user.svg"},
+                        "Controlador": {"color": "text-blue-100", "icon": "icon-expert-user.svg"},
+                        "Operacion": {"color": "text-black", "icon": "icon-no-expert.svg"},
+                        "Trabajador": {"color": "text-black", "icon": "icon-no-expert.svg"}
+                    } %}
                     <div class="flex justify-center w-30 border border-black-10 rounded p-1 sm:w-9">
-                        {% if user.rol == "Administrador" %}
+                        {% if user.rol in roles %}
                         <div class="flex items-center">
-                            <p class="text-xs font-medium text-green-100 sm:hidden">
-                                {{user.rol}}
+                            <p class="text-xs font-medium {{ roles[user.rol].color }} sm:hidden">
+                                {{ user.rol }}
                             </p>
                             <div>
-                                <img src="{{ url_for('static', filename='img/icon-admin-user.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if user.rol == "Controlador" %}
-                        <div class="flex items-center">
-                            <p class="text-xs font-medium text-blue-100 sm:hidden">
-                                {{user.rol}}
-                            </p>
-                            <div>
-                                <img src="{{ url_for('static', filename='img/icon-expert-user.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if user.rol == "Operacion" %}
-                        <div class="flex items-center">
-                            <p class="text-xs sm:hidden font-medium">
-                                {{user.rol}}
-                            </p>
-                            <div>
-                                <img src="{{ url_for('static', filename='img/icon-no-expert.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if user.rol == "Trabajador" %}
-                        <div class="flex items-center">
-                            <p class="text-xs sm:hidden font-medium">
-                                {{user.rol}}
-                            </p>
-                            <div>
-                                <img src="{{ url_for('static', filename='img/icon-no-expert.svg') }}" height="24px" width="24px" alt class="w-6 h-6 block w-full">
+                                <img src="{{ url_for('static', filename='img/' ~ roles[user.rol].icon) }}" height="24px" width="24px" alt="{{ user.rol }}" class="w-6 h-6 block w-full">
                             </div>
                         </div>
                         {% endif %}

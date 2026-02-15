@@ -1,7 +1,10 @@
 from datetime import datetime
 from typing import List, Optional
+import uuid
+
 from qhawariy import db
 from qhawariy.utilities.builtins import LIMA_TZ
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Notificacion(db.Model):
@@ -9,13 +12,16 @@ class Notificacion(db.Model):
     Modelo Notificacion
     """
     __tablename__ = "notificaciones"
-    id_notificacion = db.Column(
-        db.Integer,
-        primary_key=True
+    __table_args__ = {"schema": "app"}
+
+    id_notificacion: uuid.UUID = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
     )
     id_usuario = db.Column(
-        db.Integer,
-        db.ForeignKey('usuarios.id_usuario'),
+        ShortUUID(),
+        db.ForeignKey('app.usuarios.id_usuario'),
         nullable=False
     )
 
@@ -32,7 +38,7 @@ class Notificacion(db.Model):
         single_parent=True
     )
 
-    def __init__(self, id_usuario: int, mensaje: str, prioridad: str):
+    def __init__(self, id_usuario: str, mensaje: str, prioridad: str):
         self.id_usuario = id_usuario
         self.mensaje = mensaje
         self.prioridad = prioridad
@@ -53,7 +59,7 @@ class Notificacion(db.Model):
         return f'<Notificacion {self.id_notificacion}>'
 
     @staticmethod
-    def obtener_todos_por_usuario(id_usuario: int) -> List["Notificacion"]:
+    def obtener_todos_por_usuario(id_usuario: str) -> List["Notificacion"]:
         return (
             Notificacion.query
             .filter_by(id_usuario=id_usuario)
@@ -62,6 +68,6 @@ class Notificacion(db.Model):
         )  # type: ignore
 
     @staticmethod
-    def obtener_por_id(id_notificacion: int) -> Optional["Notificacion"]:
+    def obtener_por_id(id_notificacion: str) -> Optional["Notificacion"]:
         resultado = Notificacion.query.get(id_notificacion)
         return resultado

@@ -27,7 +27,7 @@ def compile_stylesheet_bundles(assets: Environment) -> Environment:
     assets.register('estilos_principales', principal)  # type: ignore
     assets.register('estilos_timeline_fleet', timeline_fleet)  # type: ignore
 
-    if app.config['APP_ENV_DEVELOPMENT'] == 'development':
+    if app.config['APP_ENV'] == 'development':
         principal.build()  # type: ignore
         timeline_fleet.build()  # type: ignore
     return assets
@@ -97,7 +97,7 @@ def compile_js_assets(assets: Environment) -> Environment:
     assets.register('timeline_fleet_js', timeline_fleet)  # type: ignore
 
     # Cambiar en modo produccion
-    if app.config['APP_ENV_DEVELOPMENT'] == "development":
+    if app.config['APP_ENV'] == 'development':
         principal.build()  # type: ignore
         calendar.build()  # type: ignore
         programacion.build()  # type: ignore

@@ -1,5 +1,8 @@
 from typing import Optional
+import uuid
+
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class ProximaRuta(db.Model):
@@ -7,9 +10,23 @@ class ProximaRuta(db.Model):
     Modelo ProximaRuta
     """
     __tablename__ = "proximas_rutas"
-    id_pr: int = db.Column(db.Integer, primary_key=True)
-    id_ruta: int = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=False)
-    id_ruta2: int = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=True)
+    __table_args__ = {"schema": "app"}
+
+    id_pr: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+    id_ruta: int = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.rutas.id_ruta"),
+        nullable=False
+    )
+    id_ruta2: Optional[int] = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.rutas.id_ruta"),
+        nullable=True
+    )
 
     # Relacion entre tablas
     actual = db.relationship(
@@ -25,9 +42,9 @@ class ProximaRuta(db.Model):
         single_parent=True
     )
 
-    def __init__(self, id_ruta: int, id_ruta2: int | None):
+    def __init__(self, id_ruta: int, id_ruta2: Optional[int]):
         self.id_ruta = id_ruta
-        if id_ruta2 is not None:
+        if id_ruta2:
             self.id_ruta2 = id_ruta2
 
     def __repr__(self):
@@ -40,7 +57,7 @@ class ProximaRuta(db.Model):
 
     # Setters
     @ruta_proxima.setter
-    def ruta_proxima(self, nueva_ruta_proxima: int):
+    def ruta_proxima(self, nueva_ruta_proxima: Optional[int]):
         self.id_ruta2 = nueva_ruta_proxima
 
     def guardar(self):
@@ -53,5 +70,5 @@ class ProximaRuta(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_por_ruta_actual(ruta_id: int) -> Optional["ProximaRuta"]:
+    def obtener_por_ruta_actual(ruta_id: str) -> Optional["ProximaRuta"]:
         return ProximaRuta.query.filter_by(id_ruta=ruta_id).first()  # type: ignore

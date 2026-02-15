@@ -1,22 +1,31 @@
 from typing import List, Optional
+import uuid
 from sqlalchemy import desc
 
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class SecuenciaControlRuta(db.Model):
     """ Modelo SecuenciaControlRuta: Establece la secuencia de controles
     dentro de una ruta """
     __tablename__ = 'secuencias_controles_rutas'
-    id_scr: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_scr: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     secuencia: int = db.Column(db.Integer, nullable=False)
     id_ruta: int = db.Column(
-        db.Integer, db.ForeignKey('rutas.id_ruta'),
+        ShortUUID(),
+        db.ForeignKey('app.rutas.id_ruta'),
         nullable=False
     )
     id_control: int = db.Column(
-        db.Integer,
-        db.ForeignKey('controles.id_control'),
+        ShortUUID(),
+        db.ForeignKey('app.controles.id_control'),
         nullable=False
     )
 
@@ -49,12 +58,12 @@ class SecuenciaControlRuta(db.Model):
             db.session.add(self)
         db.session.commit()
 
-    def eliminar(self):
+    def eliminar(self) -> None:
         db.session.delete(self)
         db.session.commit()
 
     @staticmethod
-    def obtener_por_id(scr_id: int):
+    def obtener_por_id(scr_id: int) -> Optional["SecuenciaControlRuta"]:
         resultado = SecuenciaControlRuta.query.get(scr_id)
         return resultado
 

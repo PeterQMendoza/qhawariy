@@ -1,5 +1,8 @@
 from typing import List, Optional
+import uuid
+
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class RutaTerminal(db.Model):
@@ -7,17 +10,27 @@ class RutaTerminal(db.Model):
     Modelo: Ruta Terminal
     """
     __tablename__ = "rutas_terminales"
-    id_rt: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
 
-    id_ruta: int = db.Column(db.Integer, db.ForeignKey("rutas.id_ruta"), nullable=False)
+    id_rt: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
+
+    id_ruta: int = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.rutas.id_ruta"),
+        nullable=False
+    )
     id_terminal: int = db.Column(
-        db.Integer,
-        db.ForeignKey("terminales.id_terminal"),
+        ShortUUID(),
+        db.ForeignKey("app.terminales.id_terminal"),
         nullable=False
     )
     id_terminal_2: int = db.Column(
-        db.Integer,
-        db.ForeignKey("terminales.id_terminal"),
+        ShortUUID(),
+        db.ForeignKey("app.terminales.id_terminal"),
         nullable=False
     )
 

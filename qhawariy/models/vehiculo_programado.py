@@ -1,6 +1,7 @@
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
+import uuid
 # from typing import List
 # import pytz
 
@@ -13,6 +14,7 @@ from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.programacion import Programacion
 from qhawariy.models.fecha import Fecha
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 # from qhawariy.utilities.builtins import LIMA_TZ
 
 
@@ -20,7 +22,13 @@ class VehiculoProgramado(db.Model):
     """Modelo VehiculoProgramado
     """
     __tablename__ = "vehiculos_programados"
-    id_vp: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_vp: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     tiempo: Optional[datetime] = db.Column(db.Time, default=None)
     # La propiedad de vehiculo_en_espera se utiliza para informar que el vehiculo puede
     # iniciar el viaje en cualquier momento
@@ -28,14 +36,14 @@ class VehiculoProgramado(db.Model):
     # programacion, y para solucionarlo
     # se reemplaza el vehiculo por otro para cubrir su puesto
     vehiculo_en_espera: bool = db.Column(db.Boolean, default=False)
-    id_vehiculo: int = db.Column(
-        db.Integer,
-        db.ForeignKey("vehiculos.id_vehiculo"),
+    id_vehiculo: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.vehiculos.id_vehiculo"),
         nullable=False
     )
-    id_programacion: int = db.Column(
-        db.Integer,
-        db.ForeignKey("programaciones.id_programacion"),
+    id_programacion: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.programaciones.id_programacion"),
         nullable=False
     )
 
@@ -57,8 +65,8 @@ class VehiculoProgramado(db.Model):
         self,
         tiempo: Optional[datetime],
         vehiculo_en_espera: bool,
-        id_vehiculo: int,
-        id_programacion: int
+        id_vehiculo: str,
+        id_programacion: str
     ):
         if vehiculo_en_espera is True:
             self.tiempo = None
@@ -297,98 +305,136 @@ class VehiculoProgramado(db.Model):
             ).all()
         )  # type: ignore
 
-    # Para Estadisticas
+    # Para Estadisticas de programacion
     @staticmethod
-    def estadistica_vp_fecha_programa():
-        resultado = VehiculoProgramado.query.join(
-            Programacion,
-            Programacion.id_programacion == VehiculoProgramado.id_programacion
-        ).join(
-            Fecha, Programacion.id_fecha == Fecha.id_fecha  # type: ignore
-        ).add_columns(
-            Fecha.fecha,  # type: ignore
-            func.count(VehiculoProgramado.id_vehiculo)  # type: ignore
-        ).order_by(
-            asc(Fecha.fecha)  # type: ignore
-        ).group_by(Fecha.fecha).all()  # type: ignore
-        return resultado
+    def estadistica_vp_fecha_programa() -> List[Tuple[datetime, int]]:
+        return (
+            db.session.query(
+                Fecha.fecha,  # type: ignore
+                func.count(VehiculoProgramado.id_vehiculo)  # type: ignore
+            )
+            .join(
+                Programacion,
+                Programacion.id_programacion == VehiculoProgramado.id_programacion
+            )
+            .join(
+                Fecha,
+                Programacion.id_fecha == Fecha.id_fecha  # type: ignore
+            )
+            .group_by(Fecha.fecha)
+            .order_by(
+                asc(Fecha.fecha)  # type: ignore
+            )
+            .all()  # type: ignore
+        )
+
+    # Modificado
+    @staticmethod
+    def estadistica_vp_flota_programa() -> List[Tuple[str, int]]:
+        return (
+            db.session.query(
+                Vehiculo.flota,  # type: ignore
+                func.coalesce(func.count(Vehiculo.id_vehiculo), 0)  # type: ignore
+            )
+            .select_from(VehiculoProgramado)
+            .join(
+                Vehiculo,
+                VehiculoProgramado.id_vehiculo == Vehiculo.id_vehiculo  # type: ignore
+            )
+            .group_by(Vehiculo.flota)
+            .order_by(
+                desc(Vehiculo.flota)  # type: ignore
+            )
+            .all()  # type: ignore
+        )
 
     @staticmethod
-    def estadistica_vp_flota_programa():
-        resultado = VehiculoProgramado.query.join(
-            Vehiculo,
-            VehiculoProgramado.id_vehiculo == Vehiculo.id_vehiculo  # type: ignore
-        ).add_columns(
-            Vehiculo.flota,  # type: ignore
-            func.ifnull(func.count(Vehiculo.id_vehiculo), 0)  # type: ignore
-        ).filter(
-            VehiculoProgramado.id_vehiculo == Vehiculo.id_vehiculo  # type: ignore
-        ).order_by(
-            desc(Vehiculo.flota)  # type: ignore
-        ).group_by(Vehiculo.flota).all()  # type: ignore
-        return resultado
+    def estadistica_vp_fecha_programado_no_programado() -> List[Tuple[datetime, int]]:
+        return (
+            db.session.query(
+                func.max(Fecha.fecha),  # type: ignore
+                func.count(VehiculoProgramado.id_vehiculo)  # type: ignore
+            )
+            .join(
+                Programacion,
+                VehiculoProgramado.id_programacion == Programacion.id_programacion
+            )
+            .join(
+                Fecha, Fecha.id_fecha == Programacion.id_fecha  # type: ignore
+            )
+            .group_by(
+                Programacion.id_fecha
+            )
+            .all()
+        )
 
     @staticmethod
-    def estadistica_vp_fecha_programado_no_programado():
-        resultado = VehiculoProgramado.query.join(
-            Programacion,
-            VehiculoProgramado.id_programacion == Programacion.id_programacion
-        ).join(
-            Fecha, Fecha.id_fecha == Programacion.id_fecha  # type: ignore
-        ).add_columns(
-            func.max(Fecha.fecha),
-            func.count(VehiculoProgramado.id_vehiculo)  # type: ignore
-        ).filter(
-            VehiculoProgramado.id_programacion == Programacion.id_programacion
-        ).all()
-        return resultado
+    def estadistica_cantidad_vehiculos_por_ruta() -> List[Tuple[str, int]]:
+        return (
+            db.session.query(
+                Ruta.codigo,  # type: ignore
+                func.count(VehiculoProgramado.id_vp)  # type: ignore
+            )
+            .join(
+                Programacion,
+                VehiculoProgramado.id_programacion == Programacion.id_programacion
+            )
+            .join(
+                Ruta, Ruta.id_ruta == Programacion.id_ruta  # type: ignore
+            )
+            .join(
+                RutaTerminal, RutaTerminal.id_ruta == Ruta.id_ruta  # type: ignore
+            )
+            .group_by(
+                Ruta.id_ruta  # type: ignore
+            )
+            .order_by(
+                Ruta.id_ruta  # type: ignore
+            )
+            .all()
+        )
 
     @staticmethod
-    def estadistica_cantidad_vehiculos_por_ruta():
-        resultado = VehiculoProgramado.query.join(
-            Programacion,
-            VehiculoProgramado.id_programacion == Programacion.id_programacion
-        ).join(
-            Ruta, Ruta.id_ruta == Programacion.id_ruta  # type: ignore
-        ).join(
-            RutaTerminal, RutaTerminal.id_ruta == Ruta.id_ruta  # type: ignore
-        ).add_columns(
-            Ruta.codigo,  # type: ignore
-            func.count(VehiculoProgramado.id_vp)  # type: ignore
-        ).group_by(
-            Ruta.id_ruta  # type: ignore
-        ).order_by(
-            Ruta.id_ruta  # type: ignore
-        ).all()
-        return resultado
+    def estadistica_vp_fecha_programa_y_ruta(
+        ruta: int
+    ) -> List[Tuple[datetime, int]]:
+        return (
+            db.session.query(
+                Fecha.fecha,  # type: ignore
+                func.count(VehiculoProgramado.id_vehiculo)  # type: ignore
+            )
+            .join(
+                Programacion,
+                VehiculoProgramado.id_programacion == Programacion.id_programacion
+            )
+            .join(
+                Ruta, Ruta.id_ruta == Programacion.id_ruta  # type: ignore
+            )
+            .join(
+                Fecha, Fecha.id_fecha == Programacion.id_fecha  # type: ignore
+            )
+            .filter(
+                Ruta.id_ruta == ruta  # type: ignore
+            )
+            .group_by(Fecha.fecha)
+            .order_by(
+                asc(Fecha.fecha)  # type: ignore
+            )
+            .all()  # type: ignore
+        )
 
     @staticmethod
-    def estadistica_vp_fecha_programa_y_ruta(ruta: int):
-        resultado = VehiculoProgramado.query.join(
-            Programacion,
-            VehiculoProgramado.id_programacion == Programacion.id_programacion
-        ).join(
-            Ruta, Ruta.id_ruta == Programacion.id_ruta  # type: ignore
-        ).join(
-            Fecha, Fecha.id_fecha == Programacion.id_fecha  # type: ignore
-        ).add_columns(
-            Fecha.fecha,  # type: ignore
-            func.count(VehiculoProgramado.id_vehiculo)  # type: ignore
-        ).where(
-            Ruta.id_ruta == ruta  # type: ignore
-        ).order_by(
-            asc(Fecha.fecha)  # type: ignore
-        ).group_by(Fecha.fecha).all()  # type: ignore
-        return resultado
-
-    @staticmethod
-    def estadistica_vp_tiempos():
-        resultado = VehiculoProgramado.query.add_columns(
-            VehiculoProgramado.tiempo,  # type: ignore
-            func.count(VehiculoProgramado.tiempo)  # type: ignore
-        ).order_by(
-            asc(VehiculoProgramado.tiempo)  # type: ignore
-        ).group_by(
-            VehiculoProgramado.tiempo  # type: ignore
-        ).all()
-        return resultado
+    def estadistica_vp_tiempos() -> List[Tuple[Optional[datetime], int]]:
+        return (
+            db.session.query(
+                VehiculoProgramado.tiempo,  # type: ignore
+                func.count(VehiculoProgramado.tiempo)  # type: ignore
+            )
+            .group_by(
+                VehiculoProgramado.tiempo  # type: ignore
+            )
+            .order_by(
+                asc(VehiculoProgramado.tiempo)  # type: ignore
+            )
+            .all()
+        )

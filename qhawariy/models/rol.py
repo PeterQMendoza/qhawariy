@@ -1,12 +1,20 @@
 from typing import List, Optional
+import uuid
 from qhawariy import db
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Rol(db.Model):
     """Modelo Rol describe el rol que se asignara al usuario
     """
     __tablename__ = "roles"
-    id_rol: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_rol: uuid.UUID = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     rol: str = db.Column(db.String(20), unique=True, nullable=False)
     # Relaciones
     rusuarios = db.relationship(
@@ -31,7 +39,7 @@ class Rol(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_rol_por_id(id: int):
+    def obtener_rol_por_id(id: uuid.UUID):
         return Rol.query.get(id)
 
     @staticmethod

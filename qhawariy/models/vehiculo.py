@@ -5,12 +5,14 @@ import datetime
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
+import uuid
 
 from sqlalchemy import desc
 from sqlalchemy.sql import func
 
 from qhawariy import db
 from qhawariy.utilities.builtins import LIMA_TZ
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Vehiculo(db.Model):
@@ -27,7 +29,13 @@ class Vehiculo(db.Model):
     """
 
     __tablename__ = "vehiculos"
-    id_vehiculo: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_vehiculo: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     flota: int = db.Column(db.Integer, nullable=False)
     placa: str = db.Column(db.String(8), unique=True, nullable=False)
     marca: str = db.Column(db.String(45), nullable=False)
@@ -216,9 +224,16 @@ class Vehiculo(db.Model):
 
     @staticmethod
     def estadistica_todos_vehiculos_activos():
-        return Vehiculo.query.filter_by(activo=True).add_columns(
-            func.count(Vehiculo.id_vehiculo)  # type: ignore
-        ).all()
+        return (
+            db.session.query(
+                func.count(Vehiculo.id_vehiculo)  # type: ignore
+            )
+            .filter(Vehiculo.activo.is_(True))  # type: ignore
+            .group_by(
+                Vehiculo.activo  # type: ignore
+            )
+            .all()
+        )
 
 
 class Estado(ABC):

@@ -2,13 +2,22 @@
 # import pytz
 
 from typing import List, Optional
+import uuid
 from qhawariy import db
 from sqlalchemy.sql import asc
+
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Propietario(db.Model):
     __tablename__ = "propietarios"
-    id_propietario: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_propietario: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     nombres: str = db.Column(db.String(50), nullable=False)
     apellidos: str = db.Column(db.String(50), nullable=False)
     telefono: str = db.Column(db.String(15), nullable=False)

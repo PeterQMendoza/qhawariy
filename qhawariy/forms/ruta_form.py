@@ -1,11 +1,17 @@
 from flask_wtf import FlaskForm
-from wtforms.fields import StringField, SelectField, SubmitField, DateField
+from wtforms.fields import (
+    StringField,
+    SelectField,
+    SubmitField,
+    DateField,
+    FloatField
+)
 from wtforms_html5 import AutoAttrMeta
-from wtforms.validators import DataRequired, URL, Optional
+from wtforms.validators import DataRequired, URL, Optional, NumberRange
 
 
 class RutaTerminalForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     terminal1 = SelectField(
         "Terminal 1",
@@ -25,14 +31,20 @@ class RutaTerminalForm(FlaskForm):
 
 
 class AgregarTerminalForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     direccion = StringField(
         "Direccion",
         validators=[DataRequired("Necesitamos esta informacion")]
     )
-    latitud = StringField("Ubicacion GPS latitud del terminal")
-    longitud = StringField("Ubicacion GPS longitud del terminal")
+    latitud = FloatField(
+        "Ubicacion GPS latitud del terminal",
+        validators=[NumberRange(min=-90, max=90)]
+    )
+    longitud = FloatField(
+        "Ubicacion GPS longitud del terminal",
+        validators=[NumberRange(min=-180, max=180)]
+    )
     departamento = SelectField(
         "Departamento",
         validators=[DataRequired("Seleccione un departamento")],
@@ -55,14 +67,20 @@ class AgregarTerminalForm(FlaskForm):
 
 
 class EditarTerminalForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     direccion = StringField(
         "Direccion",
         validators=[DataRequired("Necesitamos la direccion")]
     )
-    latitud = StringField("Ubicacion GPS latitud")
-    longitud = StringField("Ubicacion GPS longitud")
+    latitud = FloatField(
+        "Ubicacion GPS latitud del terminal",
+        validators=[NumberRange(min=-90, max=90)]
+    )
+    longitud = FloatField(
+        "Ubicacion GPS longitud del terminal",
+        validators=[NumberRange(min=-180, max=180)]
+    )
     departamento = SelectField(
         "Departamento",
         validators=[DataRequired("Seleccione un departamento")],
@@ -85,7 +103,7 @@ class EditarTerminalForm(FlaskForm):
 
 
 class AgregarRutaForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     codigo = StringField(
         "Codigo",
@@ -126,7 +144,8 @@ class AgregarRutaForm(FlaskForm):
 
     proxima_ruta = SelectField(
         "Proxima ruta",
-        validators=[Optional("Seleccione proxima ruta")],
+        choices=[("", "Seleccione próxima ruta")],
+        validators=[Optional()],
         id="select_proxima_1",
         coerce=int
     )
@@ -135,7 +154,7 @@ class AgregarRutaForm(FlaskForm):
 
 
 class EditarRutaForm(FlaskForm):
-    class Meta(AutoAttrMeta):
+    class Meta(AutoAttrMeta):  # type: ignore
         csrf = True
     codigo = StringField(
         "Codigo",
@@ -169,7 +188,7 @@ class EditarRutaForm(FlaskForm):
 
     proxima_ruta = SelectField(
         "Proxima ruta",
-        validators=[Optional("Seleccione proxima ruta")],
+        validators=[Optional()],
         id="select_proxima_1",
         coerce=int
     )

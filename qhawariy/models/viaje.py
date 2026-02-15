@@ -1,5 +1,6 @@
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
+import uuid
 # import pytz
 
 from flask_sqlalchemy.pagination import Pagination
@@ -12,28 +13,35 @@ from qhawariy.models.fecha import Fecha
 from qhawariy.models.ruta import Ruta
 from qhawariy.models.vehiculo import Vehiculo
 from qhawariy.models.control import Control
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
 class Viaje(db.Model):
     """" Modelo Viaje
     """
     __tablename__ = "viajes"
-    id_viaje: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_viaje: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     # Columna de la tabla que indica el numero de vueltas realizadas por un vehiculo
     orden: int = db.Column(db.Integer, nullable=False)
-    id_vehiculo: int = db.Column(
-        db.Integer,
-        db.ForeignKey("vehiculos.id_vehiculo"),
+    id_vehiculo: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.vehiculos.id_vehiculo"),
         nullable=False
     )
-    id_ruta: int = db.Column(
-        db.Integer,
-        db.ForeignKey("rutas.id_ruta"),
+    id_ruta: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.rutas.id_ruta"),
         nullable=False
     )
-    id_fecha: int = db.Column(
-        db.Integer,
-        db.ForeignKey("fechas.id_fecha"),
+    id_fecha: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.fechas.id_fecha"),
         nullable=False
     )
 
@@ -66,10 +74,10 @@ class Viaje(db.Model):
 
     def __init__(
         self,
-        id_ruta: int,
-        id_vehiculo: int,
+        id_ruta: str,
+        id_vehiculo: str,
         orden: int,
-        id_fecha: int
+        id_fecha: str
     ):
         self.orden = orden
         self.id_vehiculo = id_vehiculo
@@ -217,7 +225,7 @@ class Viaje(db.Model):
                 ControlTiempo.id_viaje == Viaje.id_viaje  # type: ignore
             ).join(
                 Control,
-                Control.id_control == ControlTiempo.id_control
+                Control.id_control == ControlTiempo.id_control  # type: ignore
             ).where(
                 Fecha.fecha == fecha,  # type: ignore
                 Ruta.id_ruta == ruta_id  # type: ignore
@@ -226,16 +234,24 @@ class Viaje(db.Model):
 
     # Para mostrar estadisticas
     @staticmethod
-    def estadistica_viajes_por_vehiculo():
-        resultado = Viaje.query.join(
-            Vehiculo, Vehiculo.id_vehiculo == Viaje.id_vehiculo  # type: ignore
-        ).add_columns(
-            Vehiculo.flota,  # type: ignore
-            func.count(Viaje.id_viaje)  # type: ignore
-        ).group_by(
-            Vehiculo.id_vehiculo  # type: ignore
-        ).all()
-        return resultado
+    def estadistica_viajes_por_vehiculo() -> List[Tuple[str, int]]:
+        return (
+            db.session.query(
+                Vehiculo.flota,  # type: ignore
+                func.count(Viaje.id_viaje)  # type: ignore
+            )
+            .select_from(Viaje)
+            .join(
+                Vehiculo, Vehiculo.id_vehiculo == Viaje.id_vehiculo  # type: ignore
+            )
+            .group_by(
+                Vehiculo.id_vehiculo  # type: ignore
+            )
+            .order_by(
+                Vehiculo.id_vehiculo  # type: ignore
+            )
+            .all()
+        )
 
     @staticmethod
     def estadistica_viajes_por_fecha_ruta(id_ruta: int):
@@ -260,20 +276,26 @@ class Viaje(db.Model):
         return resultado
 
     @staticmethod
-    def estadistica_viajes_por_fecha():
+    def estadistica_viajes_por_fecha() -> List[Tuple[Optional[datetime.datetime], int]]:
         """
         Funcion que retorna el total de viajes realizados por fecha
         """
-        resultado = Viaje.query.join(
-            Fecha, Fecha.id_fecha == Viaje.id_fecha  # type: ignore
-        ).join(
-            Ruta, Ruta.id_ruta == Viaje.id_ruta  # type: ignore
-        ).add_columns(
-            Fecha.fecha,  # type: ignore
-            func.count(Viaje.id_viaje)  # type: ignore
-        ).order_by(
-            asc(Fecha.fecha)  # type: ignore
-        ).group_by(
-            Fecha.id_fecha  # type: ignore
-        ).all()
-        return resultado
+        return (
+            db.session.query(
+                Fecha.fecha,  # type: ignore
+                func.count(Viaje.id_viaje)  # type: ignore
+            )
+            .join(
+                Fecha, Fecha.id_fecha == Viaje.id_fecha  # type: ignore
+            )
+            .join(
+                Ruta, Ruta.id_ruta == Viaje.id_ruta  # type: ignore
+            )
+            .group_by(
+                Fecha.id_fecha  # type: ignore
+            )
+            .order_by(
+                asc(Fecha.fecha)  # type: ignore
+            )
+            .all()
+        )

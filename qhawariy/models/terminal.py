@@ -1,30 +1,44 @@
-from typing import List
+from typing import List, Optional
+import uuid
+
+from geoalchemy2 import Geometry, WKTElement
 from qhawariy import db
+from qhawariy.utilities.gps import GPSMixin
+from qhawariy.utilities.uuid_endpoints import ShortUUID
 
 
-class Terminal(db.Model):
+class Terminal(db.Model, GPSMixin):
     """Modelo Terminal:
     """
     __tablename__ = "terminales"
-    id_terminal: int = db.Column(db.Integer, primary_key=True)
+    __table_args__ = {"schema": "app"}
+
+    id_terminal: str = db.Column(
+        ShortUUID(),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
     direccion: str = db.Column(db.String(50), nullable=False)
-    latitud: str = db.Column(db.String(25), nullable=False)
-    longitud: str = db.Column(db.String(25), nullable=False)
-    id_departamento: int = db.Column(
-        db.Integer,
-        db.ForeignKey("departamentos.id_departamento"),
+    ubicacion = db.Column(
+        Geometry(geometry_type="POINT", srid=4326),
         nullable=False
     )
-    id_provincia: int = db.Column(
-        db.Integer,
-        db.ForeignKey("provincias.id_provincia"),
+    id_departamento: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.departamentos.id_departamento"),
         nullable=False
     )
-    id_distrito: int = db.Column(
-        db.Integer,
-        db.ForeignKey("distritos.id_distrito"),
+    id_provincia: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.provincias.id_provincia"),
         nullable=False
     )
+    id_distrito: str = db.Column(
+        ShortUUID(),
+        db.ForeignKey("app.distritos.id_distrito"),
+        nullable=False
+    )
+
     # Relaciones
     departamento = db.relationship(
         "Departamento",
@@ -45,29 +59,17 @@ class Terminal(db.Model):
         single_parent=True
     )
 
-    # terminales = db.relationship(
-    #     "RutaTerminal",
-    #     back_populates="terminal",
-    #     cascade="all,delete-orphan"
-    # )
-    # terminales2 = db.relationship(
-    #     "RutaTerminal",
-    #     back_populates="terminal2",
-    #     cascade="all,delete-orphan"
-    # )
-
     def __init__(
         self,
         direccion: str,
-        latitud: str,
-        longitud: str,
-        id_departamento: int,
-        id_provincia: int,
-        id_distrito: int
+        latitud: float,
+        longitud: float,
+        id_departamento: str,
+        id_provincia: str,
+        id_distrito: str
     ):
         self.direccion = direccion
-        self.latitud = latitud
-        self.longitud = longitud
+        self.ubicacion = WKTElement(f"POINT({longitud} {latitud})", srid=4326)
         self.id_departamento = id_departamento
         self.id_provincia = id_provincia
         self.id_distrito = id_distrito
@@ -85,7 +87,7 @@ class Terminal(db.Model):
         db.session.commit()
 
     @staticmethod
-    def obtener_terminal_por_id(id: int):
+    def obtener_terminal_por_id(id: int) -> Optional["Terminal"]:
         return Terminal.query.get(id)
 
     @staticmethod

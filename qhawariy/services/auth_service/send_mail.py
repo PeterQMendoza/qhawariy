@@ -40,7 +40,7 @@ def send_email(
         msg.html = html_body
 
     # current_app es un LocalProxy, por eso usamos _get_current_object()
-    app_qh = app._ge_current_object()  # type: ignore
+    app_qh = app._get_current_object()  # type: ignore
     Thread(
         target=send_async_email,
         args=(app_qh, msg)  # type: ignore

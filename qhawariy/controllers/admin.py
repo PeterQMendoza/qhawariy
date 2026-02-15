@@ -147,10 +147,10 @@ def listar_usuarios():
     return render_template("admin/lista_usuario.html", users=users)
 
 
-@bp.route("/usuario/<int:user_id>/", methods=["GET", "PUT"])
+@bp.route("/usuario/<string:user_id>", methods=["GET", "PUT"])
 @login_required
 @admin_required
-def editar_usuario(user_id: int):
+def editar_usuario(user_id: str):
     # Para actualizar usuario existente
     roles = Rol.obtener_todos_roles()
     ur = UsuarioRol.obtener_por_id_usuario(user_id)
@@ -174,10 +174,10 @@ def editar_usuario(user_id: int):
     )
 
 
-@bp.route("/usuario/eliminar/<int:user_id>/", methods=["POST"])
+@bp.route("/usuario/eliminar/<string:user_id>", methods=["POST"])
 @login_required
 @admin_required
-def eliminar_usuario(user_id: int):
+def eliminar_usuario(user_id: str):
     logger.info(f"Se va ha eliminar al usuario {user_id}")
     user = Usuario.obtener_usuario_por_id(user_id)
     if user is None:
@@ -188,10 +188,10 @@ def eliminar_usuario(user_id: int):
     return redirect(url_for("admin.listar_usuarios"))
 
 
-@bp.route("/configuracion/<int:config_id>", methods=["GET", "POST"])
+@bp.route("/configuracion/<string:config_id>", methods=["GET", "POST"])
 @login_required
 @admin_required
-def configurar(config_id: int):
+def configurar(config_id: str):
     configuracion = Configuracion.obtener_config(config_id)
     # controles=Control.obtener_todos()
     # items=[(ctrl.id_control,ctrl.codigo)for ctrl in controles]
