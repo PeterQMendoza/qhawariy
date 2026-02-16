@@ -21,7 +21,7 @@ class Usuario(db.Model, UserMixin):
     __tablename__ = "usuarios"
     __table_args__ = {"schema": "app"}
 
-    id_usuario: uuid.UUID = db.Column(
+    id_usuario: str = db.Column(
         ShortUUID(),
         primary_key=True,
         default=lambda: str(uuid.uuid4())

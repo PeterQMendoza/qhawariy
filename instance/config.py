@@ -5,7 +5,8 @@ from typing import Dict, Optional, Type
 # Carpeta BASE del proyecto
 BASE_DIR = Path(__file__).resolve().parents[1]
 
-SECRET_KEY = "66149efe039c9daaeda402ec5613d643b47c8960641d42664b4abcd48c683e32"
+DEFAULT_SECRET_KEY = "66149efe039c9daaeda402ec5613d643b47c8960641d42664b4abcd48c683e32"
+DEFAULT_PASSWORD_ADMIN = "1admin@qh"
 
 
 def construir_postgres_uri(
@@ -37,19 +38,21 @@ class BaseConfig:
     PORT = int(os.getenv("PORT", "8000"))  # type: ignore
 
     # Paths
-    BASE_DIR = BASE_DIR
+    BASE_DIR: Path = BASE_DIR
     # Configuracion de las rutas de archivos para cargar y manejar
     # archivos
-    FILES_DIR = os.path.join(BASE_DIR, "files")
-    SHAPEFILE_FOLDER = os.path.join(FILES_DIR, "shapefile")
-    UPLOAD_FOLDER = os.path.join(FILES_DIR, "uploads")
-    DOWNLOAD_FOLDER = os.path.join(FILES_DIR, "downloads")
-    COORD_DATA_FOLDER = os.path.join(FILES_DIR, "data")
-    LOGS_FOLDER = os.path.join(FILES_DIR, "logs")
+    FILES_DIR: Path = BASE_DIR / "files"
+    SHAPEFILE_FOLDER: Path = FILES_DIR / "shapefile"
+    UPLOAD_FOLDER: Path = FILES_DIR / "uploads"
+    DOWNLOAD_FOLDER: Path = FILES_DIR / "downloads"
+    COORD_DATA_FOLDER: Path = FILES_DIR / "data"
+    LOGS_FOLDER: Path = FILES_DIR / "logs"
     ALLOWED_EXTENSIONS = {'txt', 'csv', 'xlsx'}
 
     # Seguridad
-    SECRET_KEY = os.getenv("SECRET_KEY", SECRET_KEY)
+    SECRET_KEY: str = os.getenv("SECRET_KEY", DEFAULT_SECRET_KEY)
+    # Clave para usuario admin
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", DEFAULT_PASSWORD_ADMIN)
 
     # SQLALCHEMY por defecto (sobrescribe en subclase)
     SQLALCHEMY_DATABASE_URI: str = ""
@@ -98,8 +101,6 @@ class BaseConfig:
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 16*1024*1024))
 
     # Configuracion para claves recapcha
-    RECAPTCHA_PUBLIC_KEY = "6LeYIbsSAAAAACRPIllxA7wvXjIE411PfdB2gt2J"
-    RECAPTCHA_PRIVATE_KEY = "6LeYIbsSAAAAAJezaIq3Ft_hSTo0YtyeFG-JgRtu"
     # RECAPTCHA_PARAMETERS = {'hl': 'zh', 'render': 'explicit'}
     # RECAPTCHA_DATA_ATTRS = {'theme': 'dark'}
 

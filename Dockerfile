@@ -1,4 +1,4 @@
- Usar una imagen base de Python
+# Usar una imagen base de Python
 FROM python:3.12-slim
 
 ARG APP_UID=1000
@@ -19,10 +19,10 @@ RUN apt-get update && apt-get install -y \
     openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar dependencias del sistema (para mysqlclient, curl, etc)
+# Instalar dependencias del sistema (para postgresql client, curl, etc)
 RUN apt-get update && apt-get install -y \
     build-essential \
-    default-libmysqlclient-dev \
+    libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -63,6 +63,9 @@ EXPOSE 5000
 
 # ENTRYPOINT corre como root para poder ajustar permiso
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Ejecutar como usuario no root
+USER appuser
 
 # Comando de arranque con uso de gunicorn como servidor WSGI
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "--timeout", "120", "--threads", "2", "app:app"]

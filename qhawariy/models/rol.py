@@ -10,7 +10,7 @@ class Rol(db.Model):
     __tablename__ = "roles"
     __table_args__ = {"schema": "app"}
 
-    id_rol: uuid.UUID = db.Column(
+    id_rol: str = db.Column(
         ShortUUID(),
         primary_key=True,
         default=lambda: str(uuid.uuid4())

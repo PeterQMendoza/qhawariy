@@ -29,19 +29,20 @@ services:
     environment:
       - GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=no
   db:
-    image: mysql:8.0
-    container_name: mysql_db
+    image: postgres:15
+    container_name: postgres_db
     restart: always
     env_file:
       - .env
     networks:
       - backend_qh
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       # test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\" || exit 1"]
       # Corregir errores de conexion con IPv6
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      # test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$MYSQL_ROOT_PASSWORD\" || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U $DB_USER -d $DB_NAME || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -67,7 +68,7 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
+  postgres_data:
   static_data:
   instance_config:
   files_data:

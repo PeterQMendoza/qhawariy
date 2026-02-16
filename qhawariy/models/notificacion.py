@@ -14,12 +14,12 @@ class Notificacion(db.Model):
     __tablename__ = "notificaciones"
     __table_args__ = {"schema": "app"}
 
-    id_notificacion: uuid.UUID = db.Column(
+    id_notificacion: str = db.Column(
         ShortUUID(),
         primary_key=True,
         default=lambda: str(uuid.uuid4())
     )
-    id_usuario = db.Column(
+    id_usuario: str = db.Column(
         ShortUUID(),
         db.ForeignKey('app.usuarios.id_usuario'),
         nullable=False

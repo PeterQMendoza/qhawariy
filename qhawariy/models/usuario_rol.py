@@ -15,17 +15,17 @@ class UsuarioRol(db.Model):
     __tablename__ = "usuarios_roles"
     __table_args__ = {"schema": "app"}
 
-    id_ur: uuid.UUID = db.Column(
+    id_ur: str = db.Column(
         ShortUUID(),
         primary_key=True,
         default=lambda: str(uuid.uuid4())
     )
-    id_usuario: uuid.UUID = db.Column(
+    id_usuario: str = db.Column(
         ShortUUID(),
         db.ForeignKey("app.usuarios.id_usuario"),
         nullable=False
     )
-    id_rol: uuid.UUID = db.Column(
+    id_rol: str = db.Column(
         ShortUUID(),
         db.ForeignKey("app.roles.id_rol"),
         nullable=False
@@ -45,7 +45,7 @@ class UsuarioRol(db.Model):
         single_parent=True
     )
 
-    def __init__(self, id_usuario: uuid.UUID, id_rol: uuid.UUID):
+    def __init__(self, id_usuario: str, id_rol: str):
         self.id_usuario = id_usuario
         self.id_rol = id_rol
 
